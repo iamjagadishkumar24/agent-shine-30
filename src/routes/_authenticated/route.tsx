@@ -27,6 +27,8 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/lib/theme";
 import { CommandPalette, useCommandPalette } from "@/components/layout/command-palette";
 import { getMyProfile } from "@/lib/profile.functions";
+import { getMyRoles } from "@/lib/agent-portal.functions";
+import { UserRound } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
