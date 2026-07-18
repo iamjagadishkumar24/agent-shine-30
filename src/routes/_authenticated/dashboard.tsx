@@ -38,6 +38,24 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format, isAfter, subDays } from "date-fns";
 import { ChartSkeleton, KpiCardSkeleton, ListRowSkeleton } from "@/components/ui/skeleton-blocks";
 
+// Null-safe date helpers — dashboard aggregates rows from multiple tables where
+// timestamps may be null or malformed; formatting invalid dates throws.
+function parseDate(iso: unknown): Date | null {
+  if (!iso || typeof iso !== "string") return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+function safeFormat(iso: unknown, fmt: string, fallback = "—") {
+  const d = parseDate(iso);
+  if (!d) return fallback;
+  try { return format(d, fmt); } catch { return fallback; }
+}
+function safeTimeAgo(iso: unknown, fallback = "") {
+  const d = parseDate(iso);
+  if (!d) return fallback;
+  try { return formatDistanceToNow(d, { addSuffix: false }); } catch { return fallback; }
+}
+
 // Lazy-loaded heavy chart components — split into an async chunk so the
 // dashboard shell (KPIs + lists) renders immediately with skeletons.
 const HeavyCharts = {
@@ -237,7 +255,7 @@ function bucketByWeek<T extends { created_at: string }>(rows: T[], filter: (r: T
 function Dashboard() {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const { data, isLoading, isFetching } = useDashboardData();
+  const { data, isLoading, isFetching, isError, error, refetch } = useDashboardData();
   const [range, setRange] = useState<"Daily" | "Weekly" | "Monthly">("Weekly");
 
   const agents = data?.agents ?? [];
@@ -401,7 +419,8 @@ function Dashboard() {
   const heatmap = useMemo(() => {
     const grid: number[][] = Array.from({ length: 7 }, () => new Array(24).fill(0));
     feedback.forEach((f) => {
-      const d = new Date(f.created_at);
+      const d = parseDate(f.created_at);
+      if (!d) return;
       if (Date.now() - d.getTime() > 30 * 86400000) return;
       grid[d.getDay()][d.getHours()] += 1;
     });
@@ -479,6 +498,22 @@ function Dashboard() {
       </div>
 
       <div className="mx-auto max-w-[1600px] px-8 pb-16 pt-6 [&_>_*]:animate-in [&_>_*]:fade-in [&_>_*]:duration-300">
+        {isError && (
+          <Card className="mb-5 rounded-xl border-destructive/40 bg-destructive/5 p-4">
+            <div className="flex items-start gap-3">
+              <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium text-destructive">Dashboard failed to load</div>
+                <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                  {(error as any)?.message ?? "Unable to fetch data. Please retry."}
+                </div>
+              </div>
+              <Button size="sm" variant="outline" className="h-7 gap-1.5" onClick={() => refetch()}>
+                <RefreshCw className="h-3 w-3" /> Retry
+              </Button>
+            </div>
+          </Card>
+        )}
         {/* KPI GRID */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {isLoading && !data && Array.from({ length: 12 }).map((_, i) => <KpiCardSkeleton key={i} />)}
@@ -650,8 +685,8 @@ function Dashboard() {
                     </div>
                   </div>
                   <div className="shrink-0 text-right text-[10px] text-muted-foreground">
-                    {format(new Date(c.scheduled_at), "MMM d")}
-                    <div>{format(new Date(c.scheduled_at), "p")}</div>
+                    {safeFormat(c.scheduled_at, "MMM d")}
+                    <div>{safeFormat(c.scheduled_at, "p", "")}</div>
                   </div>
                 </Link>
               ))}
@@ -730,7 +765,7 @@ function Dashboard() {
                       <div className="truncate text-xs text-muted-foreground">{a.who}</div>
                     </div>
                     <div className="shrink-0 text-[10px] text-muted-foreground">
-                      {formatDistanceToNow(new Date(a.when), { addSuffix: false })}
+                      {safeTimeAgo(a.when)}
                     </div>
                   </Link>
                 );
