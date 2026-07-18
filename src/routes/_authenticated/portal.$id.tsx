@@ -96,8 +96,18 @@ function PortalFeedbackDetail() {
   });
 
   if (isLoading) {
-    return <div className="mx-auto max-w-4xl px-8 py-12 text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div>
+        <PageHeader title="Feedback" subtitle="Loading…" />
+        <div className="mx-auto max-w-4xl px-8 pb-12 pt-6 space-y-3">
+          <SkeletonBox className="h-40 w-full" />
+          <SkeletonBox className="h-32 w-full" />
+          <SkeletonBox className="h-32 w-full" />
+        </div>
+      </div>
+    );
   }
+
   if (!data) {
     return (
       <div className="mx-auto max-w-4xl px-8 py-12 text-sm text-muted-foreground">
