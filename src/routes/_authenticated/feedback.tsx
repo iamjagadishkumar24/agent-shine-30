@@ -261,11 +261,30 @@ function FeedbackPage() {
               <Button size="sm" variant="outline" onClick={exportCsv}>
                 <Download className="mr-1.5 h-3.5 w-3.5" /> Export
               </Button>
-              <Button size="sm" variant="destructive" onClick={() => {
-                if (confirm(`Delete ${selected.size} feedback item(s)? This cannot be undone.`)) delMut.mutate();
-              }} disabled={delMut.isPending}>
-                <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="destructive" disabled={delMut.isPending}>
+                    <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete {selected.size} feedback item{selected.size === 1 ? "" : "s"}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This permanently removes the selected feedback along with their attachments, audit trail, and delivery history. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => delMut.mutate()}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Clear</Button>
             </div>
           </div>
