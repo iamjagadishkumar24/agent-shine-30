@@ -3,11 +3,18 @@ import { useMemo, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, TrendingUp, TrendingDown, Users, Target } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Users, Target, AlertCircle } from "lucide-react";
 
 const Charts = lazy(() => import("@/components/analytics/analytics-charts"));
+
+function parseTime(s: string | null | undefined): number | null {
+  if (!s) return null;
+  const t = new Date(s).getTime();
+  return Number.isFinite(t) ? t : null;
+}
 
 type FeedbackRow = {
   id: string;
@@ -57,7 +64,7 @@ export const Route = createFileRoute("/_authenticated/analytics")({
 });
 
 function AnalyticsPage() {
-  const { data, isLoading } = useAnalyticsData();
+  const { data, isLoading, isError, error, refetch, isFetching } = useAnalyticsData();
   const feedback = data?.feedback ?? [];
   const agents = data?.agents ?? [];
 
@@ -74,10 +81,13 @@ function AnalyticsPage() {
     const now = Date.now();
     const d30 = now - 30 * 864e5;
     const d60 = now - 60 * 864e5;
-    const last30 = feedback.filter((f) => new Date(f.created_at).getTime() >= d30).length;
+    const last30 = feedback.filter((f) => {
+      const t = parseTime(f.created_at);
+      return t != null && t >= d30;
+    }).length;
     const prev30 = feedback.filter((f) => {
-      const t = new Date(f.created_at).getTime();
-      return t >= d60 && t < d30;
+      const t = parseTime(f.created_at);
+      return t != null && t >= d60 && t < d30;
     }).length;
     const delta = prev30 === 0 ? (last30 ? 100 : 0) : Math.round(((last30 - prev30) / prev30) * 100);
 
@@ -98,7 +108,9 @@ function AnalyticsPage() {
       });
     }
     for (const f of feedback) {
-      const d = new Date(f.created_at);
+      const t = parseTime(f.created_at);
+      if (t == null) continue;
+      const d = new Date(t);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       const b = buckets.get(key);
       if (!b) continue;
@@ -157,6 +169,26 @@ function AnalyticsPage() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
   }, [feedback, agents]);
+
+  if (isError) {
+    return (
+      <div>
+        <PageHeader title="Analytics" subtitle="Deep trends across feedback, delivery, and agent performance." />
+        <div className="mx-auto max-w-4xl px-8 pb-12 pt-6">
+          <Card className="rounded-xl border-destructive/50 bg-destructive/5 p-8 text-center">
+            <AlertCircle className="mx-auto h-6 w-6 text-destructive" />
+            <h2 className="mt-3 text-sm font-medium">Couldn't load analytics</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {(error as Error)?.message ?? "Please retry in a moment."}
+            </p>
+            <Button size="sm" className="mt-4" onClick={() => refetch()} disabled={isFetching}>
+              {isFetching ? "Retrying…" : "Retry"}
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
