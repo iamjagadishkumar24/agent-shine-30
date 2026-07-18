@@ -108,7 +108,9 @@ function AnalyticsPage() {
       });
     }
     for (const f of feedback) {
-      const d = new Date(f.created_at);
+      const t = parseTime(f.created_at);
+      if (t == null) continue;
+      const d = new Date(t);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       const b = buckets.get(key);
       if (!b) continue;
