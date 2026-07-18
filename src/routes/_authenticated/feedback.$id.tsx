@@ -431,6 +431,33 @@ function FeedbackDetail() {
               )}
             </ul>
           </Card>
+
+          <Card className="rounded-xl border-border/60 bg-card/60 p-5">
+            <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <History className="h-3 w-3" /> Audit log
+            </div>
+            <ul className="mt-3 space-y-2.5 text-xs">
+              {(auditLog as any[]).length === 0 && (
+                <li className="text-muted-foreground">No workflow activity yet.</li>
+              )}
+              {(auditLog as any[]).map((a) => (
+                <li key={a.id} className="border-l border-border/60 pl-2.5">
+                  <div className="capitalize text-foreground">
+                    {String(a.action).replace(/_/g, " ")}
+                    {a.from_status && a.to_status && (
+                      <span className="ml-1 text-muted-foreground">
+                        · {a.from_status} → {a.to_status}
+                      </span>
+                    )}
+                  </div>
+                  {a.comment && <div className="mt-0.5 text-muted-foreground whitespace-pre-wrap">{a.comment}</div>}
+                  <div className="mt-0.5 text-[10px] text-muted-foreground/70">
+                    {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Card>
         </div>
       </div>
     </div>
