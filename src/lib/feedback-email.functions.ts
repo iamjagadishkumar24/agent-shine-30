@@ -27,8 +27,8 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       .single();
     if (error || !fb) throw new Error(error?.message || "Feedback not found");
     if (!fb.agent?.email) throw new Error("Agent has no email on file");
-    if (fb.status !== "approved" && fb.status !== "draft") {
-      throw new Error(`Cannot send from status "${fb.status}" — must be approved first`);
+    if (fb.status !== "approved") {
+      throw new Error(`Cannot send from status "${fb.status}" — feedback must be approved first`);
     }
 
     const { data: settings } = await supabase.from("email_settings").select("*").eq("singleton", true).maybeSingle();
