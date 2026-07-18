@@ -30,6 +30,7 @@ const Schema = z.object({
   duration_minutes: z.number().int().min(5).max(480),
   notes: z.string().trim().max(2000).optional(),
   feedback_id: z.string().uuid().optional().or(z.literal("")),
+  plan_id: z.string().uuid().optional().or(z.literal("")),
 });
 
 function NewSession() {
