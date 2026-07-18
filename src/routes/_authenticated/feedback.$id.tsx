@@ -234,7 +234,7 @@ function FeedbackDetail() {
                 <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Complete
               </Button>
             )}
-            <Button variant="ghost" size="icon" onClick={() => remove.mutate()} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" onClick={confirmDelete} disabled={remove.isPending} className="text-muted-foreground hover:text-destructive" aria-label="Delete feedback"><Trash2 className="h-3.5 w-3.5" /></Button>
           </div>
         }
       />
