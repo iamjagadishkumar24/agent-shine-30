@@ -9,22 +9,34 @@ import { toast } from "sonner";
 import { Sparkles, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+  }),
   component: AuthPage,
 });
 
+// Only accept same-origin relative paths so OAuth returns cannot bounce off-site.
+function safeNext(next: string | undefined): string {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return "/dashboard";
+  return next;
+}
+
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const destination = safeNext(next);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session) window.location.href = destination;
     });
-  }, [navigate]);
+  }, [destination]);
 
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +45,10 @@ function AuthPage() {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email, password,
-          options: { emailRedirectTo: window.location.origin, data: { full_name: name } },
+          options: {
+            emailRedirectTo: window.location.origin + destination,
+            data: { full_name: name },
+          },
         });
         if (error) throw error;
         toast.success("Account created");
@@ -41,7 +56,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      navigate({ to: "/dashboard", replace: true });
+      window.location.href = destination;
     } catch (err: any) {
       toast.error(err.message ?? "Something went wrong");
     } finally {
@@ -51,10 +66,12 @@ function AuthPage() {
 
   const handleGoogle = async () => {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    // Return to /auth so this page can consume `next` after Supabase hydrates the session.
+    const redirectUri = `${window.location.origin}/auth${next ? `?next=${encodeURIComponent(next)}` : ""}`;
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectUri });
     if (result.error) { toast.error(result.error.message); setLoading(false); return; }
     if (result.redirected) return;
-    navigate({ to: "/dashboard", replace: true });
+    window.location.href = destination;
   };
 
   return (
