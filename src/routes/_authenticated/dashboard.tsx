@@ -443,7 +443,6 @@ function Dashboard() {
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["dashboard"] });
-    refetch();
   };
 
   return (
