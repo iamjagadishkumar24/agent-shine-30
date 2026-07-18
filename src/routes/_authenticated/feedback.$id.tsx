@@ -204,8 +204,24 @@ function FeedbackDetail() {
   });
 
   if (isLoading || !data) {
-    return <div className="p-8 text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div className="mx-auto max-w-6xl px-8 pt-8 space-y-4">
+        <div className="h-8 w-64 rounded-md bg-muted animate-pulse" />
+        <div className="h-4 w-48 rounded-md bg-muted animate-pulse" />
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="h-40 rounded-xl border border-border/60 bg-card/40 animate-pulse" />
+            <div className="h-40 rounded-xl border border-border/60 bg-card/40 animate-pulse" />
+          </div>
+          <div className="space-y-4">
+            <div className="h-32 rounded-xl border border-border/60 bg-card/40 animate-pulse" />
+            <div className="h-32 rounded-xl border border-border/60 bg-card/40 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
   }
+
 
   const send = () => sendMutation.mutate();
   const acknowledge = () => update.mutate({ status: "acknowledged", acknowledged_at: new Date().toISOString(), acknowledgement_note: ackNote }, { onSuccess: () => toast.success("Acknowledged") });
