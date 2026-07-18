@@ -5,19 +5,34 @@ export function renderErrorPage(): string {
     <meta charset="utf-8" />
     <title>This page didn't load</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
     <style>
-      body { font: 15px/1.5 system-ui, -apple-system, sans-serif; background: #fafafa; color: #111; display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 1.5rem; }
+      :root { color-scheme: light dark; }
+      body {
+        font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        background: #fafafa; color: #111;
+        display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 1.5rem;
+      }
       .card { max-width: 28rem; width: 100%; text-align: center; padding: 2rem; }
       h1 { font-size: 1.25rem; margin: 0 0 0.5rem; }
       p { color: #4b5563; margin: 0 0 1.5rem; }
       .actions { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
-      a, button { padding: 0.5rem 1rem; border-radius: 0.375rem; font: inherit; cursor: pointer; text-decoration: none; border: 1px solid transparent; }
+      a, button {
+        padding: 0.5rem 1rem; border-radius: 0.375rem; font: inherit; cursor: pointer;
+        text-decoration: none; border: 1px solid transparent;
+      }
       .primary { background: #111; color: #fff; }
       .secondary { background: #fff; color: #111; border-color: #d1d5db; }
+      @media (prefers-color-scheme: dark) {
+        body { background: #0a0a0a; color: #f5f5f5; }
+        p { color: #a1a1aa; }
+        .primary { background: #f5f5f5; color: #0a0a0a; }
+        .secondary { background: transparent; color: #f5f5f5; border-color: #3f3f46; }
+      }
     </style>
   </head>
   <body>
-    <div class="card">
+    <div class="card" role="alert" aria-live="assertive">
       <h1>This page didn't load</h1>
       <p>Something went wrong on our end. You can try refreshing or head back home.</p>
       <div class="actions">
