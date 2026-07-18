@@ -21,20 +21,26 @@ const DraftSchema = z.object({
   recommended_actions: z.string(),
 });
 
+const clamp = (s: unknown, max: number) =>
+  typeof s === "string" ? s.trim().slice(0, max) : "";
+
 export const generateFeedbackDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => InputSchema.parse(raw))
   .handler(async ({ data, context }) => {
     // Verify staff role — agents must not use this
     const { supabase, userId } = context;
-    const { data: roles } = await supabase
+    const { data: roles, error: rolesError } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", userId);
+    if (rolesError) {
+      throw new Response("Failed to verify permissions", { status: 500 });
+    }
     const isStaff = (roles ?? []).some((r) =>
       ["qa_admin", "qa_reviewer", "team_lead", "manager"].includes(r.role as string),
     );
-    if (!isStaff) throw new Error("Forbidden");
+    if (!isStaff) throw new Response("Forbidden", { status: 403 });
 
     const { data: agent } = await supabase
       .from("agents")
@@ -43,7 +49,7 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
       .maybeSingle();
 
     const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+    if (!key) throw new Response("AI service is not configured", { status: 503 });
 
     const gateway = createLovableAiGatewayProvider(key);
     const model = gateway("google/gemini-3-flash-preview");
@@ -55,8 +61,11 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
       "Never invent facts the observer didn't mention. If a section has no basis, keep it short and honest.",
     ].join(" ");
 
+    const agentName = clamp(agent?.full_name, 120) || "(unknown)";
+    const agentDept = clamp(agent?.department, 120);
+
     const prompt = [
-      `Agent: ${agent?.full_name ?? "(unknown)"} in ${agent?.department ?? ""}`.trim(),
+      `Agent: ${agentName}${agentDept ? ` in ${agentDept}` : ""}`,
       `Category: ${data.category}`,
       `Feedback type: ${data.feedback_type}`,
       `Severity: ${data.severity}`,
@@ -70,25 +79,42 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
       .filter(Boolean)
       .join("\n");
 
+    // Bound the upstream call — a hung model must not stall the request forever.
+    const abort = new AbortController();
+    const timer = setTimeout(() => abort.abort(), 25_000);
+
     try {
       const { output } = await generateText({
         model,
         system,
         prompt,
         output: Output.object({ schema: DraftSchema }),
+        abortSignal: abort.signal,
       });
-      return output;
+      // Clamp lengths to defend against a model that ignores instructions.
+      return {
+        title: clamp(output.title, 120),
+        summary: clamp(output.summary, 2000),
+        strengths: clamp(output.strengths, 1500),
+        improvements: clamp(output.improvements, 1500),
+        recommended_actions: clamp(output.recommended_actions, 1500),
+      };
     } catch (error) {
       if (NoObjectGeneratedError.isInstance(error)) {
         // Fallback: return observations as summary so the user isn't blocked
         return {
-          title: `${data.category} feedback`,
+          title: `${clamp(data.category, 60)} feedback`,
           summary: data.observations,
           strengths: "",
           improvements: "",
           recommended_actions: "",
         };
       }
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Response("AI request timed out. Try again.", { status: 504 });
+      }
       throw error;
+    } finally {
+      clearTimeout(timer);
     }
   });
