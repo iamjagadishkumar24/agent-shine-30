@@ -91,9 +91,7 @@ function FeedbackDetail() {
   const acknowledge = () => update.mutate({ status: "acknowledged", acknowledged_at: new Date().toISOString(), acknowledgement_note: ackNote }, { onSuccess: () => toast.success("Acknowledged") });
   const complete = () => update.mutate({ status: "completed" }, { onSuccess: () => toast.success("Marked complete") });
 
-  return renderView();
 
-  function renderView() {
 
   return (
     <div>
