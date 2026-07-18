@@ -21,7 +21,9 @@ const NAV = [
   { to: "/feedback", label: "Feedback", icon: MessageSquareText },
   { to: "/coaching", label: "Coaching", icon: GraduationCap },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
+
 
 function AuthedLayout() {
   const { user } = Route.useRouteContext();
