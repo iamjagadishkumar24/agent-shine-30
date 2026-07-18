@@ -14,6 +14,13 @@ import { formatDistanceToNow } from "date-fns";
 import { sendFeedbackEmail } from "@/lib/feedback-email.functions";
 import { createUploadUrl, deleteAttachment } from "@/lib/feedback-attachments.functions";
 import { transitionFeedback } from "@/lib/feedback-workflow.functions";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+
+function safeTimeAgo(v: string | null | undefined): string | null {
+  if (!v) return null;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? null : formatDistanceToNow(d, { addSuffix: true });
+}
 
 export const Route = createFileRoute("/_authenticated/feedback/$id")({
   component: FeedbackDetail,
