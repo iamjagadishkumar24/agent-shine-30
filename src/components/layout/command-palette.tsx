@@ -26,6 +26,7 @@ const NAV = [
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/feedback", label: "Feedback", icon: MessageSquareText },
   { to: "/coaching", label: "Coaching", icon: GraduationCap },
+  { to: "/coaching/plans", label: "Coaching plans", icon: GraduationCap },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/reports", label: "Reports", icon: FileBarChart },
   { to: "/settings", label: "Settings", icon: Settings },
