@@ -19,7 +19,7 @@ import {
   listReportSchedules, upsertReportSchedule, deleteReportSchedule, runReportScheduleNow,
 } from "@/lib/report-schedules.functions";
 
-export const Route = createFileRoute("/_authenticated/reports.schedules")({
+export const Route = createFileRoute("/_authenticated/reports/schedules")({
   component: SchedulesPage,
 });
 
