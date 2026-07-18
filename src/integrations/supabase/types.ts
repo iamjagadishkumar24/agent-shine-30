@@ -72,13 +72,23 @@ export type Database = {
           agent_id: string
           case_id: string | null
           category: string
+          click_count: number
+          clicked_at: string | null
           created_at: string
           created_by: string
+          delivered_at: string | null
           due_date: string | null
+          email_error: string | null
+          escalated_at: string | null
           feedback_type: Database["public"]["Enums"]["feedback_type"]
+          first_opened_at: string | null
           id: string
           improvements: string | null
+          last_reminder_at: string | null
+          open_count: number
+          opened_at: string | null
           recommended_actions: string | null
+          reminder_count: number
           root_cause: string | null
           score: number | null
           sent_at: string | null
@@ -96,13 +106,23 @@ export type Database = {
           agent_id: string
           case_id?: string | null
           category: string
+          click_count?: number
+          clicked_at?: string | null
           created_at?: string
           created_by: string
+          delivered_at?: string | null
           due_date?: string | null
+          email_error?: string | null
+          escalated_at?: string | null
           feedback_type?: Database["public"]["Enums"]["feedback_type"]
+          first_opened_at?: string | null
           id?: string
           improvements?: string | null
+          last_reminder_at?: string | null
+          open_count?: number
+          opened_at?: string | null
           recommended_actions?: string | null
+          reminder_count?: number
           root_cause?: string | null
           score?: number | null
           sent_at?: string | null
@@ -120,13 +140,23 @@ export type Database = {
           agent_id?: string
           case_id?: string | null
           category?: string
+          click_count?: number
+          clicked_at?: string | null
           created_at?: string
           created_by?: string
+          delivered_at?: string | null
           due_date?: string | null
+          email_error?: string | null
+          escalated_at?: string | null
           feedback_type?: Database["public"]["Enums"]["feedback_type"]
+          first_opened_at?: string | null
           id?: string
           improvements?: string | null
+          last_reminder_at?: string | null
+          open_count?: number
+          opened_at?: string | null
           recommended_actions?: string | null
+          reminder_count?: number
           root_cause?: string | null
           score?: number | null
           sent_at?: string | null
@@ -144,6 +174,38 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_email_events: {
+        Row: {
+          created_at: string
+          detail: Json
+          event_type: string
+          feedback_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          event_type: string
+          feedback_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          event_type?: string
+          feedback_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_email_events_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
             referencedColumns: ["id"]
           },
         ]
