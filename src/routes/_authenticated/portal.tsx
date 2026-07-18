@@ -9,6 +9,13 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
 
+function safeTimeAgo(v: string | null | undefined) {
+  if (!v) return "—";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? "—" : formatDistanceToNow(d, { addSuffix: true });
+}
+
+
 export const Route = createFileRoute("/_authenticated/portal")({
   component: PortalPage,
 });
