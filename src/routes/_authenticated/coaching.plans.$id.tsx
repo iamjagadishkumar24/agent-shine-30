@@ -11,10 +11,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Target, TrendingUp, Trash2, CheckCircle2, Archive } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const safeDate = (v: unknown) => {
+  if (!v) return "—";
+  const d = new Date(v as string);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+};
+const safeDateTime = (v: unknown) => {
+  if (!v) return "—";
+  const d = new Date(v as string);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" });
+};
 
 export const Route = createFileRoute("/_authenticated/coaching/plans/$id")({
   component: PlanDetail,
