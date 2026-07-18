@@ -46,6 +46,38 @@ function NewFeedback() {
     feedback_type: "constructive" as const, severity: "medium" as const,
     summary: "", strengths: "", improvements: "", recommended_actions: "", score: "",
   });
+  const [aiOpen, setAiOpen] = useState(false);
+  const [observations, setObservations] = useState("");
+  const runAi = useServerFn(generateFeedbackDraft);
+  const ai = useMutation({
+    mutationFn: async () => {
+      if (!form.agent_id) throw new Error("Pick an agent first");
+      if (observations.trim().length < 10) throw new Error("Add at least a sentence of observations");
+      return await runAi({
+        data: {
+          agent_id: form.agent_id,
+          category: form.category,
+          feedback_type: form.feedback_type,
+          severity: form.severity,
+          observations: observations.trim(),
+          score: form.score ? Number(form.score) : null,
+        },
+      });
+    },
+    onSuccess: (draft) => {
+      setForm((f) => ({
+        ...f,
+        title: draft.title || f.title,
+        summary: draft.summary || f.summary,
+        strengths: draft.strengths || f.strengths,
+        improvements: draft.improvements || f.improvements,
+        recommended_actions: draft.recommended_actions || f.recommended_actions,
+      }));
+      setAiOpen(false);
+      toast.success("AI draft applied — review before sending");
+    },
+    onError: (e: any) => toast.error(e.message ?? "AI draft failed"),
+  });
 
   const { data: agents = [] } = useQuery({
     queryKey: ["agents-picker"],
