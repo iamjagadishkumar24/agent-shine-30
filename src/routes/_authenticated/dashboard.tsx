@@ -237,7 +237,7 @@ function bucketByWeek<T extends { created_at: string }>(rows: T[], filter: (r: T
 function Dashboard() {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const { data, isLoading, isFetching, refetch } = useDashboardData();
+  const { data, isLoading, isFetching } = useDashboardData();
   const [range, setRange] = useState<"Daily" | "Weekly" | "Monthly">("Weekly");
 
   const agents = data?.agents ?? [];
@@ -251,7 +251,8 @@ function Dashboard() {
   const totalFeedback = feedback.length;
   const sent = feedback.filter((f) => ["sent", "acknowledged", "completed"].includes(f.status as string)).length;
   const pending = feedback.filter((f) => ["draft", "review"].includes(f.status as string)).length;
-  const completed = feedback.filter((f) => f.status === "completed" || f.status === "acknowledged").length;
+  const completed = feedback.filter((f) => f.status === "completed").length;
+  const acknowledged = feedback.filter((f) => f.status === "acknowledged" || f.status === "completed").length;
   const highPriority = feedback.filter((f) => f.severity === "critical" || f.severity === "high").length;
   const coachingCount = coaching.length;
   const openTasks = items.filter((i) => i.status === "open" || i.status === "in_progress").length;
@@ -265,7 +266,7 @@ function Dashboard() {
   const sparkAll = useMemo(() => bucketByWeek(feedback, () => true), [feedback]);
   const sparkSent = useMemo(() => bucketByWeek(feedback, (f) => ["sent", "acknowledged", "completed"].includes(f.status as string)), [feedback]);
   const sparkPending = useMemo(() => bucketByWeek(feedback, (f) => ["draft", "review"].includes(f.status as string)), [feedback]);
-  const sparkCompleted = useMemo(() => bucketByWeek(feedback, (f) => f.status === "completed" || f.status === "acknowledged"), [feedback]);
+  const sparkCompleted = useMemo(() => bucketByWeek(feedback, (f) => f.status === "completed"), [feedback]);
   const sparkHigh = useMemo(() => bucketByWeek(feedback, (f) => f.severity === "critical" || f.severity === "high"), [feedback]);
   const sparkCoaching = useMemo(() => bucketByWeek(coaching as any, () => true), [coaching]);
 
@@ -442,7 +443,6 @@ function Dashboard() {
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["dashboard"] });
-    refetch();
   };
 
   return (
@@ -502,8 +502,8 @@ function Dashboard() {
           <KpiCard label="Quality Score" value={`${qualityScore.toFixed(1)}%`} icon={Sparkles} tone="teal"
             tooltip="Blended score of QA average and completion rate." />
 
-          <KpiCard label="Average CSAT" value={avgCSAT.toFixed(1)} icon={Star} tone="amber"
-            tooltip="Average customer satisfaction score across evaluated feedback." />
+          <KpiCard label="Avg Feedback Score" value={`${avgCSAT.toFixed(1)}%`} icon={Star} tone="amber"
+            tooltip="Average score recorded on scored feedback (0-100)." />
           <KpiCard label="Average QA Score" value={`${avgQA.toFixed(1)}%`} icon={Activity} tone="indigo"
             drillTo="/agents"
             tooltip="Average QA score across all agents." />
