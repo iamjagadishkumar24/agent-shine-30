@@ -74,9 +74,26 @@ function FeedbackDetail() {
     return <div className="p-8 text-sm text-muted-foreground">Loading…</div>;
   }
 
-  const send = () => update.mutate({ status: "sent", sent_at: new Date().toISOString() }, { onSuccess: () => toast.success("Feedback sent") });
+  const sendEmailFn = useServerFn(sendFeedbackEmail);
+  const sendMutation = useMutation({
+    mutationFn: () => sendEmailFn({ data: { feedbackId: id } }),
+    onSuccess: (res: any) => {
+      if (res?.ok) toast.success("Feedback email sent");
+      else toast.warning(`Feedback marked as sent, but email failed: ${res?.error ?? "unknown"}`);
+      qc.invalidateQueries({ queryKey: ["feedback", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-list"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["feedback-events", id] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+  const send = () => sendMutation.mutate();
   const acknowledge = () => update.mutate({ status: "acknowledged", acknowledged_at: new Date().toISOString(), acknowledgement_note: ackNote }, { onSuccess: () => toast.success("Acknowledged") });
   const complete = () => update.mutate({ status: "completed" }, { onSuccess: () => toast.success("Marked complete") });
+
+  return renderView();
+
+  function renderView() {
 
   return (
     <div>
