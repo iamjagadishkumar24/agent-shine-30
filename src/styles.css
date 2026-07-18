@@ -152,3 +152,10 @@
   border: 1px solid var(--border);
 }
 
+
+/* Hide Lovable badge */
+#lovable-badge,
+[id^="lovable-badge"],
+a[href*="lovable.dev"][target="_blank"] {
+  display: none !important;
+}
