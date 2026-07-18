@@ -78,10 +78,23 @@ function AuthedLayout() {
   const collapsed = prefs.sidebarCollapsed;
   const { open: cmdOpen, setOpen: setCmdOpen } = useCommandPalette();
   const fetchProfile = useServerFn(getMyProfile);
+  const fetchRoles = useServerFn(getMyRoles);
   const { data: profile } = useQuery({
     queryKey: ["my-profile"],
     queryFn: () => fetchProfile(),
   });
+  const { data: roles = [] } = useQuery({
+    queryKey: ["my-roles"],
+    queryFn: () => fetchRoles(),
+    staleTime: 5 * 60_000,
+  });
+  const staffRoles = ["super_admin", "qa_admin", "team_manager"];
+  const isStaff = roles.some((r) => staffRoles.includes(r));
+  const NAV = (isStaff ? STAFF_NAV : AGENT_NAV) as ReadonlyArray<{
+    to: string;
+    label: string;
+    icon: typeof LayoutDashboard;
+  }>;
 
   const email = user?.email ?? "";
   const displayName = profile?.full_name || email.split("@")[0] || "User";
