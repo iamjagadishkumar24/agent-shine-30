@@ -65,6 +65,137 @@ export type Database = {
         }
         Relationships: []
       }
+      email_queue: {
+        Row: {
+          attachments: Json
+          attempts: number
+          created_at: string
+          created_by: string | null
+          delivered_at: string | null
+          feedback_id: string | null
+          html: string
+          id: string
+          kind: string
+          last_error: string | null
+          max_attempts: number
+          next_attempt_at: string
+          priority: number
+          provider: string | null
+          provider_message_id: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+          text_body: string
+          to_email: string
+          to_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json
+          attempts?: number
+          created_at?: string
+          created_by?: string | null
+          delivered_at?: string | null
+          feedback_id?: string | null
+          html: string
+          id?: string
+          kind?: string
+          last_error?: string | null
+          max_attempts?: number
+          next_attempt_at?: string
+          priority?: number
+          provider?: string | null
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+          text_body: string
+          to_email: string
+          to_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json
+          attempts?: number
+          created_at?: string
+          created_by?: string | null
+          delivered_at?: string | null
+          feedback_id?: string | null
+          html?: string
+          id?: string
+          kind?: string
+          last_error?: string | null
+          max_attempts?: number
+          next_attempt_at?: string
+          priority?: number
+          provider?: string | null
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          text_body?: string
+          to_email?: string
+          to_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_queue_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_settings: {
+        Row: {
+          confidentiality_notice: string | null
+          created_at: string
+          enabled: boolean
+          id: string
+          logo_url: string | null
+          provider: string
+          reply_to: string | null
+          sender_email: string | null
+          sender_name: string
+          signature_html: string | null
+          singleton: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          confidentiality_notice?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          logo_url?: string | null
+          provider?: string
+          reply_to?: string | null
+          sender_email?: string | null
+          sender_name?: string
+          signature_html?: string | null
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          confidentiality_notice?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          logo_url?: string | null
+          provider?: string
+          reply_to?: string | null
+          sender_email?: string | null
+          sender_name?: string
+          signature_html?: string | null
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           acknowledged_at: string | null
@@ -174,6 +305,47 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_attachments: {
+        Row: {
+          created_at: string
+          feedback_id: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          size_bytes: number | null
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          feedback_id: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          feedback_id?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_attachments_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
             referencedColumns: ["id"]
           },
         ]

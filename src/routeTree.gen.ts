@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedFeedbackRouteImport } from './routes/_authenticated/feedback'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCoachingRouteImport } from './routes/_authenticated/coaching'
@@ -20,6 +21,7 @@ import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedFeedbackNewRouteImport } from './routes/_authenticated/feedback.new'
 import { Route as AuthenticatedFeedbackIdRouteImport } from './routes/_authenticated/feedback.$id'
 import { Route as ApiPublicHooksFeedbackEscalationsRouteImport } from './routes/api/public/hooks/feedback-escalations'
+import { Route as ApiPublicHooksDrainEmailQueueRouteImport } from './routes/api/public/hooks/drain-email-queue'
 import { Route as ApiPublicTrackOpenIdRouteImport } from './routes/api/public/track/open.$id'
 import { Route as ApiPublicTrackClickIdRouteImport } from './routes/api/public/track/click.$id'
 
@@ -36,6 +38,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFeedbackRoute = AuthenticatedFeedbackRouteImport.update({
   id: '/feedback',
@@ -79,6 +86,12 @@ const ApiPublicHooksFeedbackEscalationsRoute =
     path: '/api/public/hooks/feedback-escalations',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksDrainEmailQueueRoute =
+  ApiPublicHooksDrainEmailQueueRouteImport.update({
+    id: '/api/public/hooks/drain-email-queue',
+    path: '/api/public/hooks/drain-email-queue',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicTrackOpenIdRoute = ApiPublicTrackOpenIdRouteImport.update({
   id: '/api/public/track/open/$id',
   path: '/api/public/track/open/$id',
@@ -98,8 +111,10 @@ export interface FileRoutesByFullPath {
   '/coaching': typeof AuthenticatedCoachingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/feedback': typeof AuthenticatedFeedbackRouteWithChildren
+  '/settings': typeof AuthenticatedSettingsRoute
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
   '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
@@ -112,8 +127,10 @@ export interface FileRoutesByTo {
   '/coaching': typeof AuthenticatedCoachingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/feedback': typeof AuthenticatedFeedbackRouteWithChildren
+  '/settings': typeof AuthenticatedSettingsRoute
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
   '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
@@ -128,8 +145,10 @@ export interface FileRoutesById {
   '/_authenticated/coaching': typeof AuthenticatedCoachingRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/feedback': typeof AuthenticatedFeedbackRouteWithChildren
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/_authenticated/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
   '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
@@ -144,8 +163,10 @@ export interface FileRouteTypes {
     | '/coaching'
     | '/dashboard'
     | '/feedback'
+    | '/settings'
     | '/feedback/$id'
     | '/feedback/new'
+    | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
     | '/api/public/track/click/$id'
     | '/api/public/track/open/$id'
@@ -158,8 +179,10 @@ export interface FileRouteTypes {
     | '/coaching'
     | '/dashboard'
     | '/feedback'
+    | '/settings'
     | '/feedback/$id'
     | '/feedback/new'
+    | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
     | '/api/public/track/click/$id'
     | '/api/public/track/open/$id'
@@ -173,8 +196,10 @@ export interface FileRouteTypes {
     | '/_authenticated/coaching'
     | '/_authenticated/dashboard'
     | '/_authenticated/feedback'
+    | '/_authenticated/settings'
     | '/_authenticated/feedback/$id'
     | '/_authenticated/feedback/new'
+    | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
     | '/api/public/track/click/$id'
     | '/api/public/track/open/$id'
@@ -184,6 +209,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicHooksDrainEmailQueueRoute: typeof ApiPublicHooksDrainEmailQueueRoute
   ApiPublicHooksFeedbackEscalationsRoute: typeof ApiPublicHooksFeedbackEscalationsRoute
   ApiPublicTrackClickIdRoute: typeof ApiPublicTrackClickIdRoute
   ApiPublicTrackOpenIdRoute: typeof ApiPublicTrackOpenIdRoute
@@ -211,6 +237,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/feedback': {
       id: '/_authenticated/feedback'
@@ -268,6 +301,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksFeedbackEscalationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/drain-email-queue': {
+      id: '/api/public/hooks/drain-email-queue'
+      path: '/api/public/hooks/drain-email-queue'
+      fullPath: '/api/public/hooks/drain-email-queue'
+      preLoaderRoute: typeof ApiPublicHooksDrainEmailQueueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/track/open/$id': {
       id: '/api/public/track/open/$id'
       path: '/api/public/track/open/$id'
@@ -306,6 +346,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCoachingRoute: typeof AuthenticatedCoachingRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFeedbackRoute: typeof AuthenticatedFeedbackRouteWithChildren
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -314,6 +355,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCoachingRoute: AuthenticatedCoachingRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFeedbackRoute: AuthenticatedFeedbackRouteWithChildren,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -323,6 +365,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicHooksDrainEmailQueueRoute: ApiPublicHooksDrainEmailQueueRoute,
   ApiPublicHooksFeedbackEscalationsRoute:
     ApiPublicHooksFeedbackEscalationsRoute,
   ApiPublicTrackClickIdRoute: ApiPublicTrackClickIdRoute,
