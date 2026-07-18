@@ -11,19 +11,33 @@ export type HealthCheck = {
   latencyMs?: number;
 };
 
-async function timed<T>(fn: () => Promise<T>): Promise<{ result: T; latencyMs: number }> {
+const CHECK_TIMEOUT_MS = 8000;
+const AI_GATEWAY_TIMEOUT_MS = 5000;
+
+function clampMsg(s: unknown, max = 240): string {
+  const str = typeof s === "string" ? s : s instanceof Error ? s.message : String(s ?? "");
+  return str.length > max ? str.slice(0, max) + "…" : str;
+}
+
+async function timed<T>(fn: () => Promise<T>, timeoutMs = CHECK_TIMEOUT_MS): Promise<{ result: T; latencyMs: number }> {
   const t = Date.now();
-  const result = await fn();
+  const result = await Promise.race<T>([
+    fn(),
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timed out after ${timeoutMs}ms`)), timeoutMs),
+    ),
+  ]);
   return { result, latencyMs: Date.now() - t };
 }
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
-  const roles = ["qa_admin", "super_admin"];
-  for (const r of roles) {
-    const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: r });
-    if (data) return;
+  const [{ data: isAdmin }, { data: isSuper }] = await Promise.all([
+    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "qa_admin" }),
+    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "super_admin" }),
+  ]);
+  if (!isAdmin && !isSuper) {
+    throw new Response("Admin role required", { status: 403 });
   }
-  throw new Error("Forbidden: admin required");
 }
 
 export const runHealthChecks = createServerFn({ method: "GET" })
