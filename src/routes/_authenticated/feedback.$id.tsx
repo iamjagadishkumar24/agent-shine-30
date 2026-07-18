@@ -35,12 +35,14 @@ function FeedbackDetail() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [ackNote, setAckNote] = useState("");
+  const [reviewNote, setReviewNote] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
   const sendEmailFn = useServerFn(sendFeedbackEmail);
   const uploadUrlFn = useServerFn(createUploadUrl);
   const deleteAttFn = useServerFn(deleteAttachment);
+  const transitionFn = useServerFn(transitionFeedback);
 
   const { data, isLoading } = useQuery({
     queryKey: ["feedback", id],
