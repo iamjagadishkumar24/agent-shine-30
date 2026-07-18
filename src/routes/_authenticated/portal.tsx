@@ -56,6 +56,9 @@ function PortalPage() {
               "Your personal quality feedback"
             : "Your personal quality feedback"
         }
+      />
+
+
 
       <div className="mx-auto max-w-5xl px-8 pb-12 pt-6 animate-in fade-in duration-300 space-y-6">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
