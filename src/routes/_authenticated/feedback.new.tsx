@@ -136,8 +136,8 @@ function NewFeedback() {
             <Button variant="outline" size="sm" onClick={() => setAiOpen(true)} disabled={create.isPending}>
               <Sparkles className="mr-1.5 h-3.5 w-3.5" /> AI draft
             </Button>
-            <Button variant="outline" size="sm" onClick={() => create.mutate("draft")} disabled={create.isPending}>Save draft</Button>
-            <Button size="sm" onClick={() => create.mutate("sent")} disabled={create.isPending}>Send now</Button>
+            <Button variant="outline" size="sm" onClick={() => create.mutate("draft")} disabled={create.isPending || !form.title.trim() || !form.agent_id}>Save draft</Button>
+            <Button size="sm" onClick={() => create.mutate("sent")} disabled={create.isPending || !canSubmit} title={!canSubmit ? "Complete the required fields to send" : undefined}>Send now</Button>
           </div>
         }
       />
