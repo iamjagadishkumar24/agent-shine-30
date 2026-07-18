@@ -119,8 +119,8 @@ function PlansList() {
                       <Progress value={pct} className="h-1.5" />
                     </div>
                     <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground">
-                      <span>Started {new Date(p.start_date).toLocaleDateString()}</span>
-                      {p.target_date && <span>· Target {new Date(p.target_date).toLocaleDateString()}</span>}
+                      <span>Started {safeDate(p.start_date)}</span>
+                      {p.target_date && <span>· Target {safeDate(p.target_date)}</span>}
                     </div>
                   </Card>
                 </Link>
