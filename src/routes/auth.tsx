@@ -8,12 +8,13 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Sparkles, Loader2 } from "lucide-react";
 
+type AuthSearch = { next?: string };
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    next: typeof s.next === "string" ? s.next : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): AuthSearch =>
+    typeof s.next === "string" ? { next: s.next } : {},
   component: AuthPage,
 });
+
 
 // Only accept same-origin relative paths so OAuth returns cannot bounce off-site.
 function safeNext(next: string | undefined): string {
