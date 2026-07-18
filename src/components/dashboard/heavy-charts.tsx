@@ -172,12 +172,13 @@ export const CategoryDonutCard = memo(function CategoryDonutCard({
 
 // ---------------------------------------------------------------------------
 export const QaGaugeCard = memo(function QaGaugeCard({ avgQA }: { avgQA: number }) {
+  const safeQA = Number.isFinite(avgQA) ? Math.min(100, Math.max(0, avgQA)) : 0;
   return (
     <Card className="col-span-12 rounded-2xl border-border/60 bg-card/60 p-6 backdrop-blur-xl md:col-span-6 xl:col-span-4">
       <div className="text-sm font-semibold">QA Score</div>
       <div className="relative mt-4 h-52">
         <ResponsiveContainer>
-          <RadialBarChart innerRadius="70%" outerRadius="100%" data={[{ name: "qa", value: avgQA, fill: "url(#gauge-grad)" }]} startAngle={180} endAngle={0}>
+          <RadialBarChart innerRadius="70%" outerRadius="100%" data={[{ name: "qa", value: safeQA, fill: "url(#gauge-grad)" }]} startAngle={180} endAngle={0}>
             <defs>
               <linearGradient id="gauge-grad" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="oklch(0.66 0.22 20)" />
@@ -190,7 +191,7 @@ export const QaGaugeCard = memo(function QaGaugeCard({ avgQA }: { avgQA: number 
           </RadialBarChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-x-0 bottom-6 grid place-items-center">
-          <div className="text-3xl font-semibold tabular-nums">{avgQA.toFixed(1)}%</div>
+          <div className="text-3xl font-semibold tabular-nums">{safeQA.toFixed(1)}%</div>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Average QA</div>
         </div>
       </div>
@@ -233,17 +234,20 @@ export const EmailDonutCard = memo(function EmailDonutCard({
           </div>
         </div>
         <div className="min-w-0 flex-1 space-y-2 text-xs">
-          {emailSlices.map((s) => (
-            <div key={s.name} className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
-                <span className="text-muted-foreground">{s.name}</span>
+          {emailSlices.map((s) => {
+            const pct = totalEmails > 0 ? (s.value / totalEmails) * 100 : 0;
+            return (
+              <div key={s.name} className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
+                  <span className="text-muted-foreground">{s.name}</span>
+                </div>
+                <span className="tabular-nums">
+                  {s.value} <span className="text-muted-foreground">({pct.toFixed(1)}%)</span>
+                </span>
               </div>
-              <span className="tabular-nums">
-                {s.value} <span className="text-muted-foreground">({((s.value / totalEmails) * 100).toFixed(1)}%)</span>
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </Card>
@@ -281,29 +285,34 @@ export const ActivityHeatmapCard = memo(function ActivityHeatmapCard({
             ))}
           </div>
           <TooltipProvider delayDuration={100}>
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, di) => (
-              <div key={day} className="mt-1 flex items-center gap-1">
-                <div className="w-8 text-[10px] text-muted-foreground">{day}</div>
-                {heatmap[di].map((v, hi) => {
-                  const intensity = v / heatMax;
-                  return (
-                    <UITooltip key={hi}>
-                      <TooltipTrigger asChild>
-                        <div
-                          className="h-4 w-4 rounded-sm ring-1 ring-inset ring-border/30 transition hover:scale-110"
-                          style={{
-                            background: v === 0 ? "var(--muted)" : `oklch(0.65 0.20 285 / ${0.2 + intensity * 0.8})`,
-                          }}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="text-xs">
-                        {day} {hi}:00 — {v} feedback
-                      </TooltipContent>
-                    </UITooltip>
-                  );
-                })}
-              </div>
-            ))}
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, di) => {
+              const row = heatmap[di] ?? [];
+              const safeMax = heatMax > 0 ? heatMax : 1;
+              return (
+                <div key={day} className="mt-1 flex items-center gap-1">
+                  <div className="w-8 text-[10px] text-muted-foreground">{day}</div>
+                  {Array.from({ length: 24 }, (_, hi) => {
+                    const v = row[hi] ?? 0;
+                    const intensity = v / safeMax;
+                    return (
+                      <UITooltip key={hi}>
+                        <TooltipTrigger asChild>
+                          <div
+                            className="h-4 w-4 rounded-sm ring-1 ring-inset ring-border/30 transition hover:scale-110"
+                            style={{
+                              background: v === 0 ? "var(--muted)" : `oklch(0.65 0.20 285 / ${0.2 + intensity * 0.8})`,
+                            }}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs">
+                          {day} {hi}:00 — {v} feedback
+                        </TooltipContent>
+                      </UITooltip>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </TooltipProvider>
         </div>
       </div>
