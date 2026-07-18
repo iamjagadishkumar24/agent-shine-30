@@ -251,7 +251,11 @@ function SchedulesPage() {
                 <Label>Recipients (comma-separated emails)</Label>
                 <Input
                   value={(editing.recipients ?? []).join(", ")}
-                  onChange={(e) => setEditing({ ...editing, recipients: e.target.value.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean) })}
+                  onChange={(e) => {
+                    const parts = e.target.value.split(/[,\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean);
+                    const unique = Array.from(new Set(parts)).slice(0, 25);
+                    setEditing({ ...editing, recipients: unique });
+                  }}
                   placeholder="ops@company.com, leadership@company.com"
                 />
               </div>
