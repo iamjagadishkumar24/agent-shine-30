@@ -498,6 +498,22 @@ function Dashboard() {
       </div>
 
       <div className="mx-auto max-w-[1600px] px-8 pb-16 pt-6 [&_>_*]:animate-in [&_>_*]:fade-in [&_>_*]:duration-300">
+        {isError && (
+          <Card className="mb-5 rounded-xl border-destructive/40 bg-destructive/5 p-4">
+            <div className="flex items-start gap-3">
+              <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium text-destructive">Dashboard failed to load</div>
+                <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                  {(error as any)?.message ?? "Unable to fetch data. Please retry."}
+                </div>
+              </div>
+              <Button size="sm" variant="outline" className="h-7 gap-1.5" onClick={() => refetch()}>
+                <RefreshCw className="h-3 w-3" /> Retry
+              </Button>
+            </div>
+          </Card>
+        )}
         {/* KPI GRID */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {isLoading && !data && Array.from({ length: 12 }).map((_, i) => <KpiCardSkeleton key={i} />)}
