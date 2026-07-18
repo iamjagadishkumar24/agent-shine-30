@@ -108,8 +108,8 @@ function ReportsPage() {
       Title: f.title,
       Agent: f.agent?.full_name ?? "",
       Status: f.status,
-      Sent: f.sent_at ? new Date(f.sent_at).toLocaleString() : "",
-      Acknowledged: f.acknowledged_at ? new Date(f.acknowledged_at).toLocaleString() : "",
+      Sent: safeDateTime(f.sent_at),
+      Acknowledged: safeDateTime(f.acknowledged_at),
       Severity: f.severity ?? "",
     }));
   };
