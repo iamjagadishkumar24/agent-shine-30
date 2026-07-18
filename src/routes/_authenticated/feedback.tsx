@@ -19,6 +19,8 @@ const STATUS_TONE: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
   review: "bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.78_0.16_75)]",
   approved: "bg-primary/15 text-primary",
+  rejected: "bg-destructive/15 text-destructive",
+  revision_required: "bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.78_0.16_75)]",
   sent: "bg-primary/15 text-primary",
   acknowledged: "bg-[oklch(0.72_0.16_160)]/15 text-[oklch(0.72_0.16_160)]",
   completed: "bg-[oklch(0.72_0.16_160)]/15 text-[oklch(0.72_0.16_160)]",
