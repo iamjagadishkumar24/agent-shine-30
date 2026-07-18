@@ -38,17 +38,19 @@ export const updateMyProfile = createServerFn({ method: "POST" })
       const { error } = await context.supabase.from("profiles").insert({
         id: context.userId,
         ...data,
+        preferences: (data.preferences ?? {}) as never,
       });
       if (error) throw error;
     } else {
       const { error } = await context.supabase
         .from("profiles")
-        .update(data)
+        .update({ ...data, preferences: data.preferences as never })
         .eq("id", context.userId);
       if (error) throw error;
     }
     return { ok: true };
   });
+
 
 export const changeMyPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
