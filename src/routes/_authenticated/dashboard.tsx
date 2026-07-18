@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ import {
   Send,
   Sparkles,
   Clock,
-  AlertTriangle,
   GraduationCap,
   Mail,
   CheckCircle2,
@@ -34,29 +33,25 @@ import {
   CalendarPlus,
   Activity,
 } from "lucide-react";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  PieChart,
-  Pie,
-  Cell,
-  RadialBarChart,
-  RadialBar,
-  PolarAngleAxis,
-  LineChart,
-  Line,
-} from "recharts";
+import { LineChart, Line, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format, isAfter, subDays } from "date-fns";
+import { ChartSkeleton, KpiCardSkeleton, ListRowSkeleton } from "@/components/ui/skeleton-blocks";
+
+// Lazy-loaded heavy chart components — split into an async chunk so the
+// dashboard shell (KPIs + lists) renders immediately with skeletons.
+const HeavyCharts = {
+  Trend: lazy(() => import("@/components/dashboard/heavy-charts").then((m) => ({ default: m.TrendChartCard }))),
+  Category: lazy(() => import("@/components/dashboard/heavy-charts").then((m) => ({ default: m.CategoryDonutCard }))),
+  Gauge: lazy(() => import("@/components/dashboard/heavy-charts").then((m) => ({ default: m.QaGaugeCard }))),
+  Email: lazy(() => import("@/components/dashboard/heavy-charts").then((m) => ({ default: m.EmailDonutCard }))),
+  Heatmap: lazy(() => import("@/components/dashboard/heavy-charts").then((m) => ({ default: m.ActivityHeatmapCard }))),
+};
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
+
 
 // ---------------------------------------------------------------------------
 // DATA
