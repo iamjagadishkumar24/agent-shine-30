@@ -53,8 +53,8 @@ export const runHealthChecks = createServerFn({ method: "GET" })
     const tables = ["profiles", "agents", "feedback", "user_roles", "notifications", "coaching_sessions"] as const;
     for (const t of tables) {
       try {
-        const { result, latencyMs } = await timed(() =>
-          supabase.from(t).select("*", { count: "exact", head: true }),
+        const { result, latencyMs } = await timed(async () =>
+          await supabase.from(t).select("*", { count: "exact", head: true }),
         );
         const err = (result as any).error;
         checks.push({
