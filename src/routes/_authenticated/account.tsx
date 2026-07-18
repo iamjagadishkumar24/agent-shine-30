@@ -211,7 +211,7 @@ function SecurityTab() {
         <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
       </div>
       <div className="flex justify-end">
-        <Button onClick={submit} disabled={saving}>
+        <Button onClick={submit} disabled={saving || pw.length < 8 || pw !== confirm}>
           {saving && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
           Update password
         </Button>
