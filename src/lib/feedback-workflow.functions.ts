@@ -103,7 +103,7 @@ export const transitionFeedback = createServerFn({ method: "POST" })
 
     const { error: updErr } = await supabase
       .from("feedback")
-      .update(patch)
+      .update(patch as any)
       .eq("id", data.feedbackId);
     if (updErr) throw new Error(updErr.message);
 
