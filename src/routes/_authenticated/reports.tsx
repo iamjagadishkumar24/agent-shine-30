@@ -13,6 +13,19 @@ export const Route = createFileRoute("/_authenticated/reports")({
   component: ReportsPage,
 });
 
+function safeDateTime(v: string | null | undefined): string {
+  if (!v) return "";
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? "" : d.toLocaleString();
+}
+
+function monthKey(v: string | null | undefined): string | null {
+  if (!v) return null;
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 function ReportsPage() {
   const [busy, setBusy] = useState<string | null>(null);
 
