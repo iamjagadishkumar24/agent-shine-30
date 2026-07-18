@@ -124,6 +124,43 @@ function FeedbackDetail() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const transitionMutation = useMutation({
+    mutationFn: (payload: Parameters<typeof transitionFn>[0]["data"]) =>
+      transitionFn({ data: payload }),
+    onSuccess: (_, vars) => {
+      const label =
+        vars.type === "submit"
+          ? "Submitted for review"
+          : vars.type === "approve"
+            ? "Approved"
+            : vars.type === "reject"
+              ? "Rejected"
+              : "Revision requested";
+      toast.success(label);
+      setReviewNote("");
+      qc.invalidateQueries({ queryKey: ["feedback", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-audit", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-list"] });
+      qc.invalidateQueries({ queryKey: ["approval-queue"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const { data: auditLog = [] } = useQuery({
+    queryKey: ["feedback-audit", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("feedback_audit_log")
+        .select("*")
+        .eq("feedback_id", id)
+        .order("created_at", { ascending: false })
+        .limit(30);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const uploadFile = async (file: File) => {
     if (file.size > 20 * 1024 * 1024) {
       toast.error("Max file size is 20 MB");
