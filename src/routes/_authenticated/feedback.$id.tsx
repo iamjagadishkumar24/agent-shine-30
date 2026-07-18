@@ -14,6 +14,13 @@ import { formatDistanceToNow } from "date-fns";
 import { sendFeedbackEmail } from "@/lib/feedback-email.functions";
 import { createUploadUrl, deleteAttachment } from "@/lib/feedback-attachments.functions";
 import { transitionFeedback } from "@/lib/feedback-workflow.functions";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+
+function safeTimeAgo(v: string | null | undefined): string | null {
+  if (!v) return null;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? null : formatDistanceToNow(d, { addSuffix: true });
+}
 
 export const Route = createFileRoute("/_authenticated/feedback/$id")({
   component: FeedbackDetail,
@@ -110,11 +117,8 @@ function FeedbackDetail() {
     onError: (e: any) => toast.error(e.message ?? "Failed to delete"),
   });
 
-  const confirmDelete = () => {
-    if (confirm(`Delete "${data?.title ?? "this feedback"}"? This cannot be undone.`)) {
-      remove.mutate();
-    }
-  };
+  // Delete confirmation is handled by AlertDialog (see actions area).
+
 
   const sendMutation = useMutation({
     mutationFn: () => sendEmailFn({ data: { feedbackId: id } }),
@@ -200,8 +204,24 @@ function FeedbackDetail() {
   });
 
   if (isLoading || !data) {
-    return <div className="p-8 text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div className="mx-auto max-w-6xl px-8 pt-8 space-y-4">
+        <div className="h-8 w-64 rounded-md bg-muted animate-pulse" />
+        <div className="h-4 w-48 rounded-md bg-muted animate-pulse" />
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="h-40 rounded-xl border border-border/60 bg-card/40 animate-pulse" />
+            <div className="h-40 rounded-xl border border-border/60 bg-card/40 animate-pulse" />
+          </div>
+          <div className="space-y-4">
+            <div className="h-32 rounded-xl border border-border/60 bg-card/40 animate-pulse" />
+            <div className="h-32 rounded-xl border border-border/60 bg-card/40 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
   }
+
 
   const send = () => sendMutation.mutate();
   const acknowledge = () => update.mutate({ status: "acknowledged", acknowledged_at: new Date().toISOString(), acknowledgement_note: ackNote }, { onSuccess: () => toast.success("Acknowledged") });
@@ -234,7 +254,23 @@ function FeedbackDetail() {
                 <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Complete
               </Button>
             )}
-            <Button variant="ghost" size="icon" onClick={confirmDelete} disabled={remove.isPending} className="text-muted-foreground hover:text-destructive" aria-label="Delete feedback"><Trash2 className="h-3.5 w-3.5" /></Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" disabled={remove.isPending} className="text-muted-foreground hover:text-destructive" aria-label="Delete feedback"><Trash2 className="h-3.5 w-3.5" /></Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this feedback?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    "{data.title}" will be permanently removed along with its email history. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => remove.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         }
       />
@@ -312,7 +348,7 @@ function FeedbackDetail() {
                 <p className="mt-2 whitespace-pre-wrap text-sm">{data.review_note}</p>
                 {data.reviewed_at && (
                   <div className="mt-2 text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(data.reviewed_at), { addSuffix: true })}
+                    {(safeTimeAgo(data.reviewed_at) ?? "—")}
                   </div>
                 )}
               </Card>
@@ -366,7 +402,7 @@ function FeedbackDetail() {
             <Card className="rounded-xl border-border/60 bg-card/60 p-6">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Agent acknowledgement</div>
               <p className="mt-2 text-sm">{data.acknowledgement_note}</p>
-              {data.acknowledged_at && <div className="mt-2 text-xs text-muted-foreground">Acknowledged {formatDistanceToNow(new Date(data.acknowledged_at), { addSuffix: true })}</div>}
+              {data.acknowledged_at && <div className="mt-2 text-xs text-muted-foreground">Acknowledged {(safeTimeAgo(data.acknowledged_at) ?? "—")}</div>}
             </Card>
           )}
         </div>
@@ -401,7 +437,7 @@ function FeedbackDetail() {
               {(data.reminder_count ?? 0) > 0 && (
                 <li className="flex items-center gap-2 text-[oklch(0.78_0.16_75)]">
                   <AlertTriangle className="h-3.5 w-3.5" />
-                  <span>Escalation reminder sent {data.reminder_count}× {data.last_reminder_at ? `· ${formatDistanceToNow(new Date(data.last_reminder_at), { addSuffix: true })}` : ""}</span>
+                  <span>Escalation reminder sent {data.reminder_count}× {data.last_reminder_at ? `· ${(safeTimeAgo(data.last_reminder_at) ?? "—")}` : ""}</span>
                 </li>
               )}
               {data.email_error && (
@@ -428,12 +464,12 @@ function FeedbackDetail() {
               {(events as any[]).map((e) => (
                 <li key={e.id} className="flex items-center justify-between">
                   <span className="capitalize">{String(e.event_type).replace(/_/g, " ")}</span>
-                  <span className="text-muted-foreground">{formatDistanceToNow(new Date(e.created_at), { addSuffix: true })}</span>
+                  <span className="text-muted-foreground">{(safeTimeAgo(e.created_at) ?? "—")}</span>
                 </li>
               ))}
               {events.length === 0 && (
                 <li className="text-muted-foreground">
-                  Created {formatDistanceToNow(new Date(data.created_at), { addSuffix: true })}
+                  Created {(safeTimeAgo(data.created_at) ?? "—")}
                 </li>
               )}
             </ul>
@@ -459,7 +495,7 @@ function FeedbackDetail() {
                   </div>
                   {a.comment && <div className="mt-0.5 text-muted-foreground whitespace-pre-wrap">{a.comment}</div>}
                   <div className="mt-0.5 text-[10px] text-muted-foreground/70">
-                    {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
+                    {(safeTimeAgo(a.created_at) ?? "—")}
                   </div>
                 </li>
               ))}
@@ -490,7 +526,7 @@ function DeliveryRow({ icon, label, at, extra }: { icon: React.ReactNode; label:
       <span className={cn("grid h-5 w-5 place-items-center rounded-full", pending ? "bg-muted" : "bg-primary/15 text-primary")}>{icon}</span>
       <span className="flex-1">{label}</span>
       <span className="tabular-nums text-muted-foreground">
-        {at ? formatDistanceToNow(new Date(at), { addSuffix: true }) : "—"}
+        {at ? (safeTimeAgo(at) ?? "—") : "—"}
         {extra ? ` · ${extra}` : ""}
       </span>
     </li>
