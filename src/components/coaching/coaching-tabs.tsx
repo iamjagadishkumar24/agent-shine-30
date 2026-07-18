@@ -10,14 +10,23 @@ export function CoachingTabs() {
   ] as const;
   return (
     <div className="mx-auto max-w-6xl px-8 pt-2">
-      <div className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/30 p-0.5 text-xs">
+      <div
+        role="tablist"
+        aria-label="Coaching sections"
+        className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/30 p-0.5 text-xs"
+      >
         {tabs.map((t) => (
           <Link
             key={t.to}
             to={t.to}
+            role="tab"
+            aria-selected={t.active}
+            aria-current={t.active ? "page" : undefined}
             className={cn(
-              "rounded px-2.5 py-1 transition",
-              t.active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+              "rounded px-2.5 py-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              t.active
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {t.label}

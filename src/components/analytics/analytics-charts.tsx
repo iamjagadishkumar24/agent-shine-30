@@ -31,6 +31,14 @@ const SEVERITY_COLORS: Record<string, string> = {
   unset: "oklch(0.55 0.02 260)",
 };
 
+function EmptyState({ label }: { label: string }) {
+  return (
+    <div className="grid h-full w-full place-items-center text-xs text-muted-foreground">
+      {label}
+    </div>
+  );
+}
+
 function AnalyticsCharts({
   monthly,
   byType,
@@ -40,6 +48,16 @@ function AnalyticsCharts({
   byType: Array<{ label: string; value: number }>;
   bySeverity: Array<{ label: string; value: number }>;
 }) {
+  const safeMonthly = (monthly ?? []).map((m) => ({
+    label: String(m?.label ?? ""),
+    count: Number.isFinite(m?.count) ? m.count : 0,
+    avgScore: Number.isFinite(m?.avgScore) ? Math.max(0, Math.min(5, m.avgScore)) : 0,
+  }));
+  const safeByType = (byType ?? []).filter((r) => r && Number.isFinite(r.value) && r.value > 0);
+  const safeBySeverity = (bySeverity ?? []).filter(
+    (r) => r && Number.isFinite(r.value) && r.value > 0,
+  );
+  const hasMonthly = safeMonthly.some((m) => m.count > 0 || m.avgScore > 0);
   return (
     <div className="space-y-4">
       <Card className="rounded-2xl border-border/60 bg-card/60 p-6 backdrop-blur-xl">
