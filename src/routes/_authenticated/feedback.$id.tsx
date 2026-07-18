@@ -143,14 +143,7 @@ function FeedbackDetail() {
     }
   };
 
-      qc.invalidateQueries({ queryKey: ["feedback-attachments", id] });
-    } catch (e: any) {
-      toast.error(e.message ?? "Upload failed");
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = "";
-    }
-  };
+
 
   const removeAttachment = useMutation({
     mutationFn: (attId: string) => deleteAttFn({ data: { id: attId } }),
