@@ -153,9 +153,20 @@
 }
 
 
-/* Hide Lovable badge */
+/* Hide Lovable badge — target the wrapper so layout stays stable regardless of inner markup */
 #lovable-badge,
 [id^="lovable-badge"],
-a[href*="lovable.dev"][target="_blank"] {
+[class*="lovable-badge"],
+[data-lovable-badge],
+[aria-label*="Lovable" i],
+:has(> a[href*="lovable.dev"]),
+a[href*="lovable.dev"] {
   display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
+
