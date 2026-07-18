@@ -253,17 +253,25 @@ function AddGoalDialog({ planId, onDone }: { planId: string; onDone: () => void 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", metric: "", target_value: "", target_date: "", weight: "1" });
 
+  const titleTrim = form.title.trim();
+  const targetVal = form.target_value === "" ? null : Number(form.target_value);
+  const weightVal = form.weight === "" ? 1 : Number(form.weight);
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const targetInvalid = form.target_value !== "" && (!Number.isFinite(targetVal!) || (targetVal as number) < 0);
+  const weightInvalid = !Number.isFinite(weightVal) || weightVal < 1 || weightVal > 10;
+  const canSubmit = titleTrim.length >= 3 && !targetInvalid && !weightInvalid;
+
   const create = useMutation({
     mutationFn: async () => {
-      if (form.title.trim().length < 3) throw new Error("Title too short");
+      if (!canSubmit) throw new Error("Check the form fields");
       const payload: any = {
         plan_id: planId,
-        title: form.title.trim(),
+        title: titleTrim,
         description: form.description.trim() || null,
         metric: form.metric.trim() || null,
-        target_value: form.target_value ? Number(form.target_value) : null,
+        target_value: targetVal,
         target_date: form.target_date || null,
-        weight: Number(form.weight) || 1,
+        weight: weightVal,
       };
       const { error } = await supabase.from("coaching_goals").insert(payload);
       if (error) throw error;
@@ -287,8 +295,17 @@ function AddGoalDialog({ planId, onDone }: { planId: string; onDone: () => void 
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="g-title">Title</Label>
-            <Input id="g-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-              placeholder="e.g. Reach 90% CSAT" />
+            <Input
+              id="g-title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="e.g. Reach 90% CSAT"
+              aria-invalid={titleTrim.length > 0 && titleTrim.length < 3}
+              className={cn(titleTrim.length > 0 && titleTrim.length < 3 && "border-destructive/60")}
+            />
+            {titleTrim.length > 0 && titleTrim.length < 3 && (
+              <p className="text-xs text-destructive">Title must be at least 3 characters</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="g-desc">Description</Label>
@@ -303,29 +320,50 @@ function AddGoalDialog({ planId, onDone }: { planId: string; onDone: () => void 
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="g-target">Target value</Label>
-              <Input id="g-target" type="number" value={form.target_value}
-                onChange={(e) => setForm({ ...form, target_value: e.target.value })} placeholder="90" />
+              <Input
+                id="g-target"
+                type="number"
+                min={0}
+                step="any"
+                value={form.target_value}
+                onChange={(e) => setForm({ ...form, target_value: e.target.value })}
+                placeholder="90"
+                aria-invalid={targetInvalid}
+                className={cn(targetInvalid && "border-destructive/60")}
+              />
+              {targetInvalid && <p className="text-xs text-destructive">Must be a number ≥ 0</p>}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="g-date">Target date</Label>
-              <Input id="g-date" type="date" value={form.target_date}
+              <Input id="g-date" type="date" min={todayISO} value={form.target_date}
                 onChange={(e) => setForm({ ...form, target_date: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="g-weight">Weight</Label>
-              <Input id="g-weight" type="number" min={1} max={10} value={form.weight}
-                onChange={(e) => setForm({ ...form, weight: e.target.value })} />
+              <Label htmlFor="g-weight">Weight (1–10)</Label>
+              <Input
+                id="g-weight"
+                type="number"
+                min={1}
+                max={10}
+                step={1}
+                value={form.weight}
+                onChange={(e) => setForm({ ...form, weight: e.target.value })}
+                aria-invalid={weightInvalid}
+                className={cn(weightInvalid && "border-destructive/60")}
+              />
+              {weightInvalid && <p className="text-xs text-destructive">Between 1 and 10</p>}
             </div>
           </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button size="sm" onClick={() => create.mutate()} disabled={create.isPending}>
+          <Button size="sm" onClick={() => create.mutate()} disabled={!canSubmit || create.isPending}>
             {create.isPending ? "Adding…" : "Add goal"}
           </Button>
         </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );
