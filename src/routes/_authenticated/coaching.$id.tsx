@@ -144,20 +144,28 @@ function SessionDetail() {
   });
 
   if (isLoading || !session) {
-    return <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div>
+        <PageHeader title="Coaching session" subtitle="Loading…" />
+        <DetailSkeleton />
+      </div>
+    );
   }
 
   const s = session as any;
   const done = items.filter((i: any) => i.status === "done").length;
   const isActive = s.status === "scheduled";
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const canAddItem = newItem.trim().length >= 3;
 
   return (
     <div>
       <PageHeader
-        title={s.topic}
-        subtitle={`with ${s.agent?.full_name ?? "—"} · ${new Date(s.scheduled_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`}
+        title={s.topic || "Coaching session"}
+        subtitle={`with ${s.agent?.full_name ?? "—"} · ${safeDateTime(s.scheduled_at)}`}
         actions={
           <Link to="/coaching">
+
             <Button variant="ghost" size="sm" className="h-8 gap-1"><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
           </Link>
         }
