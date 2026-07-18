@@ -29,7 +29,7 @@ function monthKey(v: string | null | undefined): string | null {
 function ReportsPage() {
   const [busy, setBusy] = useState<string | null>(null);
 
-  const { data: agents = [] } = useQuery({
+  const { data: agents = [], isLoading: agentsLoading } = useQuery({
     queryKey: ["report-agents"],
     queryFn: async () => {
       const { data, error } = await supabase.from("agents")
@@ -39,7 +39,7 @@ function ReportsPage() {
     },
   });
 
-  const { data: feedback = [] } = useQuery({
+  const { data: feedback = [], isLoading: feedbackLoading } = useQuery({
     queryKey: ["report-feedback"],
     queryFn: async () => {
       const { data, error } = await supabase.from("feedback")
@@ -49,6 +49,8 @@ function ReportsPage() {
       return data;
     },
   });
+
+  const dataLoading = agentsLoading || feedbackLoading;
 
   // Agent performance rows
   const perfRows = () => {
