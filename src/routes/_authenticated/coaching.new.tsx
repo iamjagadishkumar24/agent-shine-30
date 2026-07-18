@@ -71,6 +71,7 @@ function NewSession() {
         duration_minutes: parsed.duration_minutes,
         notes: parsed.notes || null,
         feedback_id: parsed.feedback_id || null,
+        plan_id: parsed.plan_id || null,
       };
       const { data: user } = await supabase.auth.getUser();
       if (user.user) payload.coach_id = user.user.id;
