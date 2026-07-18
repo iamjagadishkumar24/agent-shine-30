@@ -38,6 +38,24 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format, isAfter, subDays } from "date-fns";
 import { ChartSkeleton, KpiCardSkeleton, ListRowSkeleton } from "@/components/ui/skeleton-blocks";
 
+// Null-safe date helpers — dashboard aggregates rows from multiple tables where
+// timestamps may be null or malformed; formatting invalid dates throws.
+function parseDate(iso: unknown): Date | null {
+  if (!iso || typeof iso !== "string") return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+function safeFormat(iso: unknown, fmt: string, fallback = "—") {
+  const d = parseDate(iso);
+  if (!d) return fallback;
+  try { return format(d, fmt); } catch { return fallback; }
+}
+function safeTimeAgo(iso: unknown, fallback = "") {
+  const d = parseDate(iso);
+  if (!d) return fallback;
+  try { return formatDistanceToNow(d, { addSuffix: false }); } catch { return fallback; }
+}
+
 // Lazy-loaded heavy chart components — split into an async chunk so the
 // dashboard shell (KPIs + lists) renders immediately with skeletons.
 const HeavyCharts = {
