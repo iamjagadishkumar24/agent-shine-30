@@ -81,8 +81,8 @@ function ReportsPage() {
   const trendRows = () => {
     const buckets = new Map<string, { total: number; sent: number; ack: number; sumScore: number; scored: number }>();
     for (const f of feedback as any[]) {
-      const d = new Date(f.created_at);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const key = monthKey(f.created_at);
+      if (!key) continue;
       if (!buckets.has(key)) buckets.set(key, { total: 0, sent: 0, ack: 0, sumScore: 0, scored: 0 });
       const b = buckets.get(key)!;
       b.total += 1;
