@@ -44,7 +44,7 @@ function FeedbackDetail() {
   });
 
   const update = useMutation({
-    mutationFn: async (patch: Record<string, any>) => {
+    mutationFn: async (patch: import("@/integrations/supabase/types").TablesUpdate<"feedback">) => {
       const { error } = await supabase.from("feedback").update(patch).eq("id", id);
       if (error) throw error;
     },
