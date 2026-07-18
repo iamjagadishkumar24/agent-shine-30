@@ -470,7 +470,7 @@ function GoalRow({ goal, onUpdated }: { goal: any; onUpdated: () => void }) {
                 {history.map((h: any) => (
                   <li key={h.id} className="flex items-start gap-2 text-xs">
                     <span className="text-muted-foreground w-32 shrink-0">
-                      {new Date(h.recorded_at).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
+                      {safeDateTime(h.recorded_at)}
                     </span>
                     {h.value !== null && h.value !== undefined && (
                       <span className="font-medium tabular-nums w-16 shrink-0">{h.value}</span>
