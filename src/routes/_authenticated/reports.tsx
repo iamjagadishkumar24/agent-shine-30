@@ -1,10 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, FileSpreadsheet, Users, TrendingUp, Mail } from "lucide-react";
+import { FileText, FileSpreadsheet, Users, TrendingUp, Mail, CalendarClock } from "lucide-react";
 import { toCsv, toPdf } from "@/lib/reports";
 import { useState } from "react";
 import { toast } from "sonner";
