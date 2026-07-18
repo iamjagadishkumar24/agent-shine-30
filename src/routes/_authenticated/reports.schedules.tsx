@@ -66,6 +66,10 @@ function SchedulesPage() {
   const { data: schedules = [], isLoading } = useQuery({
     queryKey: ["report-schedules"],
     queryFn: () => list(),
+    select: (rows: any) =>
+      [...(rows as Schedule[])].sort(
+        (a, b) => new Date(a.next_run_at).getTime() - new Date(b.next_run_at).getTime(),
+      ),
   });
 
   const [editing, setEditing] = useState<Partial<Schedule> | null>(null);
