@@ -171,7 +171,7 @@ function ProfileTab() {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={() => save.mutate()} disabled={save.isPending}>
+        <Button onClick={() => save.mutate()} disabled={save.isPending || !dirty || !form.full_name.trim()}>
           {save.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
           Save changes
         </Button>
