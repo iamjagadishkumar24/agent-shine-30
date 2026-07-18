@@ -10,6 +10,12 @@ import { Progress } from "@/components/ui/progress";
 import { Plus, Target, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+function safeDate(v: string | null | undefined): string {
+  if (!v) return "—";
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+}
+
 export const Route = createFileRoute("/_authenticated/coaching/plans")({
   component: PlansList,
 });
