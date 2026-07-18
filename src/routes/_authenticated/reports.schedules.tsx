@@ -48,6 +48,14 @@ const TYPE_LABEL: Record<Schedule["report_type"], string> = {
 };
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+function safeDateTime(v: string | null | undefined): string {
+  if (!v) return "—";
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString();
+}
+const clamp = (n: number, lo: number, hi: number) =>
+  Number.isFinite(n) ? Math.min(hi, Math.max(lo, Math.trunc(n))) : lo;
+
 function SchedulesPage() {
   const qc = useQueryClient();
   const list = useServerFn(listReportSchedules);
@@ -58,6 +66,10 @@ function SchedulesPage() {
   const { data: schedules = [], isLoading } = useQuery({
     queryKey: ["report-schedules"],
     queryFn: () => list(),
+    select: (rows: any) =>
+      [...(rows as Schedule[])].sort(
+        (a, b) => new Date(a.next_run_at).getTime() - new Date(b.next_run_at).getTime(),
+      ),
   });
 
   const [editing, setEditing] = useState<Partial<Schedule> | null>(null);
@@ -96,7 +108,17 @@ function SchedulesPage() {
       />
 
       <div className="mx-auto max-w-5xl px-8 pb-12 pt-6 space-y-3">
-        {isLoading && <Card className="p-6 text-sm text-muted-foreground">Loading…</Card>}
+        {isLoading && (
+          <div className="space-y-3" aria-busy="true">
+            {[0, 1, 2].map((i) => (
+              <Card key={i} className="p-5">
+                <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+                <div className="mt-3 h-3 w-2/3 animate-pulse rounded bg-muted" />
+                <div className="mt-2 h-3 w-1/2 animate-pulse rounded bg-muted" />
+              </Card>
+            ))}
+          </div>
+        )}
         {!isLoading && schedules.length === 0 && (
           <Card className="p-8 text-center">
             <CalendarClock className="mx-auto h-8 w-8 text-muted-foreground" />
@@ -120,14 +142,14 @@ function SchedulesPage() {
                   {s.cadence === "weekly"
                     ? `Every ${DOW[s.day_of_week ?? 1]} at ${String(s.hour_utc).padStart(2, "0")}:00 UTC`
                     : `Monthly on day ${s.day_of_month ?? 1} at ${String(s.hour_utc).padStart(2, "0")}:00 UTC`}
-                  {" · "}Next run: {new Date(s.next_run_at).toLocaleString()}
+                  {" · "}Next run: {safeDateTime(s.next_run_at)}
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground truncate">
                   Recipients: {s.recipients.join(", ") || "—"}
                 </div>
                 {s.last_run_at && (
                   <div className="mt-1 text-[11px] text-muted-foreground">
-                    Last run: {new Date(s.last_run_at).toLocaleString()} · {s.last_status ?? "—"}
+                    Last run: {safeDateTime(s.last_run_at)} · {s.last_status ?? "—"}
                     {s.last_error ? ` · ${s.last_error}` : ""}
                   </div>
                 )}
@@ -216,20 +238,24 @@ function SchedulesPage() {
                   <div>
                     <Label>Day of month</Label>
                     <Input type="number" min={1} max={28} value={editing.day_of_month ?? 1}
-                      onChange={(e) => setEditing({ ...editing, day_of_month: Number(e.target.value) })} />
+                      onChange={(e) => setEditing({ ...editing, day_of_month: clamp(Number(e.target.value), 1, 28) })} />
                   </div>
                 )}
                 <div>
                   <Label>Hour (UTC)</Label>
                   <Input type="number" min={0} max={23} value={editing.hour_utc ?? 13}
-                    onChange={(e) => setEditing({ ...editing, hour_utc: Number(e.target.value) })} />
+                    onChange={(e) => setEditing({ ...editing, hour_utc: clamp(Number(e.target.value), 0, 23) })} />
                 </div>
               </div>
               <div>
                 <Label>Recipients (comma-separated emails)</Label>
                 <Input
                   value={(editing.recipients ?? []).join(", ")}
-                  onChange={(e) => setEditing({ ...editing, recipients: e.target.value.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean) })}
+                  onChange={(e) => {
+                    const parts = e.target.value.split(/[,\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean);
+                    const unique = Array.from(new Set(parts)).slice(0, 25);
+                    setEditing({ ...editing, recipients: unique });
+                  }}
                   placeholder="ops@company.com, leadership@company.com"
                 />
               </div>
