@@ -285,29 +285,34 @@ export const ActivityHeatmapCard = memo(function ActivityHeatmapCard({
             ))}
           </div>
           <TooltipProvider delayDuration={100}>
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, di) => (
-              <div key={day} className="mt-1 flex items-center gap-1">
-                <div className="w-8 text-[10px] text-muted-foreground">{day}</div>
-                {heatmap[di].map((v, hi) => {
-                  const intensity = v / heatMax;
-                  return (
-                    <UITooltip key={hi}>
-                      <TooltipTrigger asChild>
-                        <div
-                          className="h-4 w-4 rounded-sm ring-1 ring-inset ring-border/30 transition hover:scale-110"
-                          style={{
-                            background: v === 0 ? "var(--muted)" : `oklch(0.65 0.20 285 / ${0.2 + intensity * 0.8})`,
-                          }}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="text-xs">
-                        {day} {hi}:00 — {v} feedback
-                      </TooltipContent>
-                    </UITooltip>
-                  );
-                })}
-              </div>
-            ))}
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, di) => {
+              const row = heatmap[di] ?? [];
+              const safeMax = heatMax > 0 ? heatMax : 1;
+              return (
+                <div key={day} className="mt-1 flex items-center gap-1">
+                  <div className="w-8 text-[10px] text-muted-foreground">{day}</div>
+                  {Array.from({ length: 24 }, (_, hi) => {
+                    const v = row[hi] ?? 0;
+                    const intensity = v / safeMax;
+                    return (
+                      <UITooltip key={hi}>
+                        <TooltipTrigger asChild>
+                          <div
+                            className="h-4 w-4 rounded-sm ring-1 ring-inset ring-border/30 transition hover:scale-110"
+                            style={{
+                              background: v === 0 ? "var(--muted)" : `oklch(0.65 0.20 285 / ${0.2 + intensity * 0.8})`,
+                            }}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs">
+                          {day} {hi}:00 — {v} feedback
+                        </TooltipContent>
+                      </UITooltip>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </TooltipProvider>
         </div>
       </div>
