@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedFeedbackRouteImport } from './routes/_authenticated/feedback'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCoachingRouteImport } from './routes/_authenticated/coaching'
@@ -25,6 +26,7 @@ import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticate
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedReportsSchedulesRouteImport } from './routes/_authenticated/reports.schedules'
+import { Route as AuthenticatedPortalIdRouteImport } from './routes/_authenticated/portal.$id'
 import { Route as AuthenticatedFeedbackNewRouteImport } from './routes/_authenticated/feedback.new'
 import { Route as AuthenticatedFeedbackIdRouteImport } from './routes/_authenticated/feedback.$id'
 import { Route as AuthenticatedCoachingNewRouteImport } from './routes/_authenticated/coaching.new'
@@ -64,6 +66,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFeedbackRoute = AuthenticatedFeedbackRouteImport.update({
@@ -119,6 +126,11 @@ const AuthenticatedReportsSchedulesRoute =
     path: '/schedules',
     getParentRoute: () => AuthenticatedReportsRoute,
   } as any)
+const AuthenticatedPortalIdRoute = AuthenticatedPortalIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedPortalRoute,
+} as any)
 const AuthenticatedFeedbackNewRoute =
   AuthenticatedFeedbackNewRouteImport.update({
     id: '/new',
@@ -194,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/coaching': typeof AuthenticatedCoachingRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/feedback': typeof AuthenticatedFeedbackRouteWithChildren
+  '/portal': typeof AuthenticatedPortalRouteWithChildren
   '/reports': typeof AuthenticatedReportsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -202,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/coaching/new': typeof AuthenticatedCoachingNewRoute
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/portal/$id': typeof AuthenticatedPortalIdRoute
   '/reports/schedules': typeof AuthenticatedReportsSchedulesRoute
   '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
@@ -222,6 +236,7 @@ export interface FileRoutesByTo {
   '/coaching': typeof AuthenticatedCoachingRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/feedback': typeof AuthenticatedFeedbackRouteWithChildren
+  '/portal': typeof AuthenticatedPortalRouteWithChildren
   '/reports': typeof AuthenticatedReportsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -230,6 +245,7 @@ export interface FileRoutesByTo {
   '/coaching/new': typeof AuthenticatedCoachingNewRoute
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/portal/$id': typeof AuthenticatedPortalIdRoute
   '/reports/schedules': typeof AuthenticatedReportsSchedulesRoute
   '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
@@ -252,6 +268,7 @@ export interface FileRoutesById {
   '/_authenticated/coaching': typeof AuthenticatedCoachingRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/feedback': typeof AuthenticatedFeedbackRouteWithChildren
+  '/_authenticated/portal': typeof AuthenticatedPortalRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -260,6 +277,7 @@ export interface FileRoutesById {
   '/_authenticated/coaching/new': typeof AuthenticatedCoachingNewRoute
   '/_authenticated/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/_authenticated/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/_authenticated/portal/$id': typeof AuthenticatedPortalIdRoute
   '/_authenticated/reports/schedules': typeof AuthenticatedReportsSchedulesRoute
   '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
@@ -282,6 +300,7 @@ export interface FileRouteTypes {
     | '/coaching'
     | '/dashboard'
     | '/feedback'
+    | '/portal'
     | '/reports'
     | '/settings'
     | '/.lovable/oauth/consent'
@@ -290,6 +309,7 @@ export interface FileRouteTypes {
     | '/coaching/new'
     | '/feedback/$id'
     | '/feedback/new'
+    | '/portal/$id'
     | '/reports/schedules'
     | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
@@ -310,6 +330,7 @@ export interface FileRouteTypes {
     | '/coaching'
     | '/dashboard'
     | '/feedback'
+    | '/portal'
     | '/reports'
     | '/settings'
     | '/.lovable/oauth/consent'
@@ -318,6 +339,7 @@ export interface FileRouteTypes {
     | '/coaching/new'
     | '/feedback/$id'
     | '/feedback/new'
+    | '/portal/$id'
     | '/reports/schedules'
     | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
@@ -339,6 +361,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coaching'
     | '/_authenticated/dashboard'
     | '/_authenticated/feedback'
+    | '/_authenticated/portal'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/.lovable/oauth/consent'
@@ -347,6 +370,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coaching/new'
     | '/_authenticated/feedback/$id'
     | '/_authenticated/feedback/new'
+    | '/_authenticated/portal/$id'
     | '/_authenticated/reports/schedules'
     | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
@@ -413,6 +437,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/portal': {
+      id: '/_authenticated/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof AuthenticatedPortalRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/feedback': {
@@ -484,6 +515,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/reports/schedules'
       preLoaderRoute: typeof AuthenticatedReportsSchedulesRouteImport
       parentRoute: typeof AuthenticatedReportsRoute
+    }
+    '/_authenticated/portal/$id': {
+      id: '/_authenticated/portal/$id'
+      path: '/$id'
+      fullPath: '/portal/$id'
+      preLoaderRoute: typeof AuthenticatedPortalIdRouteImport
+      parentRoute: typeof AuthenticatedPortalRoute
     }
     '/_authenticated/feedback/new': {
       id: '/_authenticated/feedback/new'
@@ -595,6 +633,17 @@ const AuthenticatedFeedbackRouteWithChildren =
     AuthenticatedFeedbackRouteChildren,
   )
 
+interface AuthenticatedPortalRouteChildren {
+  AuthenticatedPortalIdRoute: typeof AuthenticatedPortalIdRoute
+}
+
+const AuthenticatedPortalRouteChildren: AuthenticatedPortalRouteChildren = {
+  AuthenticatedPortalIdRoute: AuthenticatedPortalIdRoute,
+}
+
+const AuthenticatedPortalRouteWithChildren =
+  AuthenticatedPortalRoute._addFileChildren(AuthenticatedPortalRouteChildren)
+
 interface AuthenticatedReportsRouteChildren {
   AuthenticatedReportsSchedulesRoute: typeof AuthenticatedReportsSchedulesRoute
 }
@@ -614,6 +663,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCoachingRoute: typeof AuthenticatedCoachingRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFeedbackRoute: typeof AuthenticatedFeedbackRouteWithChildren
+  AuthenticatedPortalRoute: typeof AuthenticatedPortalRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
@@ -626,6 +676,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCoachingRoute: AuthenticatedCoachingRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFeedbackRoute: AuthenticatedFeedbackRouteWithChildren,
+  AuthenticatedPortalRoute: AuthenticatedPortalRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }

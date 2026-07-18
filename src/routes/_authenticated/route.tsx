@@ -27,6 +27,8 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/lib/theme";
 import { CommandPalette, useCommandPalette } from "@/components/layout/command-palette";
 import { getMyProfile } from "@/lib/profile.functions";
+import { getMyRoles } from "@/lib/agent-portal.functions";
+import { UserRound } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,7 +50,7 @@ export const Route = createFileRoute("/_authenticated")({
   component: AuthedLayout,
 });
 
-const NAV = [
+const STAFF_NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/feedback", label: "Feedback", icon: MessageSquareText },
@@ -56,6 +58,11 @@ const NAV = [
   { to: "/coaching", label: "Coaching", icon: GraduationCap },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/reports", label: "Reports", icon: FileBarChart },
+] as const;
+
+const AGENT_NAV = [
+  { to: "/portal", label: "My feedback", icon: UserRound },
+  { to: "/coaching", label: "Coaching", icon: GraduationCap },
 ] as const;
 
 const BOTTOM_NAV = [
@@ -71,10 +78,19 @@ function AuthedLayout() {
   const collapsed = prefs.sidebarCollapsed;
   const { open: cmdOpen, setOpen: setCmdOpen } = useCommandPalette();
   const fetchProfile = useServerFn(getMyProfile);
+  const fetchRoles = useServerFn(getMyRoles);
   const { data: profile } = useQuery({
     queryKey: ["my-profile"],
     queryFn: () => fetchProfile(),
   });
+  const { data: roles = [] } = useQuery({
+    queryKey: ["my-roles"],
+    queryFn: () => fetchRoles(),
+    staleTime: 5 * 60_000,
+  });
+  const staffRoles = ["super_admin", "qa_admin", "team_manager"];
+  const isStaff = roles.some((r) => staffRoles.includes(r));
+  const NAV = isStaff ? STAFF_NAV : AGENT_NAV;
 
   const email = user?.email ?? "";
   const displayName = profile?.full_name || email.split("@")[0] || "User";
@@ -216,12 +232,14 @@ function AuthedLayout() {
               <kbd className="rounded border border-border px-1 text-[10px] font-mono">⌘K</kbd>
             </button>
 
-            <Button asChild size="sm" variant="ghost" className="gap-1.5">
-              <Link to="/feedback/new">
-                <Plus className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">New feedback</span>
-              </Link>
-            </Button>
+            {isStaff && (
+              <Button asChild size="sm" variant="ghost" className="gap-1.5">
+                <Link to="/feedback/new">
+                  <Plus className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">New feedback</span>
+                </Link>
+              </Button>
+            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
