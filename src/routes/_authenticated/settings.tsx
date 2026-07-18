@@ -231,7 +231,7 @@ function EmailConfig() {
         <div className="mt-1 text-xs text-muted-foreground">Verifies the provider connection and delivers a formatted test message.</div>
         <div className="mt-4 flex gap-2">
           <Input placeholder="destination@example.com" value={testTo} onChange={(e) => setTestTo(e.target.value)} />
-          <Button onClick={() => test.mutate()} disabled={test.isPending || !testTo}>
+          <Button onClick={() => test.mutate()} disabled={test.isPending || !testEmailValid}>
             {test.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Send className="mr-2 h-3.5 w-3.5" />}
             Send test
           </Button>
