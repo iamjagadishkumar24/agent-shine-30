@@ -90,11 +90,7 @@ function AuthedLayout() {
   });
   const staffRoles = ["super_admin", "qa_admin", "team_manager"];
   const isStaff = roles.some((r) => staffRoles.includes(r));
-  const NAV = (isStaff ? STAFF_NAV : AGENT_NAV) as ReadonlyArray<{
-    to: string;
-    label: string;
-    icon: typeof LayoutDashboard;
-  }>;
+  const NAV = isStaff ? STAFF_NAV : AGENT_NAV;
 
   const email = user?.email ?? "";
   const displayName = profile?.full_name || email.split("@")[0] || "User";
