@@ -101,11 +101,14 @@ export const TrendChartCard = memo(function TrendChartCard({
 export const CategoryDonutCard = memo(function CategoryDonutCard({
   categories,
   totalCat,
+  onSliceClick,
 }: {
   categories: Array<{ name: string; value: number; pct: number; color: string }>;
   totalCat: number;
+  onSliceClick?: (name: string) => void;
 }) {
   const list = categories.length ? categories : [{ name: "No data yet", value: 1, pct: 0, color: "oklch(0.26 0.010 265)" } as any];
+  const clickable = !!onSliceClick && categories.length > 0;
   return (
     <Card className="col-span-12 rounded-2xl border-border/60 bg-card/60 p-6 backdrop-blur-xl md:col-span-6 xl:col-span-4">
       <div className="text-sm font-semibold">Feedback by Category</div>
@@ -113,7 +116,17 @@ export const CategoryDonutCard = memo(function CategoryDonutCard({
         <div className="relative h-44 w-44 shrink-0">
           <ResponsiveContainer>
             <PieChart>
-              <Pie data={list} dataKey="value" innerRadius={55} outerRadius={82} paddingAngle={3} stroke="none" isAnimationActive={false}>
+              <Pie
+                data={list}
+                dataKey="value"
+                innerRadius={55}
+                outerRadius={82}
+                paddingAngle={3}
+                stroke="none"
+                isAnimationActive={false}
+                onClick={clickable ? (d: any) => onSliceClick!(d?.name) : undefined}
+                cursor={clickable ? "pointer" : "default"}
+              >
                 {list.map((c: any, i: number) => (
                   <Cell key={i} fill={c.color} />
                 ))}
@@ -129,15 +142,28 @@ export const CategoryDonutCard = memo(function CategoryDonutCard({
           </div>
         </div>
         <div className="min-w-0 flex-1 space-y-2">
-          {list.map((c: any) => (
-            <div key={c.name} className="flex items-center justify-between gap-2 text-xs">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: c.color }} />
-                <span className="truncate text-muted-foreground">{c.name}</span>
+          {list.map((c: any) => {
+            const row = (
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: c.color }} />
+                  <span className="truncate text-muted-foreground">{c.name}</span>
+                </div>
+                <span className="tabular-nums text-foreground">{c.pct.toFixed(1)}%</span>
               </div>
-              <span className="tabular-nums text-foreground">{c.pct.toFixed(1)}%</span>
-            </div>
-          ))}
+            );
+            return clickable ? (
+              <button
+                key={c.name}
+                onClick={() => onSliceClick!(c.name)}
+                className="w-full rounded-md px-1.5 py-1 -mx-1.5 text-left transition hover:bg-muted/40"
+              >
+                {row}
+              </button>
+            ) : (
+              <div key={c.name}>{row}</div>
+            );
+          })}
         </div>
       </div>
     </Card>
