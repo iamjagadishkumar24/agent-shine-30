@@ -70,6 +70,15 @@ function HealthPage() {
             Live diagnostics for APIs, database, auth, storage, email, and AI services.
           </p>
         </div>
+        <Button
+          size="sm"
+          variant={autoRefresh ? "default" : "outline"}
+          onClick={() => setAutoRefresh((v) => !v)}
+          aria-pressed={autoRefresh}
+        >
+          {autoRefresh ? <Pause className="h-3.5 w-3.5 mr-1.5" /> : <Play className="h-3.5 w-3.5 mr-1.5" />}
+          Auto-refresh
+        </Button>
         <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching}>
           <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", isFetching && "animate-spin")} />
           Run checks
