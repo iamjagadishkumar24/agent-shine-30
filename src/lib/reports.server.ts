@@ -55,7 +55,7 @@ export function rowsToPdf(opts: { title: string; subtitle?: string; rows: Row[] 
     doc.text(`Page ${i} of ${pageCount} · Signal QMS`, pageW - 40, doc.internal.pageSize.getHeight() - 20, { align: "right" });
   }
 
-  return doc.output("arraybuffer") as unknown as Uint8Array;
+  return doc.output("arraybuffer") as ArrayBuffer;
 }
 
 export async function buildReportRows(
