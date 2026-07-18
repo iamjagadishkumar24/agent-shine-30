@@ -327,12 +327,16 @@ export type Database = {
           opened_at: string | null
           recommended_actions: string | null
           reminder_count: number
+          review_note: string | null
+          reviewed_at: string | null
+          reviewer_id: string | null
           root_cause: string | null
           score: number | null
           sent_at: string | null
           severity: Database["public"]["Enums"]["feedback_severity"]
           status: Database["public"]["Enums"]["feedback_status"]
           strengths: string | null
+          submitted_for_review_at: string | null
           summary: string | null
           tags: string[] | null
           title: string
@@ -361,12 +365,16 @@ export type Database = {
           opened_at?: string | null
           recommended_actions?: string | null
           reminder_count?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
           root_cause?: string | null
           score?: number | null
           sent_at?: string | null
           severity?: Database["public"]["Enums"]["feedback_severity"]
           status?: Database["public"]["Enums"]["feedback_status"]
           strengths?: string | null
+          submitted_for_review_at?: string | null
           summary?: string | null
           tags?: string[] | null
           title: string
@@ -395,12 +403,16 @@ export type Database = {
           opened_at?: string | null
           recommended_actions?: string | null
           reminder_count?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
           root_cause?: string | null
           score?: number | null
           sent_at?: string | null
           severity?: Database["public"]["Enums"]["feedback_severity"]
           status?: Database["public"]["Enums"]["feedback_status"]
           strengths?: string | null
+          submitted_for_review_at?: string | null
           summary?: string | null
           tags?: string[] | null
           title?: string
@@ -675,6 +687,8 @@ export type Database = {
         | "sent"
         | "acknowledged"
         | "completed"
+        | "rejected"
+        | "revision_required"
       feedback_type:
         | "positive"
         | "constructive"
@@ -822,6 +836,8 @@ export const Constants = {
         "sent",
         "acknowledged",
         "completed",
+        "rejected",
+        "revision_required",
       ],
       feedback_type: [
         "positive",
