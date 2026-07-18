@@ -184,22 +184,31 @@ export const runHealthChecks = createServerFn({ method: "GET" })
       if (!hasKey) {
         checks.push({ id: "ai.gateway", module: "AI", name: "Lovable AI Gateway", status: "fail", message: "LOVABLE_API_KEY not set" });
       } else {
-        const { result, latencyMs } = await timed(() =>
-          fetch("https://ai.gateway.lovable.dev/v1/models", {
-            headers: { "Lovable-API-Key": process.env.LOVABLE_API_KEY! },
-          }),
-        );
-        checks.push({
-          id: "ai.gateway",
-          module: "AI",
-          name: "Lovable AI Gateway",
-          status: result.ok ? "ok" : "fail",
-          message: result.ok ? `Reachable (HTTP ${result.status})` : `HTTP ${result.status}`,
-          latencyMs,
-        });
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), AI_GATEWAY_TIMEOUT_MS);
+        try {
+          const { result, latencyMs } = await timed(
+            () =>
+              fetch("https://ai.gateway.lovable.dev/v1/models", {
+                headers: { "Lovable-API-Key": process.env.LOVABLE_API_KEY! },
+                signal: controller.signal,
+              }),
+            AI_GATEWAY_TIMEOUT_MS + 500,
+          );
+          checks.push({
+            id: "ai.gateway",
+            module: "AI",
+            name: "Lovable AI Gateway",
+            status: result.ok ? "ok" : "fail",
+            message: result.ok ? `Reachable (HTTP ${result.status})` : `HTTP ${result.status}`,
+            latencyMs,
+          });
+        } finally {
+          clearTimeout(timer);
+        }
       }
     } catch (e) {
-      checks.push({ id: "ai.gateway", module: "AI", name: "Lovable AI Gateway", status: "fail", message: (e as Error).message });
+      checks.push({ id: "ai.gateway", module: "AI", name: "Lovable AI Gateway", status: "fail", message: clampMsg(e) });
     }
 
     // --- Environment vars ---
