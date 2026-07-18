@@ -376,17 +376,17 @@ function FeedbackDetail() {
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Agent</div>
             <div className="mt-3 flex items-center gap-3">
               <div className="grid h-10 w-10 place-items-center rounded-full bg-primary/15 text-sm font-medium text-primary">
-                {data.agent?.full_name?.split(" ").map((s: string) => s[0]).slice(0, 2).join("")}
+                {(data.agent?.full_name ?? "?").split(" ").filter(Boolean).map((s: string) => s[0]).slice(0, 2).join("").toUpperCase() || "?"}
               </div>
               <div>
-                <div className="text-sm font-medium">{data.agent?.full_name}</div>
-                <div className="text-xs text-muted-foreground">{data.agent?.employee_id} · {data.agent?.department}</div>
+                <div className="text-sm font-medium">{data.agent?.full_name ?? "Unassigned"}</div>
+                <div className="text-xs text-muted-foreground">{data.agent?.employee_id ?? "—"} · {data.agent?.department ?? "—"}</div>
               </div>
             </div>
             <dl className="mt-4 space-y-2 text-xs">
               <Row k="Team" v={data.agent?.team ?? "—"} />
               <Row k="Manager" v={data.agent?.manager_name ?? "—"} />
-              <Row k="QA Score" v={Number(data.agent?.qa_score ?? 0).toFixed(1)} />
+              <Row k="QA Score" v={data.agent?.qa_score == null ? "—" : Number(data.agent.qa_score).toFixed(1)} />
             </dl>
           </Card>
 
