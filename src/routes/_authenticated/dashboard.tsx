@@ -759,7 +759,7 @@ function Dashboard() {
           </Card>
         </div>
 
-        {isLoading && <div className="mt-4 text-xs text-muted-foreground">Loading…</div>}
+        
       </div>
     </div>
   );
