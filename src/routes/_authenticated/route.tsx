@@ -50,7 +50,7 @@ export const Route = createFileRoute("/_authenticated")({
   component: AuthedLayout,
 });
 
-const NAV = [
+const STAFF_NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/feedback", label: "Feedback", icon: MessageSquareText },
@@ -58,6 +58,11 @@ const NAV = [
   { to: "/coaching", label: "Coaching", icon: GraduationCap },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/reports", label: "Reports", icon: FileBarChart },
+] as const;
+
+const AGENT_NAV = [
+  { to: "/portal", label: "My feedback", icon: UserRound },
+  { to: "/coaching", label: "Coaching", icon: GraduationCap },
 ] as const;
 
 const BOTTOM_NAV = [
