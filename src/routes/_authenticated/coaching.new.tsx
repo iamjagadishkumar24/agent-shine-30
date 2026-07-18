@@ -34,7 +34,7 @@ const Schema = z.object({
 function NewSession() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { agent, feedback } = Route.useSearch();
+  const { agent = "", feedback = "" } = Route.useSearch();
 
   const now = new Date(Date.now() + 24 * 60 * 60 * 1000);
   now.setSeconds(0, 0);
