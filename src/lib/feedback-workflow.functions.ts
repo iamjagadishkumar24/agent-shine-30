@@ -42,7 +42,7 @@ type Action = z.infer<typeof ActionSchema>;
  */
 export const transitionFeedback = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((raw: unknown): Action => {
+  .inputValidator((raw: Action): Action => {
     const parsed = ActionSchema.safeParse(raw);
     if (!parsed.success) {
       throw new Response(parsed.error.issues[0]?.message ?? "Invalid request", { status: 400 });
