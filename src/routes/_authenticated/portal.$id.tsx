@@ -6,12 +6,26 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { SkeletonBox } from "@/components/ui/skeleton-blocks";
 import { ArrowLeft, CheckCircle2, MessageCircleQuestion, History } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from "date-fns";
 import { acknowledgeFeedback, requestClarification } from "@/lib/agent-portal.functions";
+
+function safeTimeAgo(v: string | null | undefined) {
+  if (!v) return "";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? "" : formatDistanceToNow(d, { addSuffix: true });
+}
+
+function safeDate(v: string | null | undefined) {
+  if (!v) return "";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? "" : format(d, "PPP");
+}
+
 
 export const Route = createFileRoute("/_authenticated/portal/$id")({
   component: PortalFeedbackDetail,
@@ -82,8 +96,18 @@ function PortalFeedbackDetail() {
   });
 
   if (isLoading) {
-    return <div className="mx-auto max-w-4xl px-8 py-12 text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div>
+        <PageHeader title="Feedback" subtitle="Loading…" />
+        <div className="mx-auto max-w-4xl px-8 pb-12 pt-6 space-y-3">
+          <SkeletonBox className="h-40 w-full" />
+          <SkeletonBox className="h-32 w-full" />
+          <SkeletonBox className="h-32 w-full" />
+        </div>
+      </div>
+    );
   }
+
   if (!data) {
     return (
       <div className="mx-auto max-w-4xl px-8 py-12 text-sm text-muted-foreground">
@@ -97,8 +121,9 @@ function PortalFeedbackDetail() {
   return (
     <div>
       <PageHeader
-        title={data.title}
-        subtitle={`${data.status.toUpperCase()} · ${data.category} · ${data.feedback_type}`}
+        title={data.title || "Feedback"}
+        subtitle={[data.status?.toUpperCase(), data.category, data.feedback_type].filter(Boolean).join(" · ")}
+
         actions={
           <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/portal" })}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back
@@ -119,11 +144,12 @@ function PortalFeedbackDetail() {
           {data.strengths && <Section label="Strengths" body={data.strengths} />}
           {data.improvements && <Section label="Areas to improve" body={data.improvements} />}
           {data.recommended_actions && <Section label="Recommended actions" body={data.recommended_actions} />}
-          {data.due_date && (
+          {data.due_date && safeDate(data.due_date) && (
             <div className="text-xs text-muted-foreground">
-              Due by <span className="font-medium text-foreground">{format(new Date(data.due_date), "PPP")}</span>
+              Due by <span className="font-medium text-foreground">{safeDate(data.due_date)}</span>
             </div>
           )}
+
         </Card>
 
         {/* Acknowledge */}
@@ -158,11 +184,12 @@ function PortalFeedbackDetail() {
           <Card className="rounded-xl border-border/60 bg-card/60 p-5">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Your acknowledgement</div>
             <div className="mt-1 whitespace-pre-wrap text-sm">{data.acknowledgement_note}</div>
-            {data.acknowledged_at && (
+            {safeTimeAgo(data.acknowledged_at) && (
               <div className="mt-2 text-xs text-muted-foreground">
-                {formatDistanceToNow(new Date(data.acknowledged_at), { addSuffix: true })}
+                {safeTimeAgo(data.acknowledged_at)}
               </div>
             )}
+
           </Card>
         )}
 
@@ -207,7 +234,7 @@ function PortalFeedbackDetail() {
                   <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                   <div className="min-w-0 flex-1">
                     <div className="text-xs">
-                      <span className="font-medium capitalize">{e.action.replace(/_/g, " ")}</span>
+                      <span className="font-medium capitalize">{(e.action || "update").replace(/_/g, " ")}</span>
                       {e.from_status && e.to_status && e.from_status !== e.to_status && (
                         <span className="ml-1 text-muted-foreground">
                           {e.from_status} → {e.to_status}
@@ -218,8 +245,9 @@ function PortalFeedbackDetail() {
                       <div className="mt-0.5 whitespace-pre-wrap text-xs text-muted-foreground">{e.comment}</div>
                     )}
                     <div className="mt-0.5 text-[10px] text-muted-foreground">
-                      {formatDistanceToNow(new Date(e.created_at), { addSuffix: true })}
+                      {safeTimeAgo(e.created_at)}
                     </div>
+
                   </div>
                 </li>
               ))}

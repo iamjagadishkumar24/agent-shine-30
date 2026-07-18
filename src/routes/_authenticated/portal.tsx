@@ -7,7 +7,15 @@ import { Card } from "@/components/ui/card";
 import { SkeletonBox } from "@/components/ui/skeleton-blocks";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+
 import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
+
+function safeTimeAgo(v: string | null | undefined) {
+  if (!v) return "—";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? "—" : formatDistanceToNow(d, { addSuffix: true });
+}
+
 
 export const Route = createFileRoute("/_authenticated/portal")({
   component: PortalPage,
@@ -43,8 +51,16 @@ function PortalPage() {
     <div>
       <PageHeader
         title="My feedback"
-        subtitle={agent ? `${agent.full_name} · ${agent.department}` : "Your personal quality feedback"}
+        subtitle={
+          agent
+            ? [agent.full_name, agent.department].filter(Boolean).join(" · ") ||
+              "Your personal quality feedback"
+            : "Your personal quality feedback"
+        }
       />
+
+
+
       <div className="mx-auto max-w-5xl px-8 pb-12 pt-6 animate-in fade-in duration-300 space-y-6">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <StatCard icon={AlertCircle} tone="warn" label="Awaiting acknowledgement" value={pending} />
@@ -101,10 +117,9 @@ function PortalPage() {
                     {f.status}
                   </span>
                   <span className="w-28 text-right text-xs text-muted-foreground">
-                    {f.sent_at
-                      ? formatDistanceToNow(new Date(f.sent_at), { addSuffix: true })
-                      : "—"}
+                    {safeTimeAgo(f.sent_at)}
                   </span>
+
                 </Link>
               ))}
             </div>
