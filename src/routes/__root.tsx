@@ -32,18 +32,41 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
-  useEffect(() => { reportLovableError(error, { boundary: "root" }); }, [error]);
+  useEffect(() => {
+    reportLovableError(error, { boundary: "root" });
+  }, [error]);
+  // Never surface raw stack traces or internal identifiers to end users.
+  const rawMessage = (error?.message ?? "").trim();
+  const safeMessage =
+    rawMessage && rawMessage.length < 200 && !/at\s+\w+\s*\(/.test(rawMessage)
+      ? rawMessage
+      : "An unexpected error occurred. Please try again.";
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
+      <div className="max-w-md text-center" role="alert" aria-live="assertive">
         <h1 className="text-xl font-semibold">Something broke</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
-        <button
-          onClick={() => { router.invalidate(); reset(); }}
-          className="mt-6 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-        >
-          Try again
-        </button>
+        <p className="mt-2 text-sm text-muted-foreground">{safeMessage}</p>
+        <div className="mt-6 flex items-center justify-center gap-2">
+          <button
+            onClick={() => {
+              try {
+                router.invalidate();
+              } catch {
+                /* ignore */
+              }
+              reset();
+            }}
+            className="inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+          >
+            Try again
+          </button>
+          <Link
+            to="/"
+            className="inline-flex rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary/60"
+          >
+            Go home
+          </Link>
+        </div>
       </div>
     </div>
   );

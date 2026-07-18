@@ -96,19 +96,26 @@ function AuthedLayout() {
   const NAV = isStaff ? STAFF_NAV : AGENT_NAV;
 
   const email = user?.email ?? "";
-  const displayName = profile?.full_name || email.split("@")[0] || "User";
-  const initials = (profile?.full_name || email || "?")
-    .split(/\s+/)
-    .map((s: string) => s[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+  const displayName = profile?.full_name?.trim() || email.split("@")[0] || "User";
+  const initials =
+    (profile?.full_name || email || "?")
+      .split(/\s+/)
+      .map((s: string) => s?.[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?";
 
   const signOut = async () => {
-    await qc.cancelQueries();
-    qc.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    try {
+      await qc.cancelQueries();
+      qc.clear();
+      await supabase.auth.signOut();
+    } catch {
+      /* even if signOut errors, still bounce to /auth */
+    } finally {
+      navigate({ to: "/auth", replace: true });
+    }
   };
 
   const current = [...NAV, ...BOTTOM_NAV, { to: "/account", label: "Account", icon: UserCog }].find((n) =>
