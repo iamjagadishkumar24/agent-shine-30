@@ -419,7 +419,8 @@ function Dashboard() {
   const heatmap = useMemo(() => {
     const grid: number[][] = Array.from({ length: 7 }, () => new Array(24).fill(0));
     feedback.forEach((f) => {
-      const d = new Date(f.created_at);
+      const d = parseDate(f.created_at);
+      if (!d) return;
       if (Date.now() - d.getTime() > 30 * 86400000) return;
       grid[d.getDay()][d.getHours()] += 1;
     });
