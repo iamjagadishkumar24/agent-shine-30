@@ -117,11 +117,8 @@ function FeedbackDetail() {
     onError: (e: any) => toast.error(e.message ?? "Failed to delete"),
   });
 
-  const confirmDelete = () => {
-    if (confirm(`Delete "${data?.title ?? "this feedback"}"? This cannot be undone.`)) {
-      remove.mutate();
-    }
-  };
+  // Delete confirmation is handled by AlertDialog (see actions area).
+
 
   const sendMutation = useMutation({
     mutationFn: () => sendEmailFn({ data: { feedbackId: id } }),
