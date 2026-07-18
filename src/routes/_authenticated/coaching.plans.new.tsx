@@ -21,13 +21,18 @@ export const Route = createFileRoute("/_authenticated/coaching/plans/new")({
   component: NewPlan,
 });
 
-const Schema = z.object({
-  title: z.string().trim().min(4, "Title too short").max(200),
-  agent_id: z.string().uuid("Pick an agent"),
-  description: z.string().trim().max(2000).optional(),
-  start_date: z.string().min(1),
-  target_date: z.string().optional().or(z.literal("")),
-});
+const Schema = z
+  .object({
+    title: z.string().trim().min(4, "Title must be at least 4 characters").max(200),
+    agent_id: z.string().uuid("Pick an agent"),
+    description: z.string().trim().max(2000).optional(),
+    start_date: z.string().min(1, "Start date is required"),
+    target_date: z.string().optional().or(z.literal("")),
+  })
+  .refine(
+    (v) => !v.target_date || v.target_date >= v.start_date,
+    { path: ["target_date"], message: "Target date must be on or after the start date" },
+  );
 
 function NewPlan() {
   const navigate = useNavigate();
@@ -42,6 +47,7 @@ function NewPlan() {
     start_date: today,
     target_date: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { data: agents = [] } = useQuery({
     queryKey: ["agents-picker"],
@@ -76,6 +82,28 @@ function NewPlan() {
     onError: (e: any) => toast.error(e.message ?? "Could not create plan"),
   });
 
+  const submit = () => {
+    const result = Schema.safeParse(form);
+    if (!result.success) {
+      const errs: Record<string, string> = {};
+      for (const issue of result.error.issues) {
+        const key = String(issue.path[0] ?? "form");
+        if (!errs[key]) errs[key] = issue.message;
+      }
+      setErrors(errs);
+      toast.error(result.error.issues[0]?.message ?? "Please fix the highlighted fields");
+      return;
+    }
+    setErrors({});
+    create.mutate();
+  };
+
+  const canSubmit =
+    form.title.trim().length >= 4 &&
+    !!form.agent_id &&
+    !!form.start_date &&
+    (!form.target_date || form.target_date >= form.start_date);
+
   return (
     <div>
       <PageHeader title="New coaching plan" subtitle="Set a development plan with measurable goals and dates." />
@@ -84,19 +112,22 @@ function NewPlan() {
           <div className="space-y-1.5">
             <Label htmlFor="title">Plan title</Label>
             <Input id="title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-              placeholder="e.g. Q4 CSAT improvement" />
+              placeholder="e.g. Q4 CSAT improvement"
+              aria-invalid={!!errors.title} />
+            {errors.title && <p className="text-xs text-destructive">{errors.title}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label>Agent</Label>
             <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
-              <SelectTrigger><SelectValue placeholder="Pick agent" /></SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.agent_id}><SelectValue placeholder="Pick agent" /></SelectTrigger>
               <SelectContent>
                 {agents.map((a: any) => (
-                  <SelectItem key={a.id} value={a.id}>{a.full_name} · {a.department}</SelectItem>
+                  <SelectItem key={a.id} value={a.id}>{a.full_name}{a.department ? ` · ${a.department}` : ""}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {errors.agent_id && <p className="text-xs text-destructive">{errors.agent_id}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -104,24 +135,29 @@ function NewPlan() {
             <Textarea id="desc" rows={3} value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder="Focus areas, context, expected outcome…" />
+            {errors.description && <p className="text-xs text-destructive">{errors.description}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="start">Start date</Label>
               <Input id="start" type="date" value={form.start_date}
-                onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+                onChange={(e) => setForm({ ...form, start_date: e.target.value })}
+                aria-invalid={!!errors.start_date} />
+              {errors.start_date && <p className="text-xs text-destructive">{errors.start_date}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="target">Target date</Label>
-              <Input id="target" type="date" value={form.target_date}
-                onChange={(e) => setForm({ ...form, target_date: e.target.value })} />
+              <Input id="target" type="date" value={form.target_date} min={form.start_date || undefined}
+                onChange={(e) => setForm({ ...form, target_date: e.target.value })}
+                aria-invalid={!!errors.target_date} />
+              {errors.target_date && <p className="text-xs text-destructive">{errors.target_date}</p>}
             </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/coaching/plans" })}>Cancel</Button>
-            <Button size="sm" onClick={() => create.mutate()} disabled={create.isPending}>
+            <Button size="sm" onClick={submit} disabled={create.isPending || !canSubmit}>
               {create.isPending ? "Creating…" : "Create plan"}
             </Button>
           </div>

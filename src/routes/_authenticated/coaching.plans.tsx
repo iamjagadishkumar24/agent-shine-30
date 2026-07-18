@@ -10,6 +10,12 @@ import { Progress } from "@/components/ui/progress";
 import { Plus, Target, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+function safeDate(v: string | null | undefined): string {
+  if (!v) return "—";
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+}
+
 export const Route = createFileRoute("/_authenticated/coaching/plans")({
   component: PlansList,
 });
@@ -66,7 +72,16 @@ function PlansList() {
       <CoachingTabs />
       <div className="mx-auto max-w-6xl px-8 pb-12 pt-4">
         {isLoading ? (
-          <Card className="p-10 text-center text-sm text-muted-foreground">Loading…</Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-busy="true">
+            {[0, 1, 2, 3].map((i) => (
+              <Card key={i} className="p-4">
+                <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
+                <div className="mt-2 h-3 w-1/3 animate-pulse rounded bg-muted" />
+                <div className="mt-4 h-1.5 w-full animate-pulse rounded bg-muted" />
+                <div className="mt-3 h-3 w-1/2 animate-pulse rounded bg-muted" />
+              </Card>
+            ))}
+          </div>
         ) : data.length === 0 ? (
           <Card className="p-10 text-center">
             <Sparkles className="mx-auto h-6 w-6 text-muted-foreground" />
@@ -104,8 +119,8 @@ function PlansList() {
                       <Progress value={pct} className="h-1.5" />
                     </div>
                     <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground">
-                      <span>Started {new Date(p.start_date).toLocaleDateString()}</span>
-                      {p.target_date && <span>· Target {new Date(p.target_date).toLocaleDateString()}</span>}
+                      <span>Started {safeDate(p.start_date)}</span>
+                      {p.target_date && <span>· Target {safeDate(p.target_date)}</span>}
                     </div>
                   </Card>
                 </Link>
