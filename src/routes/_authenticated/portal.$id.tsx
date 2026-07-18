@@ -144,11 +144,12 @@ function PortalFeedbackDetail() {
           {data.strengths && <Section label="Strengths" body={data.strengths} />}
           {data.improvements && <Section label="Areas to improve" body={data.improvements} />}
           {data.recommended_actions && <Section label="Recommended actions" body={data.recommended_actions} />}
-          {data.due_date && (
+          {data.due_date && safeDate(data.due_date) && (
             <div className="text-xs text-muted-foreground">
-              Due by <span className="font-medium text-foreground">{format(new Date(data.due_date), "PPP")}</span>
+              Due by <span className="font-medium text-foreground">{safeDate(data.due_date)}</span>
             </div>
           )}
+
         </Card>
 
         {/* Acknowledge */}
