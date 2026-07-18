@@ -401,7 +401,7 @@ function GoalRow({ goal, onUpdated }: { goal: any; onUpdated: () => void }) {
           {goal.metric && (
             <div className="text-xs text-muted-foreground mt-0.5 tabular-nums">
               {goal.current_value ?? 0}{goal.target_value ? ` / ${goal.target_value}` : ""} {goal.metric}
-              {goal.target_date && <span> · by {new Date(goal.target_date).toLocaleDateString()}</span>}
+              {goal.target_date && <span> · by {safeDate(goal.target_date)}</span>}
             </div>
           )}
           <div className="mt-2 flex items-center gap-2">
