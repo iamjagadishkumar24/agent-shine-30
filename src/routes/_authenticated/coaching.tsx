@@ -50,7 +50,18 @@ function CoachingList() {
       <div className="mx-auto max-w-6xl px-8 pb-12 pt-4">
 
         {isLoading ? (
-          <Card className="p-10 text-center text-sm text-muted-foreground">Loading…</Card>
+          <Card className="overflow-hidden" aria-busy="true">
+            <div className="divide-y divide-border/40">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 px-4 py-3">
+                  <div className="h-4 w-40 bg-muted/40 rounded animate-pulse" />
+                  <div className="h-4 w-32 bg-muted/40 rounded animate-pulse" />
+                  <div className="h-4 w-28 bg-muted/40 rounded animate-pulse" />
+                  <div className="h-4 w-16 bg-muted/40 rounded animate-pulse ml-auto" />
+                </div>
+              ))}
+            </div>
+          </Card>
         ) : data.length === 0 ? (
           <Card className="p-10 text-center">
             <GraduationCap className="mx-auto h-6 w-6 text-muted-foreground" />
@@ -75,20 +86,23 @@ function CoachingList() {
                 {data.map((s: any) => {
                   const items = s.items ?? [];
                   const done = items.filter((i: any) => i.status === "done").length;
+                  const sched = s.scheduled_at ? new Date(s.scheduled_at) : null;
+                  const schedLabel = sched && !Number.isNaN(sched.getTime())
+                    ? sched.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+                    : "—";
                   return (
                     <tr key={s.id} className="border-b border-border/40 last:border-0 hover:bg-muted/20">
                       <td className="px-4 py-2.5">
                         <Link to="/coaching/$id" params={{ id: s.id }} className="font-medium hover:text-primary">
-                          {s.topic}
+                          {s.topic || "Untitled session"}
                         </Link>
                       </td>
                       <td className="px-4 py-2.5 text-muted-foreground">
                         {s.agent?.full_name ?? <span className="italic">Unassigned</span>}
                         {s.agent?.department && <span className="ml-1.5 text-xs">· {s.agent.department}</span>}
                       </td>
-                      <td className="px-4 py-2.5 text-muted-foreground">
-                        {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—"}
-                      </td>
+                      <td className="px-4 py-2.5 text-muted-foreground">{schedLabel}</td>
+
                       <td className="px-4 py-2.5 text-muted-foreground">
                         <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{s.duration_minutes ?? 30}m</span>
                       </td>
