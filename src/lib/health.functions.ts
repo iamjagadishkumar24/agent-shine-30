@@ -9,11 +9,13 @@ export type HealthCheck = {
   status: CheckStatus;
   message: string;
   latencyMs?: number;
-  detail?: Record<string, unknown>;
 };
 
 async function timed<T>(fn: () => Promise<T>): Promise<{ result: T; latencyMs: number }> {
   const t = Date.now();
+  const result = await fn();
+  return { result, latencyMs: Date.now() - t };
+}
   const result = await fn();
   return { result, latencyMs: Date.now() - t };
 }
