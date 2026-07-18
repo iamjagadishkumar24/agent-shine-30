@@ -3,6 +3,7 @@ import listAgentsTool from "./tools/list-agents";
 import listFeedbackTool from "./tools/list-feedback";
 import getFeedbackTool from "./tools/get-feedback";
 import createFeedbackTool from "./tools/create-feedback";
+import updateFeedbackStatusTool from "./tools/update-feedback-status";
 import listCoachingSessionsTool from "./tools/list-coaching-sessions";
 import whoAmITool from "./tools/whoami";
 
