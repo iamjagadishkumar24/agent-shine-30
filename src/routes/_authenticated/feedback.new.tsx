@@ -146,18 +146,20 @@ function NewFeedback() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Label>Title</Label>
-              <Input className="mt-1.5" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Missed disclosure on billing call" />
+              <Input className="mt-1.5" aria-invalid={!!fieldErrors.title} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Missed disclosure on billing call" />
+              {fieldErrors.title && <p className="mt-1 text-xs text-destructive">{fieldErrors.title}</p>}
             </div>
             <div>
               <Label>Agent</Label>
               <Select value={form.agent_id} onValueChange={(v) => setForm({ ...form, agent_id: v })}>
-                <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select agent" /></SelectTrigger>
+                <SelectTrigger className="mt-1.5" aria-invalid={!!fieldErrors.agent_id}><SelectValue placeholder="Select agent" /></SelectTrigger>
                 <SelectContent>
                   {agents.map((a) => (
                     <SelectItem key={a.id} value={a.id}>{a.full_name} · {a.department}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {fieldErrors.agent_id && <p className="mt-1 text-xs text-destructive">{fieldErrors.agent_id}</p>}
             </div>
             <div>
               <Label>Category</Label>
