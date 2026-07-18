@@ -22,6 +22,8 @@ function safeNext(next: string | undefined): string {
   return next;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function AuthPage() {
   const navigate = useNavigate();
   const { next } = Route.useSearch();
@@ -33,6 +35,12 @@ function AuthPage() {
 
   const destination = safeNext(next);
 
+  const trimmedEmail = email.trim();
+  const emailValid = EMAIL_RE.test(trimmedEmail);
+  const passwordValid = mode === "signup" ? password.length >= 8 : password.length > 0;
+  const nameValid = mode === "signup" ? name.trim().length >= 2 : true;
+  const canSubmit = !loading && emailValid && passwordValid && nameValid;
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) window.location.href = destination;
@@ -41,25 +49,32 @@ function AuthPage() {
 
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSubmit) {
+      if (!emailValid) toast.error("Enter a valid email address");
+      else if (!passwordValid) toast.error("Password must be at least 8 characters");
+      else if (!nameValid) toast.error("Enter your full name");
+      return;
+    }
     setLoading(true);
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
-          email, password,
+          email: trimmedEmail,
+          password,
           options: {
             emailRedirectTo: window.location.origin + destination,
-            data: { full_name: name },
+            data: { full_name: name.trim() },
           },
         });
         if (error) throw error;
         toast.success("Account created");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
         if (error) throw error;
       }
       window.location.href = destination;
     } catch (err: any) {
-      toast.error(err.message ?? "Something went wrong");
+      toast.error(err?.message ?? "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -67,12 +82,17 @@ function AuthPage() {
 
   const handleGoogle = async () => {
     setLoading(true);
-    // Return to /auth so this page can consume `next` after Supabase hydrates the session.
-    const redirectUri = `${window.location.origin}/auth${next ? `?next=${encodeURIComponent(next)}` : ""}`;
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectUri });
-    if (result.error) { toast.error(result.error.message); setLoading(false); return; }
-    if (result.redirected) return;
-    window.location.href = destination;
+    try {
+      // Return to /auth so this page can consume `next` after Supabase hydrates the session.
+      const redirectUri = `${window.location.origin}/auth${next ? `?next=${encodeURIComponent(next)}` : ""}`;
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectUri });
+      if (result.error) { toast.error(result.error.message); setLoading(false); return; }
+      if (result.redirected) return;
+      window.location.href = destination;
+    } catch (err: any) {
+      toast.error(err?.message ?? "Google sign-in failed");
+      setLoading(false);
+    }
   };
 
   return (
@@ -120,13 +140,19 @@ function AuthPage() {
             )}
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1.5" />
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required aria-invalid={email.length > 0 && !emailValid} className="mt-1.5" />
+              {email.length > 0 && !emailValid && (
+                <p className="mt-1 text-xs text-destructive">Enter a valid email address</p>
+              )}
             </div>
             <div>
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} className="mt-1.5" />
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={mode === "signup" ? 8 : undefined} aria-invalid={mode === "signup" && password.length > 0 && !passwordValid} className="mt-1.5" />
+              {mode === "signup" && password.length > 0 && !passwordValid && (
+                <p className="mt-1 text-xs text-destructive">Must be at least 8 characters</p>
+              )}
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={!canSubmit}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {mode === "signin" ? "Sign in" : "Create account"}
             </Button>
