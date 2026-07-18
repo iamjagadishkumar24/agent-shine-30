@@ -192,8 +192,8 @@ function PlanDetail() {
             <div className="mt-4 space-y-2 text-xs">
               <div><span className="text-muted-foreground">Agent:</span> <span className="font-medium">{p.agent?.full_name}</span></div>
               <div><span className="text-muted-foreground">Department:</span> {p.agent?.department ?? "—"}</div>
-              <div><span className="text-muted-foreground">Start:</span> {new Date(p.start_date).toLocaleDateString()}</div>
-              {p.target_date && <div><span className="text-muted-foreground">Target:</span> {new Date(p.target_date).toLocaleDateString()}</div>}
+              <div><span className="text-muted-foreground">Start:</span> {safeDate(p.start_date)}</div>
+              {p.target_date && <div><span className="text-muted-foreground">Target:</span> {safeDate(p.target_date)}</div>}
             </div>
           </Card>
 
