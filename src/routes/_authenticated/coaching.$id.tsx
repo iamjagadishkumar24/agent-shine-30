@@ -10,10 +10,36 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Trash2, Plus, ArrowLeft } from "lucide-react";
+import { CheckCircle2, XCircle, Trash2, Plus, ArrowLeft, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const safeDate = (v: unknown) => {
+  if (!v) return "—";
+  const d = new Date(v as string);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+};
+const safeDateTime = (v: unknown) => {
+  if (!v) return "—";
+  const d = new Date(v as string);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+};
+
+function DetailSkeleton() {
+  return (
+    <div className="mx-auto max-w-5xl px-8 pb-12 pt-6 grid grid-cols-1 lg:grid-cols-3 gap-6" aria-busy="true">
+      <div className="lg:col-span-2 space-y-6">
+        <div className="h-64 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+        <div className="h-32 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+      </div>
+      <div className="space-y-4">
+        <div className="h-40 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+        <div className="h-24 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+      </div>
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/coaching/$id")({
   component: SessionDetail,
@@ -118,20 +144,28 @@ function SessionDetail() {
   });
 
   if (isLoading || !session) {
-    return <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div>
+        <PageHeader title="Coaching session" subtitle="Loading…" />
+        <DetailSkeleton />
+      </div>
+    );
   }
 
   const s = session as any;
   const done = items.filter((i: any) => i.status === "done").length;
   const isActive = s.status === "scheduled";
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const canAddItem = newItem.trim().length >= 3;
 
   return (
     <div>
       <PageHeader
-        title={s.topic}
-        subtitle={`with ${s.agent?.full_name ?? "—"} · ${new Date(s.scheduled_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`}
+        title={s.topic || "Coaching session"}
+        subtitle={`with ${s.agent?.full_name ?? "—"} · ${safeDateTime(s.scheduled_at)}`}
         actions={
           <Link to="/coaching">
+
             <Button variant="ghost" size="sm" className="h-8 gap-1"><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
           </Link>
         }
@@ -155,7 +189,7 @@ function SessionDetail() {
                   />
                   <div className="flex-1 min-w-0">
                     <div className={cn("text-sm truncate", it.status === "done" && "line-through text-muted-foreground")}>{it.title}</div>
-                    {it.due_date && <div className="text-[11px] text-muted-foreground">Due {new Date(it.due_date).toLocaleDateString()}</div>}
+                    {it.due_date && <div className="text-[11px] text-muted-foreground">Due {safeDate(it.due_date)}</div>}
                   </div>
                   <Select value={it.status} onValueChange={(v) => updateItem.mutate({ itemId: it.id, patch: { status: v } })}>
                     <SelectTrigger className={cn("h-7 w-32 text-xs border-none", ITEM_STATUS_STYLES[it.status])}>
@@ -176,10 +210,17 @@ function SessionDetail() {
             </div>
 
             <div className="flex gap-2 border-t border-border/50 pt-3">
-              <Input value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder="Add an action item…"
-                onKeyDown={(e) => { if (e.key === "Enter") addItem.mutate(); }} />
-              <Input type="date" value={newDue} onChange={(e) => setNewDue(e.target.value)} className="w-40" />
-              <Button size="sm" onClick={() => addItem.mutate()} className="gap-1"><Plus className="h-3.5 w-3.5" /> Add</Button>
+              <Input
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                placeholder="Add an action item… (min 3 chars)"
+                maxLength={200}
+                onKeyDown={(e) => { if (e.key === "Enter" && canAddItem) addItem.mutate(); }}
+              />
+              <Input type="date" min={todayISO} value={newDue} onChange={(e) => setNewDue(e.target.value)} className="w-40" />
+              <Button size="sm" onClick={() => addItem.mutate()} disabled={!canAddItem || addItem.isPending} className="gap-1">
+                <Plus className="h-3.5 w-3.5" /> Add
+              </Button>
             </div>
           </Card>
 
@@ -191,12 +232,36 @@ function SessionDetail() {
           )}
 
           <Card className="p-5">
-            <h3 className="text-sm font-semibold mb-2">Outcome</h3>
-            <Textarea rows={3} value={outcome} onChange={(e) => setOutcome(e.target.value)}
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold">Outcome</h3>
+              {s.status === "completed" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-xs"
+                  disabled={transition.isPending || (outcome ?? "") === (s.outcome ?? "")}
+                  onClick={async () => {
+                    const { error } = await supabase.from("coaching_sessions").update({ outcome: outcome || null }).eq("id", id);
+                    if (error) { toast.error(error.message); return; }
+                    qc.invalidateQueries({ queryKey: ["coaching-session", id] });
+                    toast.success("Outcome saved");
+                  }}
+                >
+                  <Save className="h-3.5 w-3.5" /> Save
+                </Button>
+              )}
+            </div>
+            <Textarea
+              rows={3}
+              value={outcome}
+              maxLength={4000}
+              onChange={(e) => setOutcome(e.target.value)}
               placeholder="Record what happened, decisions, follow-up owner…"
-              disabled={!isActive && s.status !== "completed"} />
+              disabled={!isActive && s.status !== "completed"}
+            />
           </Card>
         </div>
+
 
         <div className="space-y-4">
           <Card className="p-5">
@@ -214,7 +279,7 @@ function SessionDetail() {
                   </Link>
                 </div>
               )}
-              {s.completed_at && <div><span className="text-muted-foreground">Completed:</span> {new Date(s.completed_at).toLocaleString()}</div>}
+              {s.completed_at && <div><span className="text-muted-foreground">Completed:</span> {safeDateTime(s.completed_at)}</div>}
             </div>
           </Card>
 
