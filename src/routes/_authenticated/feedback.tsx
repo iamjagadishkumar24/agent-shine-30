@@ -383,7 +383,7 @@ function FeedbackRow({ f, selected, onToggle }: { f: any; selected: boolean; onT
         </span>
       </div>
       <div className="text-right text-xs text-muted-foreground">
-        {formatDistanceToNow(new Date(f.created_at), { addSuffix: true })}
+        {safeTimeAgo(f.created_at)}
       </div>
     </div>
   );
