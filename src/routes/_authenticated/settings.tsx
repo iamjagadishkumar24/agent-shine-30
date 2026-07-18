@@ -59,6 +59,14 @@ function SettingsPage() {
 // ---------------------------------------------------------------------------
 // Email configuration tab
 // ---------------------------------------------------------------------------
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function safeTimeAgo(v: string | null | undefined) {
+  if (!v) return "—";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? "—" : formatDistanceToNow(d, { addSuffix: true });
+}
+
 function EmailConfig() {
   const qc = useQueryClient();
   const getFn = useServerFn(getEmailSettings);
@@ -76,23 +84,20 @@ function EmailConfig() {
   const [verifyResult, setVerifyResult] = useState<any>(null);
   const [testResult, setTestResult] = useState<any>(null);
 
-  if (isLoading) return <Card className="p-6"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></Card>;
   const s = form ?? settings;
-  if (!s) return null;
-  const set = (patch: any) => setForm({ ...s, ...patch });
 
   const save = useMutation({
     mutationFn: () =>
       saveFn({
         data: {
-          provider: s.provider,
-          sender_name: s.sender_name,
-          sender_email: s.sender_email ?? "",
-          reply_to: s.reply_to ?? "",
-          signature_html: s.signature_html ?? "",
-          logo_url: s.logo_url ?? "",
-          confidentiality_notice: s.confidentiality_notice ?? "",
-          enabled: !!s.enabled,
+          provider: s?.provider,
+          sender_name: s?.sender_name,
+          sender_email: s?.sender_email ?? "",
+          reply_to: s?.reply_to ?? "",
+          signature_html: s?.signature_html ?? "",
+          logo_url: s?.logo_url ?? "",
+          confidentiality_notice: s?.confidentiality_notice ?? "",
+          enabled: !!s?.enabled,
         },
       }),
     onSuccess: (row) => {
@@ -100,7 +105,7 @@ function EmailConfig() {
       setForm(null);
       qc.setQueryData(["email-settings"], row);
     },
-    onError: (e: any) => toast.error(e.message ?? "Failed to save"),
+    onError: (e: any) => toast.error(e?.message ?? "Failed to save"),
   });
 
   const verify = useMutation({
@@ -108,8 +113,9 @@ function EmailConfig() {
     onSuccess: (r: any) => {
       setVerifyResult(r);
       if (r.ok) toast.success(`Connected as ${r.account ?? "provider"}`);
-      else toast.error(r.error);
+      else toast.error(r.error ?? "Verification failed");
     },
+    onError: (e: any) => toast.error(e?.message ?? "Verification failed"),
   });
 
   const test = useMutation({
@@ -117,10 +123,21 @@ function EmailConfig() {
     onSuccess: (r: any) => {
       setTestResult(r);
       if (r.ok) toast.success(`Test email sent (${r.latencyMs}ms)`);
-      else toast.error(r.error);
+      else toast.error(r.error ?? "Send failed");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e?.message ?? "Send failed"),
   });
+
+  if (isLoading || !s) {
+    return (
+      <Card className="p-6">
+        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+      </Card>
+    );
+  }
+  const set = (patch: any) => setForm({ ...s, ...patch });
+  const testEmailValid = EMAIL_RE.test(testTo.trim());
+
 
   return (
     <div className="space-y-4">
