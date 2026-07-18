@@ -50,8 +50,13 @@ function PortalPage() {
     <div>
       <PageHeader
         title="My feedback"
-        subtitle={agent ? `${agent.full_name} · ${agent.department}` : "Your personal quality feedback"}
-      />
+        subtitle={
+          agent
+            ? [agent.full_name, agent.department].filter(Boolean).join(" · ") ||
+              "Your personal quality feedback"
+            : "Your personal quality feedback"
+        }
+
       <div className="mx-auto max-w-5xl px-8 pb-12 pt-6 animate-in fade-in duration-300 space-y-6">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <StatCard icon={AlertCircle} tone="warn" label="Awaiting acknowledgement" value={pending} />
