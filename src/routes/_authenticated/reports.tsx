@@ -13,10 +13,23 @@ export const Route = createFileRoute("/_authenticated/reports")({
   component: ReportsPage,
 });
 
+function safeDateTime(v: string | null | undefined): string {
+  if (!v) return "";
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? "" : d.toLocaleString();
+}
+
+function monthKey(v: string | null | undefined): string | null {
+  if (!v) return null;
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 function ReportsPage() {
   const [busy, setBusy] = useState<string | null>(null);
 
-  const { data: agents = [] } = useQuery({
+  const { data: agents = [], isLoading: agentsLoading } = useQuery({
     queryKey: ["report-agents"],
     queryFn: async () => {
       const { data, error } = await supabase.from("agents")
@@ -26,7 +39,7 @@ function ReportsPage() {
     },
   });
 
-  const { data: feedback = [] } = useQuery({
+  const { data: feedback = [], isLoading: feedbackLoading } = useQuery({
     queryKey: ["report-feedback"],
     queryFn: async () => {
       const { data, error } = await supabase.from("feedback")
@@ -36,6 +49,8 @@ function ReportsPage() {
       return data;
     },
   });
+
+  const dataLoading = agentsLoading || feedbackLoading;
 
   // Agent performance rows
   const perfRows = () => {
@@ -66,8 +81,8 @@ function ReportsPage() {
   const trendRows = () => {
     const buckets = new Map<string, { total: number; sent: number; ack: number; sumScore: number; scored: number }>();
     for (const f of feedback as any[]) {
-      const d = new Date(f.created_at);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const key = monthKey(f.created_at);
+      if (!key) continue;
       if (!buckets.has(key)) buckets.set(key, { total: 0, sent: 0, ack: 0, sumScore: 0, scored: 0 });
       const b = buckets.get(key)!;
       b.total += 1;
@@ -93,8 +108,8 @@ function ReportsPage() {
       Title: f.title,
       Agent: f.agent?.full_name ?? "",
       Status: f.status,
-      Sent: f.sent_at ? new Date(f.sent_at).toLocaleString() : "",
-      Acknowledged: f.acknowledged_at ? new Date(f.acknowledged_at).toLocaleString() : "",
+      Sent: safeDateTime(f.sent_at),
+      Acknowledged: safeDateTime(f.acknowledged_at),
       Severity: f.severity ?? "",
     }));
   };
@@ -187,13 +202,25 @@ function ReportsPage() {
               </div>
             </div>
             <div className="mt-auto pt-5 flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 gap-1.5" disabled={busy === r.key + ":pdf"}
-                onClick={() => { const rows = r.getRows(); run(r.key + ":pdf", rows, () => r.pdf(rows)); }}>
-                <FileText className="h-3.5 w-3.5" /> PDF
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1.5"
+                disabled={dataLoading || busy === r.key + ":pdf"}
+                onClick={() => { const rows = r.getRows(); run(r.key + ":pdf", rows, () => r.pdf(rows)); }}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                {dataLoading ? "Loading…" : "PDF"}
               </Button>
-              <Button variant="outline" size="sm" className="flex-1 gap-1.5" disabled={busy === r.key + ":csv"}
-                onClick={() => { const rows = r.getRows(); run(r.key + ":csv", rows, () => r.csv(rows)); }}>
-                <FileSpreadsheet className="h-3.5 w-3.5" /> CSV
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1.5"
+                disabled={dataLoading || busy === r.key + ":csv"}
+                onClick={() => { const rows = r.getRows(); run(r.key + ":csv", rows, () => r.csv(rows)); }}
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5" />
+                {dataLoading ? "Loading…" : "CSV"}
               </Button>
             </div>
           </Card>
