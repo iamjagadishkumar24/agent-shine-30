@@ -19,6 +19,28 @@ import {
   bulkRejectFeedback,
   bulkDeleteFeedback,
 } from "@/lib/bulk-operations.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+function safeTimeAgo(v: string | null | undefined): string {
+  if (!v) return "—";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "—";
+  try {
+    return formatDistanceToNow(d, { addSuffix: true });
+  } catch {
+    return "—";
+  }
+}
 
 type Range = "7d" | "30d" | "90d" | "all";
 
