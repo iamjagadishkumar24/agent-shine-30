@@ -510,6 +510,66 @@ export type Database = {
         }
         Relationships: []
       }
+      report_schedules: {
+        Row: {
+          cadence: Database["public"]["Enums"]["report_cadence"]
+          created_at: string
+          created_by: string | null
+          day_of_month: number | null
+          day_of_week: number | null
+          enabled: boolean
+          format: Database["public"]["Enums"]["report_format"]
+          hour_utc: number
+          id: string
+          last_error: string | null
+          last_run_at: string | null
+          last_status: string | null
+          name: string
+          next_run_at: string
+          recipients: string[]
+          report_type: Database["public"]["Enums"]["report_type"]
+          updated_at: string
+        }
+        Insert: {
+          cadence: Database["public"]["Enums"]["report_cadence"]
+          created_at?: string
+          created_by?: string | null
+          day_of_month?: number | null
+          day_of_week?: number | null
+          enabled?: boolean
+          format?: Database["public"]["Enums"]["report_format"]
+          hour_utc?: number
+          id?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          last_status?: string | null
+          name: string
+          next_run_at?: string
+          recipients?: string[]
+          report_type: Database["public"]["Enums"]["report_type"]
+          updated_at?: string
+        }
+        Update: {
+          cadence?: Database["public"]["Enums"]["report_cadence"]
+          created_at?: string
+          created_by?: string | null
+          day_of_month?: number | null
+          day_of_week?: number | null
+          enabled?: boolean
+          format?: Database["public"]["Enums"]["report_format"]
+          hour_utc?: number
+          id?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          last_status?: string | null
+          name?: string
+          next_run_at?: string
+          recipients?: string[]
+          report_type?: Database["public"]["Enums"]["report_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -559,6 +619,9 @@ export type Database = {
         | "critical"
         | "compliance"
         | "coaching"
+      report_cadence: "weekly" | "monthly"
+      report_format: "pdf" | "csv" | "both"
+      report_type: "agent_performance" | "feedback_trends" | "email_delivery"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -705,6 +768,9 @@ export const Constants = {
         "compliance",
         "coaching",
       ],
+      report_cadence: ["weekly", "monthly"],
+      report_format: ["pdf", "csv", "both"],
+      report_type: ["agent_performance", "feedback_trends", "email_delivery"],
     },
   },
 } as const

@@ -1,10 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, FileSpreadsheet, Users, TrendingUp, Mail } from "lucide-react";
+import { FileText, FileSpreadsheet, Users, TrendingUp, Mail, CalendarClock } from "lucide-react";
 import { toCsv, toPdf } from "@/lib/reports";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -170,7 +170,15 @@ function ReportsPage() {
 
   return (
     <div>
-      <PageHeader title="Reports" subtitle="Export performance, trends, and delivery data as PDF or CSV." />
+      <PageHeader
+        title="Reports"
+        subtitle="Export performance, trends, and delivery data as PDF or CSV."
+        actions={
+          <Button asChild size="sm" variant="outline">
+            <Link to="/reports/schedules"><CalendarClock className="mr-1.5 h-3.5 w-3.5" /> Scheduled reports</Link>
+          </Button>
+        }
+      />
       <div className="mx-auto max-w-5xl px-8 pb-12 pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {REPORTS.map((r) => (
           <Card key={r.key} className="p-5 flex flex-col">
