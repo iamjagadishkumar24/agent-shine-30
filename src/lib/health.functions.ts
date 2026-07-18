@@ -11,19 +11,33 @@ export type HealthCheck = {
   latencyMs?: number;
 };
 
-async function timed<T>(fn: () => Promise<T>): Promise<{ result: T; latencyMs: number }> {
+const CHECK_TIMEOUT_MS = 8000;
+const AI_GATEWAY_TIMEOUT_MS = 5000;
+
+function clampMsg(s: unknown, max = 240): string {
+  const str = typeof s === "string" ? s : s instanceof Error ? s.message : String(s ?? "");
+  return str.length > max ? str.slice(0, max) + "…" : str;
+}
+
+async function timed<T>(fn: () => Promise<T>, timeoutMs = CHECK_TIMEOUT_MS): Promise<{ result: T; latencyMs: number }> {
   const t = Date.now();
-  const result = await fn();
+  const result = await Promise.race<T>([
+    fn(),
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timed out after ${timeoutMs}ms`)), timeoutMs),
+    ),
+  ]);
   return { result, latencyMs: Date.now() - t };
 }
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
-  const roles = ["qa_admin", "super_admin"];
-  for (const r of roles) {
-    const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: r });
-    if (data) return;
+  const [{ data: isAdmin }, { data: isSuper }] = await Promise.all([
+    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "qa_admin" }),
+    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "super_admin" }),
+  ]);
+  if (!isAdmin && !isSuper) {
+    throw new Response("Admin role required", { status: 403 });
   }
-  throw new Error("Forbidden: admin required");
 }
 
 export const runHealthChecks = createServerFn({ method: "GET" })
@@ -170,22 +184,31 @@ export const runHealthChecks = createServerFn({ method: "GET" })
       if (!hasKey) {
         checks.push({ id: "ai.gateway", module: "AI", name: "Lovable AI Gateway", status: "fail", message: "LOVABLE_API_KEY not set" });
       } else {
-        const { result, latencyMs } = await timed(() =>
-          fetch("https://ai.gateway.lovable.dev/v1/models", {
-            headers: { "Lovable-API-Key": process.env.LOVABLE_API_KEY! },
-          }),
-        );
-        checks.push({
-          id: "ai.gateway",
-          module: "AI",
-          name: "Lovable AI Gateway",
-          status: result.ok ? "ok" : "fail",
-          message: result.ok ? `Reachable (HTTP ${result.status})` : `HTTP ${result.status}`,
-          latencyMs,
-        });
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), AI_GATEWAY_TIMEOUT_MS);
+        try {
+          const { result, latencyMs } = await timed(
+            () =>
+              fetch("https://ai.gateway.lovable.dev/v1/models", {
+                headers: { "Lovable-API-Key": process.env.LOVABLE_API_KEY! },
+                signal: controller.signal,
+              }),
+            AI_GATEWAY_TIMEOUT_MS + 500,
+          );
+          checks.push({
+            id: "ai.gateway",
+            module: "AI",
+            name: "Lovable AI Gateway",
+            status: result.ok ? "ok" : "fail",
+            message: result.ok ? `Reachable (HTTP ${result.status})` : `HTTP ${result.status}`,
+            latencyMs,
+          });
+        } finally {
+          clearTimeout(timer);
+        }
       }
     } catch (e) {
-      checks.push({ id: "ai.gateway", module: "AI", name: "Lovable AI Gateway", status: "fail", message: (e as Error).message });
+      checks.push({ id: "ai.gateway", module: "AI", name: "Lovable AI Gateway", status: "fail", message: clampMsg(e) });
     }
 
     // --- Environment vars ---
