@@ -26,6 +26,7 @@ export default defineMcp({
     listFeedbackTool,
     getFeedbackTool,
     createFeedbackTool,
+    updateFeedbackStatusTool,
     listCoachingSessionsTool,
   ],
 });

@@ -196,6 +196,51 @@
         "outputSchema": null
       },
       {
+        "name": "update_feedback_status",
+        "title": "Update feedback status",
+        "description": "Update a feedback item's status and record a reviewer comment. Writes an audit log entry capturing the actor, previous and new status, and the comment. RLS applies as the signed-in user.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "feedback_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Feedback UUID to update."
+            },
+            "to_status": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "review",
+                "approved",
+                "sent",
+                "acknowledged",
+                "completed"
+              ],
+              "description": "New status."
+            },
+            "comment": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Reviewer comment / justification for the change."
+            }
+          },
+          "required": [
+            "feedback_id",
+            "to_status",
+            "comment"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
         "name": "list_coaching_sessions",
         "title": "List coaching sessions",
         "description": "List coaching sessions visible to the signed-in user, optionally filtered by agent or status. Newest first.",
