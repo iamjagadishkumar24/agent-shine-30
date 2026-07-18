@@ -72,8 +72,8 @@ export const runHealthChecks = createServerFn({ method: "GET" })
 
     // --- has_role RPC ---
     try {
-      const { result, latencyMs } = await timed(() =>
-        supabase.rpc("has_role", { _user_id: userId, _role: "qa_admin" }),
+      const { result, latencyMs } = await timed(async () =>
+        await supabase.rpc("has_role", { _user_id: userId, _role: "qa_admin" }),
       );
       const err = (result as any).error;
       checks.push({
