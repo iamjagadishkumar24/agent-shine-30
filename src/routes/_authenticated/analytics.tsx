@@ -134,7 +134,7 @@ function AnalyticsPage() {
   }, [feedback]);
 
   const topAgents = useMemo(() => {
-    const nameById = new Map(agents.map((a) => [a.id, a.name ?? "Unassigned"]));
+    const nameById = new Map(agents.map((a) => [a.id, a.full_name ?? "Unassigned"]));
     const counts = new Map<string, { name: string; count: number; scoreSum: number; scoreN: number }>();
     for (const f of feedback) {
       const id = f.agent_id ?? "unassigned";
