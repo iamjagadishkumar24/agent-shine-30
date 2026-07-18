@@ -254,7 +254,23 @@ function FeedbackDetail() {
                 <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Complete
               </Button>
             )}
-            <Button variant="ghost" size="icon" onClick={confirmDelete} disabled={remove.isPending} className="text-muted-foreground hover:text-destructive" aria-label="Delete feedback"><Trash2 className="h-3.5 w-3.5" /></Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" disabled={remove.isPending} className="text-muted-foreground hover:text-destructive" aria-label="Delete feedback"><Trash2 className="h-3.5 w-3.5" /></Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this feedback?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    "{data.title}" will be permanently removed along with its email history. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => remove.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         }
       />
