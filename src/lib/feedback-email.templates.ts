@@ -1,4 +1,9 @@
-// Pure HTML email template. Client-safe.
+// Pure HTML email template. Client-safe (no server imports).
+
+export type FeedbackEmailAttachmentLink = {
+  fileName: string;
+  url: string;
+};
 
 export type FeedbackEmailData = {
   feedbackId: string;
@@ -14,9 +19,16 @@ export type FeedbackEmailData = {
   recommendedActions?: string | null;
   dueDate?: string | null;
   reviewerName?: string | null;
+  managerName?: string | null;
   appBaseUrl: string;
   isReminder?: boolean;
   reminderCount?: number;
+  // Branding
+  senderName?: string;
+  logoUrl?: string | null;
+  signatureHtml?: string | null;
+  confidentialityNotice?: string | null;
+  attachmentLinks?: FeedbackEmailAttachmentLink[];
 };
 
 const escape = (s: string) =>
@@ -53,13 +65,40 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
        </td></tr>`
     : "";
 
+  const logoBlock = d.logoUrl
+    ? `<img src="${escape(d.logoUrl)}" alt="${escape(d.senderName ?? "Logo")}" height="28" style="display:block;height:28px;width:auto;margin-bottom:12px;" />`
+    : "";
+
+  const attachmentsBlock = (d.attachmentLinks ?? []).length
+    ? `<tr><td style="padding:20px 32px 0;">
+         <div style="font:600 11px/1.4 -apple-system,Segoe UI,Roboto,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#71717a;">Attachments</div>
+         <div style="margin-top:8px;">${(d.attachmentLinks ?? [])
+           .map(
+             (a) =>
+               `<a href="${escape(a.url)}" style="display:inline-block;margin:0 8px 8px 0;padding:8px 12px;border:1px solid #e4e4e7;border-radius:8px;font:500 12px/1 -apple-system,Segoe UI,Roboto,sans-serif;color:#18181b;text-decoration:none;background:#fafafa;">📎 ${escape(a.fileName)}</a>`,
+           )
+           .join("")}</div>
+       </td></tr>`
+    : "";
+
+  const signatureBlock = d.signatureHtml
+    ? `<tr><td style="padding:24px 32px 0;border-top:1px solid #f4f4f5;">
+         <div style="font:13px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;color:#3f3f46;">${d.signatureHtml}</div>
+       </td></tr>`
+    : "";
+
+  const confidentiality = d.confidentialityNotice
+    ? `<div style="margin-top:8px;font-style:italic;">${escape(d.confidentialityNotice)}</div>`
+    : "";
+
   const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escape(subject)}</title></head>
 <body style="margin:0;padding:24px 12px;background:#fafafa;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e4e4e7;border-radius:14px;overflow:hidden;">
     <tr><td style="padding:24px 32px;background:#0a0a0a;color:#fafafa;">
+      ${logoBlock}
       <div style="font:600 12px/1 -apple-system,Segoe UI,Roboto,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#a1a1aa;">Quality Assurance</div>
       <div style="margin-top:8px;font:600 22px/1.3 -apple-system,Segoe UI,Roboto,sans-serif;">${escape(d.title)}</div>
-      <div style="margin-top:6px;font:13px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#a1a1aa;">Prepared for ${escape(d.agentName)}${d.reviewerName ? ` · by ${escape(d.reviewerName)}` : ""}</div>
+      <div style="margin-top:6px;font:13px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#a1a1aa;">Prepared for ${escape(d.agentName)}${d.reviewerName ? ` · by ${escape(d.reviewerName)}` : ""}${d.managerName ? ` · Manager ${escape(d.managerName)}` : ""}</div>
     </td></tr>
     ${banner}
     <tr><td style="padding:20px 32px 0;">
@@ -69,14 +108,17 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
     ${section("Summary", d.summary)}
     ${section("Strengths", d.strengths)}
     ${section("Areas to improve", d.improvements)}
-    ${section("Recommended actions", d.recommendedActions)}
+    ${section("Coaching recommendations", d.recommendedActions)}
+    ${attachmentsBlock}
     ${d.dueDate ? `<tr><td style="padding:20px 32px 0;"><div style="font:13px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#52525b;">Please acknowledge by <strong style="color:#18181b;">${escape(d.dueDate)}</strong>.</div></td></tr>` : ""}
-    <tr><td style="padding:28px 32px 32px;">
-      <a href="${ackUrl}" style="display:inline-block;padding:12px 20px;background:#18181b;color:#fafafa;text-decoration:none;border-radius:8px;font:600 14px/1 -apple-system,Segoe UI,Roboto,sans-serif;">Review &amp; acknowledge</a>
+    <tr><td style="padding:28px 32px 8px;">
+      <a href="${ackUrl}" style="display:inline-block;padding:12px 20px;background:#18181b;color:#fafafa;text-decoration:none;border-radius:8px;font:600 14px/1 -apple-system,Segoe UI,Roboto,sans-serif;">Acknowledge feedback</a>
       <div style="margin-top:16px;font:12px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#a1a1aa;">Or open: <a href="${ackUrl}" style="color:#4338ca;">${escape(`${d.appBaseUrl}/feedback/${d.feedbackId}`)}</a></div>
     </td></tr>
+    ${signatureBlock}
     <tr><td style="padding:16px 32px;background:#fafafa;border-top:1px solid #e4e4e7;font:12px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#71717a;">
-      This is an automated message from the QA platform. Acknowledgements are tracked for coaching and compliance.
+      This is an automated message from ${escape(d.senderName ?? "the QA platform")}. Acknowledgements are tracked for coaching and compliance.
+      ${confidentiality}
     </td></tr>
   </table>
   <img src="${pixelUrl}" width="1" height="1" alt="" style="display:none;width:1px;height:1px;" />
@@ -92,10 +134,12 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
     d.summary ? `Summary:\n${d.summary}\n` : "",
     d.strengths ? `Strengths:\n${d.strengths}\n` : "",
     d.improvements ? `Areas to improve:\n${d.improvements}\n` : "",
-    d.recommendedActions ? `Recommended actions:\n${d.recommendedActions}\n` : "",
+    d.recommendedActions ? `Coaching recommendations:\n${d.recommendedActions}\n` : "",
+    (d.attachmentLinks ?? []).length ? `Attachments:\n${(d.attachmentLinks ?? []).map((a) => `- ${a.fileName}: ${a.url}`).join("\n")}\n` : "",
     d.dueDate ? `Please acknowledge by ${d.dueDate}.` : "",
     "",
-    `Review & acknowledge: ${ackUrl}`,
+    `Acknowledge: ${ackUrl}`,
+    d.confidentialityNotice ? `\n${d.confidentialityNotice}` : "",
   ].filter(Boolean).join("\n");
 
   return { subject, html, text };
