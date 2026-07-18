@@ -123,9 +123,9 @@ function FeedbackPage() {
   if (search.range) activeFilters.push({ key: "range", label: `Last ${search.range}` });
 
   const clearFilter = (key: keyof FeedbackSearch) => {
-    navigate({ search: (prev) => ({ ...prev, [key]: undefined }) });
+    navigate({ search: (prev: FeedbackSearch) => ({ ...prev, [key]: undefined }) });
   };
-  const clearAll = () => navigate({ search: () => ({}) });
+  const clearAll = () => navigate({ search: () => ({} as FeedbackSearch) });
 
   return (
     <div>
