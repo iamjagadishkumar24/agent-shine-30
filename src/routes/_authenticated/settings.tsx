@@ -392,7 +392,7 @@ function EmailHistory() {
         <tbody>
           {(rows as any[]).map((r) => (
             <tr key={r.id} className="border-t border-border/60">
-              <td className="px-4 py-2 text-xs text-muted-foreground">{formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}</td>
+              <td className="px-4 py-2 text-xs text-muted-foreground">{safeTimeAgo(r.created_at)}</td>
               <td className="px-4 py-2"><span className={cn("rounded-md px-2 py-0.5 text-xs capitalize", STATUS_TONE[r.status] ?? "bg-muted")}>{r.status}</span></td>
               <td className="px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">{r.kind}</td>
               <td className="px-4 py-2">{r.to_email}</td>
