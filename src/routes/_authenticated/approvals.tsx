@@ -40,12 +40,6 @@ const SEV_TONE: Record<string, string> = {
   critical: "text-destructive",
 };
 
-const SEV_TONE: Record<string, string> = {
-  low: "text-muted-foreground",
-  medium: "text-foreground",
-  high: "text-[oklch(0.78_0.16_75)]",
-  critical: "text-destructive",
-};
 
 type SevFilter = "all" | "critical" | "high" | "medium" | "low";
 
