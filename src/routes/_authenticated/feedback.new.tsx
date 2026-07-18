@@ -36,7 +36,7 @@ const Schema = z.object({
 function NewFeedback() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { agent } = Route.useSearch();
+  const { agent = "" } = Route.useSearch();
   const [form, setForm] = useState({
     title: "", agent_id: agent, category: "Communication",
     feedback_type: "constructive" as const, severity: "medium" as const,
