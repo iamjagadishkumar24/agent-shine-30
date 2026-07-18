@@ -232,12 +232,14 @@ function AuthedLayout() {
               <kbd className="rounded border border-border px-1 text-[10px] font-mono">⌘K</kbd>
             </button>
 
-            <Button asChild size="sm" variant="ghost" className="gap-1.5">
-              <Link to="/feedback/new">
-                <Plus className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">New feedback</span>
-              </Link>
-            </Button>
+            {isStaff && (
+              <Button asChild size="sm" variant="ghost" className="gap-1.5">
+                <Link to="/feedback/new">
+                  <Plus className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">New feedback</span>
+                </Link>
+              </Button>
+            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
