@@ -44,15 +44,16 @@ function useDashboardData() {
     queryKey: ["dashboard"],
     queryFn: async () => {
       const [agentsRes, feedbackRes] = await Promise.all([
-        supabase.from("agents").select("id, name, employee_id, department, avatar_url, qa_score, status"),
+        supabase.from("agents").select("id, full_name, employee_id, department, avatar_url, qa_score, status"),
         supabase
           .from("feedback")
-          .select("id, status, feedback_type, severity, score, created_at, agent_id, subject, delivered_at, opened_at, clicked_at, acknowledged_at, escalated_at")
+          .select("id, status, feedback_type, severity, score, created_at, agent_id, title, delivered_at, opened_at, clicked_at, acknowledged_at, escalated_at, email_error")
           .order("created_at", { ascending: false }),
       ]);
       if (agentsRes.error) throw agentsRes.error;
       if (feedbackRes.error) throw feedbackRes.error;
-      return { agents: agentsRes.data ?? [], feedback: feedbackRes.data ?? [] };
+      const agents = (agentsRes.data ?? []).map((a) => ({ ...a, name: a.full_name }));
+      return { agents, feedback: feedbackRes.data ?? [] };
     },
   });
 }
