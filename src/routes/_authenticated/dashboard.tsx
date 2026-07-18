@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -134,6 +134,7 @@ function KpiCard({
   tone,
   sparkline,
   drillTo,
+  drillSearch,
   tooltip,
 }: {
   label: string;
@@ -143,6 +144,7 @@ function KpiCard({
   tone: Tone;
   sparkline?: number[];
   drillTo?: string;
+  drillSearch?: Record<string, unknown>;
   tooltip?: string;
 }) {
   const t = TONE[tone];
@@ -201,7 +203,7 @@ function KpiCard({
     </Card>
   );
   return drillTo ? (
-    <Link to={drillTo as any} className="block h-full">
+    <Link to={drillTo as any} search={drillSearch as any} className="block h-full">
       {inner}
     </Link>
   ) : (
@@ -234,6 +236,7 @@ function bucketByWeek<T extends { created_at: string }>(rows: T[], filter: (r: T
 // ---------------------------------------------------------------------------
 function Dashboard() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { data, isLoading, isFetching, refetch } = useDashboardData();
   const [range, setRange] = useState<"Daily" | "Weekly" | "Monthly">("Weekly");
 
@@ -371,11 +374,11 @@ function Dashboard() {
     acknowledged: feedback.filter((f) => f.status === "acknowledged" || f.status === "completed").length,
   };
   const statusTotal = Math.max(1, Object.values(statusCounts).reduce((a, b) => a + b, 0));
-  const statusRows = [
-    { key: "Draft", value: statusCounts.draft, color: "oklch(0.65 0.20 285)" },
-    { key: "Pending", value: statusCounts.review, color: "oklch(0.80 0.16 75)" },
-    { key: "Sent", value: statusCounts.sent, color: "oklch(0.70 0.14 235)" },
-    { key: "Acknowledged", value: statusCounts.acknowledged, color: "oklch(0.72 0.16 160)" },
+  const statusRows: Array<{ key: string; value: number; color: string; filter: string }> = [
+    { key: "Draft", value: statusCounts.draft, color: "oklch(0.65 0.20 285)", filter: "draft" },
+    { key: "Pending", value: statusCounts.review, color: "oklch(0.80 0.16 75)", filter: "review" },
+    { key: "Sent", value: statusCounts.sent, color: "oklch(0.70 0.14 235)", filter: "sent" },
+    { key: "Acknowledged", value: statusCounts.acknowledged, color: "oklch(0.72 0.16 160)", filter: "acknowledged" },
   ];
 
   // Email
@@ -485,10 +488,10 @@ function Dashboard() {
             delta={monthDelta} sparkline={sparkAll} drillTo="/feedback"
             tooltip="All feedback records regardless of status." />
           <KpiCard label="Pending Reviews" value={pending.toLocaleString()} icon={Clock} tone="amber"
-            sparkline={sparkPending} drillTo="/feedback"
+            sparkline={sparkPending} drillTo="/feedback" drillSearch={{ status: "pending" }}
             tooltip="Drafts and items awaiting review." />
           <KpiCard label="Completed" value={completed.toLocaleString()} icon={CheckCircle2} tone="emerald"
-            sparkline={sparkCompleted} drillTo="/feedback"
+            sparkline={sparkCompleted} drillTo="/feedback" drillSearch={{ status: "completed" }}
             tooltip="Feedback acknowledged or completed." />
           <KpiCard label="Active Agents" value={`${activeAgents}/${totalAgents}`} icon={Users} tone="sky"
             drillTo="/agents"
@@ -504,9 +507,9 @@ function Dashboard() {
           <KpiCard label="Average QA Score" value={`${avgQA.toFixed(1)}%`} icon={Activity} tone="indigo"
             drillTo="/agents"
             tooltip="Average QA score across all agents." />
-          <KpiCard label="Total Reports" value={"—"} icon={FileText} tone="sky"
-            drillTo="/reports"
-            tooltip="Available report types (see Reports)." />
+          <KpiCard label="High Priority" value={highPriority.toLocaleString()} icon={ShieldAlert} tone="rose"
+            drillTo="/feedback" drillSearch={{ status: "high_priority" }}
+            tooltip="Feedback marked high or critical severity." />
           <KpiCard label="Open Tasks" value={openTasks.toLocaleString()} icon={ListChecks} tone="rose"
             drillTo="/coaching"
             tooltip="Coaching action items open or in progress." />
@@ -515,6 +518,7 @@ function Dashboard() {
             tooltip="Completed coaching action items." />
           <KpiCard label="Weekly Trend" value={fbLastWeek.toLocaleString()} icon={Zap} tone="violet"
             delta={{ ...weekDelta, suffix: "vs prev week" }} sparkline={sparkAll.slice(-6)}
+            drillTo="/feedback" drillSearch={{ range: "7d" }}
             tooltip="Feedback created in the last 7 days." />
           </>)}
         </div>
@@ -527,7 +531,7 @@ function Dashboard() {
           </Suspense>
 
           <Suspense fallback={<div className="col-span-12 md:col-span-6 xl:col-span-4"><ChartSkeleton height="h-44" /></div>}>
-            <HeavyCharts.Category categories={categories} totalCat={totalCat} />
+            <HeavyCharts.Category categories={categories} totalCat={totalCat} onSliceClick={(name) => navigate({ to: "/feedback", search: { category: name } })} />
           </Suspense>
 
           <Suspense fallback={<div className="col-span-12 md:col-span-6 xl:col-span-4"><ChartSkeleton height="h-52" /></div>}>
@@ -541,7 +545,12 @@ function Dashboard() {
               {statusRows.map((r) => {
                 const pct = (r.value / statusTotal) * 100;
                 return (
-                  <div key={r.key}>
+                  <Link
+                    key={r.key}
+                    to="/feedback"
+                    search={{ status: r.filter } as any}
+                    className="block rounded-md -mx-1.5 px-1.5 py-1 transition hover:bg-muted/40"
+                  >
                     <div className="mb-1.5 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full" style={{ background: r.color }} />
@@ -555,7 +564,7 @@ function Dashboard() {
                     <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                       <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: r.color }} />
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
