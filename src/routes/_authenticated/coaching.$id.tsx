@@ -201,11 +201,11 @@ function SessionDetail() {
         <div className="space-y-4">
           <Card className="p-5">
             <div className="text-xs text-muted-foreground mb-1">Status</div>
-            <Badge variant="outline" className="capitalize">{s.status.replace("_", " ")}</Badge>
+            <Badge variant="outline" className="capitalize">{(s.status ?? "scheduled").replace("_", " ")}</Badge>
             <div className="mt-4 space-y-2 text-xs">
-              <div><span className="text-muted-foreground">Agent:</span> <span className="font-medium">{s.agent?.full_name}</span></div>
+              <div><span className="text-muted-foreground">Agent:</span> <span className="font-medium">{s.agent?.full_name ?? "Unassigned"}</span></div>
               <div><span className="text-muted-foreground">Department:</span> {s.agent?.department ?? "—"}</div>
-              <div><span className="text-muted-foreground">Duration:</span> {s.duration_minutes} min</div>
+              <div><span className="text-muted-foreground">Duration:</span> {s.duration_minutes ?? 30} min</div>
               {s.feedback && (
                 <div>
                   <span className="text-muted-foreground">Feedback:</span>{" "}
