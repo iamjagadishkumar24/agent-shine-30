@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.tg_goal_progress_apply() FROM PUBLIC, anon, authenticated;
