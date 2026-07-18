@@ -196,6 +196,33 @@ function NewFeedback() {
           </div>
         </Card>
       </div>
+
+      <Dialog open={aiOpen} onOpenChange={setAiOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> AI feedback draft</DialogTitle>
+            <DialogDescription>
+              Paste raw observations from your review. The AI will structure it into a professional draft you can edit before sending.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Observations</Label>
+            <Textarea
+              rows={8}
+              value={observations}
+              onChange={(e) => setObservations(e.target.value)}
+              placeholder="e.g. On the 10:42 billing call, agent skipped mini-Miranda, resolved the dispute in under 3 minutes, but interrupted the customer twice..."
+            />
+            <p className="text-xs text-muted-foreground">Uses agent, category, type, severity, and score from the form above.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAiOpen(false)} disabled={ai.isPending}>Cancel</Button>
+            <Button onClick={() => ai.mutate()} disabled={ai.isPending}>
+              {ai.isPending ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Generating…</> : <><Sparkles className="mr-1.5 h-3.5 w-3.5" /> Generate draft</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
