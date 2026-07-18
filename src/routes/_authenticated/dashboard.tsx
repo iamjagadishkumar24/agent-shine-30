@@ -134,6 +134,7 @@ function KpiCard({
   tone,
   sparkline,
   drillTo,
+  drillSearch,
   tooltip,
 }: {
   label: string;
@@ -143,6 +144,7 @@ function KpiCard({
   tone: Tone;
   sparkline?: number[];
   drillTo?: string;
+  drillSearch?: Record<string, unknown>;
   tooltip?: string;
 }) {
   const t = TONE[tone];
@@ -201,7 +203,7 @@ function KpiCard({
     </Card>
   );
   return drillTo ? (
-    <Link to={drillTo as any} className="block h-full">
+    <Link to={drillTo as any} search={drillSearch as any} className="block h-full">
       {inner}
     </Link>
   ) : (
