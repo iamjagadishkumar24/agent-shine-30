@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
@@ -8,9 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Sparkles, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { generateFeedbackDraft } from "@/lib/ai-feedback.functions";
 
 export const Route = createFileRoute("/_authenticated/feedback/new")({
   validateSearch: (s: Record<string, unknown>): { agent?: string } =>
@@ -41,6 +45,38 @@ function NewFeedback() {
     title: "", agent_id: agent, category: "Communication",
     feedback_type: "constructive" as const, severity: "medium" as const,
     summary: "", strengths: "", improvements: "", recommended_actions: "", score: "",
+  });
+  const [aiOpen, setAiOpen] = useState(false);
+  const [observations, setObservations] = useState("");
+  const runAi = useServerFn(generateFeedbackDraft);
+  const ai = useMutation({
+    mutationFn: async () => {
+      if (!form.agent_id) throw new Error("Pick an agent first");
+      if (observations.trim().length < 10) throw new Error("Add at least a sentence of observations");
+      return await runAi({
+        data: {
+          agent_id: form.agent_id,
+          category: form.category,
+          feedback_type: form.feedback_type,
+          severity: form.severity,
+          observations: observations.trim(),
+          score: form.score ? Number(form.score) : null,
+        },
+      });
+    },
+    onSuccess: (draft) => {
+      setForm((f) => ({
+        ...f,
+        title: draft.title || f.title,
+        summary: draft.summary || f.summary,
+        strengths: draft.strengths || f.strengths,
+        improvements: draft.improvements || f.improvements,
+        recommended_actions: draft.recommended_actions || f.recommended_actions,
+      }));
+      setAiOpen(false);
+      toast.success("AI draft applied — review before sending");
+    },
+    onError: (e: any) => toast.error(e.message ?? "AI draft failed"),
   });
 
   const { data: agents = [] } = useQuery({
@@ -86,6 +122,9 @@ function NewFeedback() {
         subtitle="Craft feedback with clear structure. Save as draft or send immediately."
         actions={
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setAiOpen(true)} disabled={create.isPending}>
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" /> AI draft
+            </Button>
             <Button variant="outline" size="sm" onClick={() => create.mutate("draft")} disabled={create.isPending}>Save draft</Button>
             <Button size="sm" onClick={() => create.mutate("sent")} disabled={create.isPending}>Send now</Button>
           </div>
@@ -157,6 +196,33 @@ function NewFeedback() {
           </div>
         </Card>
       </div>
+
+      <Dialog open={aiOpen} onOpenChange={setAiOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> AI feedback draft</DialogTitle>
+            <DialogDescription>
+              Paste raw observations from your review. The AI will structure it into a professional draft you can edit before sending.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Observations</Label>
+            <Textarea
+              rows={8}
+              value={observations}
+              onChange={(e) => setObservations(e.target.value)}
+              placeholder="e.g. On the 10:42 billing call, agent skipped mini-Miranda, resolved the dispute in under 3 minutes, but interrupted the customer twice..."
+            />
+            <p className="text-xs text-muted-foreground">Uses agent, category, type, severity, and score from the form above.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAiOpen(false)} disabled={ai.isPending}>Cancel</Button>
+            <Button onClick={() => ai.mutate()} disabled={ai.isPending}>
+              {ai.isPending ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Generating…</> : <><Sparkles className="mr-1.5 h-3.5 w-3.5" /> Generate draft</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
