@@ -6,12 +6,26 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { SkeletonBox } from "@/components/ui/skeleton-blocks";
 import { ArrowLeft, CheckCircle2, MessageCircleQuestion, History } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, format } from "date-fns";
 import { acknowledgeFeedback, requestClarification } from "@/lib/agent-portal.functions";
+
+function safeTimeAgo(v: string | null | undefined) {
+  if (!v) return "";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? "" : formatDistanceToNow(d, { addSuffix: true });
+}
+
+function safeDate(v: string | null | undefined) {
+  if (!v) return "";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? "" : format(d, "PPP");
+}
+
 
 export const Route = createFileRoute("/_authenticated/portal/$id")({
   component: PortalFeedbackDetail,
