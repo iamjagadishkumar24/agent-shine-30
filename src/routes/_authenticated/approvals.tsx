@@ -40,11 +40,22 @@ const SEV_TONE: Record<string, string> = {
   critical: "text-destructive",
 };
 
+const SEV_TONE: Record<string, string> = {
+  low: "text-muted-foreground",
+  medium: "text-foreground",
+  high: "text-[oklch(0.78_0.16_75)]",
+  critical: "text-destructive",
+};
+
+type SevFilter = "all" | "critical" | "high" | "medium" | "low";
+
 function ApprovalsPage() {
   const qc = useQueryClient();
   const transitionFn = useServerFn(transitionFeedback);
   const [openId, setOpenId] = useState<string | null>(null);
   const [note, setNote] = useState("");
+  const [sevFilter, setSevFilter] = useState<SevFilter>("all");
+
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["approval-queue"],
