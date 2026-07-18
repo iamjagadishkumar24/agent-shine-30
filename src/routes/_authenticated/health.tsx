@@ -153,7 +153,8 @@ function HealthPage() {
 
       {data && (
         <p className="text-[11px] text-muted-foreground">
-          Last checked {new Date(data.generatedAt).toLocaleString()}
+          Last checked {safeDateTime(data.generatedAt) ?? safeDateTime(new Date(dataUpdatedAt).toISOString()) ?? "just now"}
+          {autoRefresh && " · auto-refreshing every 30s"}
         </p>
       )}
     </div>
