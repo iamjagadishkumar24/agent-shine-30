@@ -12,7 +12,7 @@ import {
   LogOut,
   Sparkles,
   Search,
-  Bell,
+  
   ChevronLeft,
   Sun,
   Moon,
@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { NotificationsBell } from "@/components/notifications/notifications-bell";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -261,9 +262,7 @@ function AuthedLayout() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="ghost" size="icon" aria-label="Notifications">
-              <Bell className="h-4 w-4" />
-            </Button>
+            <NotificationsBell userId={user.id} />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
