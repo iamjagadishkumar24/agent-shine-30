@@ -210,10 +210,17 @@ function SessionDetail() {
             </div>
 
             <div className="flex gap-2 border-t border-border/50 pt-3">
-              <Input value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder="Add an action item…"
-                onKeyDown={(e) => { if (e.key === "Enter") addItem.mutate(); }} />
-              <Input type="date" value={newDue} onChange={(e) => setNewDue(e.target.value)} className="w-40" />
-              <Button size="sm" onClick={() => addItem.mutate()} className="gap-1"><Plus className="h-3.5 w-3.5" /> Add</Button>
+              <Input
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                placeholder="Add an action item… (min 3 chars)"
+                maxLength={200}
+                onKeyDown={(e) => { if (e.key === "Enter" && canAddItem) addItem.mutate(); }}
+              />
+              <Input type="date" min={todayISO} value={newDue} onChange={(e) => setNewDue(e.target.value)} className="w-40" />
+              <Button size="sm" onClick={() => addItem.mutate()} disabled={!canAddItem || addItem.isPending} className="gap-1">
+                <Plus className="h-3.5 w-3.5" /> Add
+              </Button>
             </div>
           </Card>
 
@@ -225,12 +232,36 @@ function SessionDetail() {
           )}
 
           <Card className="p-5">
-            <h3 className="text-sm font-semibold mb-2">Outcome</h3>
-            <Textarea rows={3} value={outcome} onChange={(e) => setOutcome(e.target.value)}
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold">Outcome</h3>
+              {s.status === "completed" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-xs"
+                  disabled={transition.isPending || (outcome ?? "") === (s.outcome ?? "")}
+                  onClick={async () => {
+                    const { error } = await supabase.from("coaching_sessions").update({ outcome: outcome || null }).eq("id", id);
+                    if (error) { toast.error(error.message); return; }
+                    qc.invalidateQueries({ queryKey: ["coaching-session", id] });
+                    toast.success("Outcome saved");
+                  }}
+                >
+                  <Save className="h-3.5 w-3.5" /> Save
+                </Button>
+              )}
+            </div>
+            <Textarea
+              rows={3}
+              value={outcome}
+              maxLength={4000}
+              onChange={(e) => setOutcome(e.target.value)}
               placeholder="Record what happened, decisions, follow-up owner…"
-              disabled={!isActive && s.status !== "completed"} />
+              disabled={!isActive && s.status !== "completed"}
+            />
           </Card>
         </div>
+
 
         <div className="space-y-4">
           <Card className="p-5">
