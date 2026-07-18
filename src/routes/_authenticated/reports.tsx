@@ -112,60 +112,54 @@ function ReportsPage() {
       icon: Users,
       title: "Agent Performance",
       desc: "QA scores, feedback counts, and averages per agent.",
-      csv: () => toCsv(perfRows(), "agent-performance.csv"),
-      pdf: () => {
-        const rows = perfRows();
-        toPdf({
-          title: "Agent Performance Report",
-          subtitle: `${rows.length} agents`,
-          filename: "agent-performance.pdf",
-          sections: [{
-            title: "Roster performance",
-            columns: rows.length ? Object.keys(rows[0]) : [],
-            rows: rows.map((r) => Object.values(r) as (string | number)[]),
-          }],
-        });
-      },
+      getRows: perfRows,
+      csv: (rows: any[]) => toCsv(rows, "agent-performance.csv"),
+      pdf: (rows: any[]) => toPdf({
+        title: "Agent Performance Report",
+        subtitle: `${rows.length} agents`,
+        filename: "agent-performance.pdf",
+        sections: [{
+          title: "Roster performance",
+          columns: rows.length ? Object.keys(rows[0]) : [],
+          rows: rows.map((r) => Object.values(r) as (string | number)[]),
+        }],
+      }),
     },
     {
       key: "feedback-trends",
       icon: TrendingUp,
       title: "Feedback Trends",
       desc: "Monthly feedback volume, ack rate, and average score.",
-      csv: () => toCsv(trendRows(), "feedback-trends.csv"),
-      pdf: () => {
-        const rows = trendRows();
-        toPdf({
-          title: "Feedback Trends Report",
-          subtitle: `${rows.length} months`,
-          filename: "feedback-trends.pdf",
-          sections: [{
-            title: "Monthly breakdown",
-            columns: rows.length ? Object.keys(rows[0]) : [],
-            rows: rows.map((r) => Object.values(r) as (string | number)[]),
-          }],
-        });
-      },
+      getRows: trendRows,
+      csv: (rows: any[]) => toCsv(rows, "feedback-trends.csv"),
+      pdf: (rows: any[]) => toPdf({
+        title: "Feedback Trends Report",
+        subtitle: `${rows.length} months`,
+        filename: "feedback-trends.pdf",
+        sections: [{
+          title: "Monthly breakdown",
+          columns: rows.length ? Object.keys(rows[0]) : [],
+          rows: rows.map((r) => Object.values(r) as (string | number)[]),
+        }],
+      }),
     },
     {
       key: "email-delivery",
       icon: Mail,
       title: "Email Delivery",
       desc: "Send / acknowledgement status for every feedback item.",
-      csv: () => toCsv(emailRows(), "email-delivery.csv"),
-      pdf: () => {
-        const rows = emailRows();
-        toPdf({
-          title: "Email Delivery Report",
-          subtitle: `${rows.length} feedback items`,
-          filename: "email-delivery.pdf",
-          sections: [{
-            title: "Delivery status",
-            columns: rows.length ? Object.keys(rows[0]) : [],
-            rows: rows.map((r) => Object.values(r) as (string | number)[]),
-          }],
-        });
-      },
+      getRows: emailRows,
+      csv: (rows: any[]) => toCsv(rows, "email-delivery.csv"),
+      pdf: (rows: any[]) => toPdf({
+        title: "Email Delivery Report",
+        subtitle: `${rows.length} feedback items`,
+        filename: "email-delivery.pdf",
+        sections: [{
+          title: "Delivery status",
+          columns: rows.length ? Object.keys(rows[0]) : [],
+          rows: rows.map((r) => Object.values(r) as (string | number)[]),
+        }],
+      }),
     },
   ];
 
