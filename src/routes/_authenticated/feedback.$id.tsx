@@ -160,6 +160,29 @@ function FeedbackDetail() {
           </Card>
 
           <Card className="rounded-xl border-border/60 bg-card/60 p-5">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email delivery</div>
+            <ul className="mt-3 space-y-2.5 text-xs">
+              <DeliveryRow icon={<Mail className="h-3.5 w-3.5" />} label="Sent" at={data.sent_at} />
+              <DeliveryRow icon={<Mail className="h-3.5 w-3.5" />} label="Delivered" at={data.delivered_at} />
+              <DeliveryRow icon={<MailOpen className="h-3.5 w-3.5" />} label="Opened" at={data.first_opened_at} extra={data.open_count ? `${data.open_count}×` : undefined} />
+              <DeliveryRow icon={<MousePointerClick className="h-3.5 w-3.5" />} label="Clicked" at={data.clicked_at} extra={data.click_count ? `${data.click_count}×` : undefined} />
+              <DeliveryRow icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Acknowledged" at={data.acknowledged_at} />
+              {(data.reminder_count ?? 0) > 0 && (
+                <li className="flex items-center gap-2 text-[oklch(0.78_0.16_75)]">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span>Escalation reminder sent {data.reminder_count}× {data.last_reminder_at ? `· ${formatDistanceToNow(new Date(data.last_reminder_at), { addSuffix: true })}` : ""}</span>
+                </li>
+              )}
+              {data.email_error && (
+                <li className="flex items-start gap-2 rounded-md bg-destructive/10 p-2 text-destructive">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span className="break-all">{data.email_error}</span>
+                </li>
+              )}
+            </ul>
+          </Card>
+
+          <Card className="rounded-xl border-border/60 bg-card/60 p-5">
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Timeline</div>
             <ul className="mt-3 space-y-3 text-xs">
               <li><span className="text-muted-foreground">Created</span> · {formatDistanceToNow(new Date(data.created_at), { addSuffix: true })}</li>
