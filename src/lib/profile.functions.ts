@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
+function fail(status: number, message: string, logCtx?: unknown): never {
+  if (logCtx !== undefined) console.error("[profile.functions]", message, logCtx);
+  throw new Response(message, { status });
+}
+
 export const getMyProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -10,7 +15,7 @@ export const getMyProfile = createServerFn({ method: "GET" })
       .select("*")
       .eq("id", context.userId)
       .maybeSingle();
-    if (error) throw error;
+    if (error) fail(500, "Failed to load profile", error);
     return data;
   });
 
@@ -26,13 +31,19 @@ const ProfileUpdateSchema = z.object({
 
 export const updateMyProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => ProfileUpdateSchema.parse(data))
+  .inputValidator((data) => {
+    const parsed = ProfileUpdateSchema.safeParse(data);
+    if (!parsed.success) throw new Response("Invalid profile payload", { status: 400 });
+    return parsed.data;
+  })
   .handler(async ({ context, data }) => {
-    const { data: existing } = await context.supabase
+    // Defense-in-depth: never trust a client-supplied id; always scope to context.userId.
+    const { data: existing, error: readErr } = await context.supabase
       .from("profiles")
       .select("id")
       .eq("id", context.userId)
       .maybeSingle();
+    if (readErr) fail(500, "Failed to load profile", readErr);
 
     if (!existing) {
       const { error } = await context.supabase.from("profiles").insert({
@@ -40,26 +51,26 @@ export const updateMyProfile = createServerFn({ method: "POST" })
         ...data,
         preferences: (data.preferences ?? {}) as never,
       });
-      if (error) throw error;
+      if (error) fail(500, "Failed to create profile", error);
     } else {
       const { error } = await context.supabase
         .from("profiles")
         .update({ ...data, preferences: data.preferences as never })
         .eq("id", context.userId);
-      if (error) throw error;
+      if (error) fail(500, "Failed to update profile", error);
     }
     return { ok: true };
   });
 
-
+// Password changes are performed by the browser Supabase SDK
+// (supabase.auth.updateUser). This server endpoint intentionally does not
+// accept or forward passwords — accepting a plaintext password here would
+// expose it in server logs and to any admin-client fallback path.
 export const changeMyPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) =>
-    z.object({ password: z.string().min(8).max(200) }).parse(data),
-  )
-  .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    // Note: rely on client-side supabase.auth.updateUser as well; admin path
-    // is here only as a fallback and requires the caller's userId.
-    return { ok: true, note: "Password change is handled by client SDK", length: data.password.length };
+  .handler(async () => {
+    return {
+      ok: false,
+      note: "Password changes must go through supabase.auth.updateUser() on the client.",
+    };
   });
