@@ -38,7 +38,7 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
 
     const { data: agent } = await supabase
       .from("agents")
-      .select("full_name, department, role")
+      .select("full_name, department")
       .eq("id", data.agent_id)
       .maybeSingle();
 
