@@ -373,11 +373,11 @@ function Dashboard() {
     acknowledged: feedback.filter((f) => f.status === "acknowledged" || f.status === "completed").length,
   };
   const statusTotal = Math.max(1, Object.values(statusCounts).reduce((a, b) => a + b, 0));
-  const statusRows = [
-    { key: "Draft", value: statusCounts.draft, color: "oklch(0.65 0.20 285)" },
-    { key: "Pending", value: statusCounts.review, color: "oklch(0.80 0.16 75)" },
-    { key: "Sent", value: statusCounts.sent, color: "oklch(0.70 0.14 235)" },
-    { key: "Acknowledged", value: statusCounts.acknowledged, color: "oklch(0.72 0.16 160)" },
+  const statusRows: Array<{ key: string; value: number; color: string; filter: string }> = [
+    { key: "Draft", value: statusCounts.draft, color: "oklch(0.65 0.20 285)", filter: "draft" },
+    { key: "Pending", value: statusCounts.review, color: "oklch(0.80 0.16 75)", filter: "review" },
+    { key: "Sent", value: statusCounts.sent, color: "oklch(0.70 0.14 235)", filter: "sent" },
+    { key: "Acknowledged", value: statusCounts.acknowledged, color: "oklch(0.72 0.16 160)", filter: "acknowledged" },
   ];
 
   // Email
