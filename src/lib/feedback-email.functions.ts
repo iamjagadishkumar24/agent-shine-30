@@ -1,7 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getRequestHost } from "@tanstack/react-start/server";
 import { renderFeedbackEmail, type FeedbackEmailAttachmentLink } from "./feedback-email.templates";
+
+const STAFF_ROLES = ["qa_admin", "qa_manager", "qa_reviewer"] as const;
+const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
+
+function fail(message: string, status: number, err?: unknown): never {
+  if (err) console.error(`[feedback-email] ${message}`, err);
+  throw new Response(message, { status });
+}
 
 function getAppBaseUrl(): string {
   const envUrl = process.env.APP_BASE_URL;
@@ -13,43 +22,75 @@ function getAppBaseUrl(): string {
   return "https://app.example.com";
 }
 
+async function assertStaff(supabase: any, userId: string) {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+  if (error) fail("Unable to verify permissions", 500, error);
+  const roles = new Set((data ?? []).map((r: any) => r.role));
+  if (!STAFF_ROLES.some((r) => roles.has(r))) {
+    throw new Response("Staff role required", { status: 403 });
+  }
+}
+
 // Enqueue a feedback email. The background drainer sends it and updates
 // feedback.status = "sent" once the provider accepts it.
 export const sendFeedbackEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { feedbackId: string }) => data)
+  .inputValidator((data: unknown) =>
+    z.object({ feedbackId: z.string().uuid() }).parse(data),
+  )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
+    await assertStaff(supabase, context.userId);
+
     const { data: fb, error } = await supabase
       .from("feedback")
       .select("*, agent:agents(*)")
       .eq("id", data.feedbackId)
-      .single();
-    if (error || !fb) throw new Error(error?.message || "Feedback not found");
-    if (!fb.agent?.email) throw new Error("Agent has no email on file");
+      .maybeSingle();
+    if (error) fail("Unable to load feedback", 500, error);
+    if (!fb) throw new Response("Feedback not found", { status: 404 });
+    if (!fb.agent?.email) throw new Response("Agent has no email on file", { status: 400 });
     if (fb.status !== "approved") {
-      throw new Error(`Cannot send from status "${fb.status}" — feedback must be approved first`);
+      throw new Response(
+        `Cannot send from status "${fb.status}" — feedback must be approved first`,
+        { status: 409 },
+      );
     }
 
-    const { data: settings } = await supabase.from("email_settings").select("*").eq("singleton", true).maybeSingle();
-    if (!settings) throw new Error("Email settings not configured");
-    if (!settings.enabled) throw new Error("Email service is disabled in Settings");
-    if (!settings.sender_email) throw new Error("Configure a sender email in Settings first");
+    const { data: settings, error: settingsErr } = await supabase
+      .from("email_settings")
+      .select("*")
+      .eq("singleton", true)
+      .maybeSingle();
+    if (settingsErr) fail("Unable to load email settings", 500, settingsErr);
+    if (!settings) throw new Response("Email settings not configured", { status: 400 });
+    if (!settings.enabled) throw new Response("Email service is disabled in Settings", { status: 400 });
+    if (!settings.sender_email) {
+      throw new Response("Configure a sender email in Settings first", { status: 400 });
+    }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Signed URLs for attachments (30 days)
-    const { data: atts } = await supabaseAdmin
+    const { data: atts, error: attErr } = await supabaseAdmin
       .from("feedback_attachments")
       .select("*")
       .eq("feedback_id", fb.id);
+    if (attErr) fail("Unable to load attachments", 500, attErr);
 
     const attachmentLinks: FeedbackEmailAttachmentLink[] = [];
     const queueAttachments: any[] = [];
     for (const a of atts ?? []) {
-      const { data: signed } = await supabaseAdmin.storage
+      const { data: signed, error: signErr } = await supabaseAdmin.storage
         .from("feedback-attachments")
-        .createSignedUrl(a.storage_path, 60 * 60 * 24 * 30);
+        .createSignedUrl(a.storage_path, SIGNED_URL_TTL_SECONDS);
+      if (signErr) {
+        console.error("[feedback-email] signed URL failed", { path: a.storage_path, err: signErr });
+        continue;
+      }
       if (signed?.signedUrl) attachmentLinks.push({ fileName: a.file_name, url: signed.signedUrl });
       queueAttachments.push({
         storage_path: a.storage_path,
@@ -81,6 +122,21 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       attachmentLinks,
     });
 
+    // Optimistic status transition: approved → sent. If another sender won the
+    // race, the update matches 0 rows and we bail out instead of double-queueing.
+    const nowIso = new Date().toISOString();
+    const { data: transitioned, error: txErr } = await supabaseAdmin
+      .from("feedback")
+      .update({ status: "sent", sent_at: nowIso, email_error: null })
+      .eq("id", fb.id)
+      .eq("status", "approved")
+      .select("id")
+      .maybeSingle();
+    if (txErr) fail("Unable to update feedback status", 500, txErr);
+    if (!transitioned) {
+      throw new Response("Feedback already sent by another reviewer", { status: 409 });
+    }
+
     const { data: job, error: qErr } = await supabaseAdmin
       .from("email_queue")
       .insert({
@@ -95,17 +151,20 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
         priority: 3,
         status: "queued",
         max_attempts: 5,
-        next_attempt_at: new Date().toISOString(),
+        next_attempt_at: nowIso,
         created_by: context.userId,
       })
       .select("id")
       .single();
-    if (qErr) throw new Error(qErr.message);
-
-    await supabaseAdmin
-      .from("feedback")
-      .update({ status: "sent", sent_at: new Date().toISOString(), email_error: null })
-      .eq("id", fb.id);
+    if (qErr || !job) {
+      // Rollback the status transition so the user can retry.
+      await supabaseAdmin
+        .from("feedback")
+        .update({ status: "approved", sent_at: null })
+        .eq("id", fb.id)
+        .eq("status", "sent");
+      fail("Unable to enqueue email", 500, qErr);
+    }
 
     await supabaseAdmin.from("feedback_email_events").insert({
       feedback_id: fb.id,
@@ -117,7 +176,9 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
     try {
       const { drainQueue } = await import("@/lib/email-queue.server");
       await drainQueue();
-    } catch {}
+    } catch (drainErr) {
+      console.error("[feedback-email] immediate drain failed", drainErr);
+    }
 
     return { ok: true as const, queueId: job.id };
   });
