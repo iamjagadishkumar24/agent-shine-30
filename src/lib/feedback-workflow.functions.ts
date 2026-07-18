@@ -136,7 +136,7 @@ export const transitionFeedback = createServerFn({ method: "POST" })
       // deno-lint-ignore no-explicit-any
       .update(patch as any)
       .eq("id", data.feedbackId)
-      .eq("status", fb.status as string)
+      .eq("status", fb.status as never)
       .select("id")
       .maybeSingle();
     if (updErr) throw new Response(updErr.message, { status: 500 });
