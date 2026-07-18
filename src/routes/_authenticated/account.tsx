@@ -49,23 +49,38 @@ function ProfileTab() {
   const { data: profile, isLoading } = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile() });
 
   const [form, setForm] = useState({ full_name: "", designation: "", phone: "", bio: "", avatar_url: "" });
+  const [initial, setInitial] = useState(form);
   const [uploading, setUploading] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (profile) {
-      setForm({
+      const next = {
         full_name: profile.full_name ?? "",
         designation: profile.designation ?? "",
         phone: profile.phone ?? "",
         bio: profile.bio ?? "",
         avatar_url: profile.avatar_url ?? "",
-      });
+      };
+      setForm(next);
+      setInitial(next);
     }
   }, [profile]);
 
+  const dirty = JSON.stringify(form) !== JSON.stringify(initial);
+
   const save = useMutation({
-    mutationFn: () => saveProfile({ data: form }),
+    mutationFn: () => {
+      const trimmed = {
+        full_name: form.full_name.trim(),
+        designation: form.designation.trim(),
+        phone: form.phone.trim(),
+        bio: form.bio.trim(),
+        avatar_url: form.avatar_url,
+      };
+      if (!trimmed.full_name) throw new Error("Full name is required");
+      return saveProfile({ data: trimmed });
+    },
     onSuccess: () => {
       toast.success("Profile updated");
       qc.invalidateQueries({ queryKey: ["my-profile"] });
@@ -73,12 +88,17 @@ function ProfileTab() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const MAX_BYTES = 2 * 1024 * 1024;
+  const ALLOWED = ["image/png", "image/jpeg", "image/webp"];
+
   const onUpload = async (file: File) => {
+    if (!ALLOWED.includes(file.type)) return toast.error("Only PNG, JPG or WebP allowed");
+    if (file.size > MAX_BYTES) return toast.error("Image must be 2 MB or smaller");
     setUploading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not signed in");
-      const ext = file.name.split(".").pop() || "png";
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
       const path = `${user.id}/avatar-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
       if (upErr) throw upErr;
@@ -90,6 +110,7 @@ function ProfileTab() {
       toast.error(e instanceof Error ? e.message : "Upload failed");
     } finally {
       setUploading(false);
+      if (fileInput.current) fileInput.current.value = "";
     }
   };
 
