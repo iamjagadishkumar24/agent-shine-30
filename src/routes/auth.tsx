@@ -140,13 +140,19 @@ function AuthPage() {
             )}
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1.5" />
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required aria-invalid={email.length > 0 && !emailValid} className="mt-1.5" />
+              {email.length > 0 && !emailValid && (
+                <p className="mt-1 text-xs text-destructive">Enter a valid email address</p>
+              )}
             </div>
             <div>
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} className="mt-1.5" />
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={mode === "signup" ? 8 : undefined} aria-invalid={mode === "signup" && password.length > 0 && !passwordValid} className="mt-1.5" />
+              {mode === "signup" && password.length > 0 && !passwordValid && (
+                <p className="mt-1 text-xs text-destructive">Must be at least 8 characters</p>
+              )}
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={!canSubmit}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {mode === "signin" ? "Sign in" : "Create account"}
             </Button>
