@@ -17,6 +17,18 @@ import {
 } from "@/lib/notifications.functions";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+
+function safeTimeAgo(v: string | null | undefined): string {
+  if (!v) return "";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "";
+  try {
+    return formatDistanceToNow(d, { addSuffix: true });
+  } catch {
+    return "";
+  }
+}
 
 export function NotificationsBell({ userId }: { userId: string }) {
   const list = useServerFn(listMyNotifications);
