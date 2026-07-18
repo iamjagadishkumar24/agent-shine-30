@@ -279,7 +279,7 @@ function SessionDetail() {
                   </Link>
                 </div>
               )}
-              {s.completed_at && <div><span className="text-muted-foreground">Completed:</span> {new Date(s.completed_at).toLocaleString()}</div>}
+              {s.completed_at && <div><span className="text-muted-foreground">Completed:</span> {safeDateTime(s.completed_at)}</div>}
             </div>
           </Card>
 
