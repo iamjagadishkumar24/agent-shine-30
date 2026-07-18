@@ -749,7 +749,7 @@ function Dashboard() {
                       <div className="truncate text-xs text-muted-foreground">{a.who}</div>
                     </div>
                     <div className="shrink-0 text-[10px] text-muted-foreground">
-                      {formatDistanceToNow(new Date(a.when), { addSuffix: false })}
+                      {safeTimeAgo(a.when)}
                     </div>
                   </Link>
                 );
