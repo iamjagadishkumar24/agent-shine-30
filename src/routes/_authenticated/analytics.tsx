@@ -22,7 +22,7 @@ type FeedbackRow = {
   acknowledged_at: string | null;
 };
 
-type AgentRow = { id: string; name: string | null; qa_score: number | null };
+type AgentRow = { id: string; full_name: string | null; qa_score: number | null };
 
 function useAnalyticsData() {
   return useQuery({
@@ -34,13 +34,13 @@ function useAnalyticsData() {
           .select("id, status, feedback_type, severity, score, created_at, agent_id, delivered_at, opened_at, acknowledged_at")
           .order("created_at", { ascending: false })
           .limit(5000),
-        supabase.from("agents").select("id, name, qa_score").limit(2000),
+        supabase.from("agents").select("id, full_name, qa_score").limit(2000),
       ]);
       if (fbRes.error) throw fbRes.error;
       if (agRes.error) throw agRes.error;
       return {
-        feedback: (fbRes.data ?? []) as FeedbackRow[],
-        agents: (agRes.data ?? []) as AgentRow[],
+        feedback: (fbRes.data ?? []) as unknown as FeedbackRow[],
+        agents: (agRes.data ?? []) as unknown as AgentRow[],
       };
     },
     staleTime: 30_000,
