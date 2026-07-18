@@ -208,3 +208,16 @@ function Section({ title, body }: { title: string; body?: string | null }) {
 function Row({ k, v }: { k: string; v: React.ReactNode }) {
   return <div className="flex justify-between"><dt className="text-muted-foreground">{k}</dt><dd>{v}</dd></div>;
 }
+function DeliveryRow({ icon, label, at, extra }: { icon: React.ReactNode; label: string; at?: string | null; extra?: string }) {
+  const pending = !at;
+  return (
+    <li className={cn("flex items-center gap-2", pending ? "text-muted-foreground/70" : "text-foreground")}>
+      <span className={cn("grid h-5 w-5 place-items-center rounded-full", pending ? "bg-muted" : "bg-primary/15 text-primary")}>{icon}</span>
+      <span className="flex-1">{label}</span>
+      <span className="tabular-nums text-muted-foreground">
+        {at ? formatDistanceToNow(new Date(at), { addSuffix: true }) : "—"}
+        {extra ? ` · ${extra}` : ""}
+      </span>
+    </li>
+  );
+}
