@@ -72,7 +72,16 @@ function PlansList() {
       <CoachingTabs />
       <div className="mx-auto max-w-6xl px-8 pb-12 pt-4">
         {isLoading ? (
-          <Card className="p-10 text-center text-sm text-muted-foreground">Loading…</Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-busy="true">
+            {[0, 1, 2, 3].map((i) => (
+              <Card key={i} className="p-4">
+                <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
+                <div className="mt-2 h-3 w-1/3 animate-pulse rounded bg-muted" />
+                <div className="mt-4 h-1.5 w-full animate-pulse rounded bg-muted" />
+                <div className="mt-3 h-3 w-1/2 animate-pulse rounded bg-muted" />
+              </Card>
+            ))}
+          </div>
         ) : data.length === 0 ? (
           <Card className="p-10 text-center">
             <Sparkles className="mx-auto h-6 w-6 text-muted-foreground" />
