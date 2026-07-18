@@ -11,10 +11,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Target, TrendingUp, Trash2, CheckCircle2, Archive } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const safeDate = (v: unknown) => {
+  if (!v) return "—";
+  const d = new Date(v as string);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+};
+const safeDateTime = (v: unknown) => {
+  if (!v) return "—";
+  const d = new Date(v as string);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" });
+};
 
 export const Route = createFileRoute("/_authenticated/coaching/plans/$id")({
   component: PlanDetail,
@@ -97,7 +109,21 @@ function PlanDetail() {
   });
 
   if (isLoading || !plan) {
-    return <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div>
+        <PageHeader title="Coaching plan" subtitle="Loading…" />
+        <div className="mx-auto max-w-5xl px-8 pb-12 pt-6 grid grid-cols-1 lg:grid-cols-3 gap-6" aria-busy="true">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="h-24 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+            <div className="h-64 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+          </div>
+          <div className="space-y-4">
+            <div className="h-48 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+            <div className="h-32 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
   }
   const p = plan as any;
 
@@ -111,7 +137,7 @@ function PlanDetail() {
     <div>
       <PageHeader
         title={p.title}
-        subtitle={`${p.agent?.full_name ?? "—"} · started ${new Date(p.start_date).toLocaleDateString()}${p.target_date ? " · target " + new Date(p.target_date).toLocaleDateString() : ""}`}
+        subtitle={`${p.agent?.full_name ?? "—"} · started ${safeDate(p.start_date)}${p.target_date ? " · target " + safeDate(p.target_date) : ""}`}
         actions={
           <Link to="/coaching/plans">
             <Button variant="ghost" size="sm" className="h-8 gap-1"><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
@@ -166,8 +192,8 @@ function PlanDetail() {
             <div className="mt-4 space-y-2 text-xs">
               <div><span className="text-muted-foreground">Agent:</span> <span className="font-medium">{p.agent?.full_name}</span></div>
               <div><span className="text-muted-foreground">Department:</span> {p.agent?.department ?? "—"}</div>
-              <div><span className="text-muted-foreground">Start:</span> {new Date(p.start_date).toLocaleDateString()}</div>
-              {p.target_date && <div><span className="text-muted-foreground">Target:</span> {new Date(p.target_date).toLocaleDateString()}</div>}
+              <div><span className="text-muted-foreground">Start:</span> {safeDate(p.start_date)}</div>
+              {p.target_date && <div><span className="text-muted-foreground">Target:</span> {safeDate(p.target_date)}</div>}
             </div>
           </Card>
 
@@ -193,10 +219,30 @@ function PlanDetail() {
             </Link>
           </Card>
 
-          <Button variant="ghost" size="sm" className="w-full text-xs text-destructive/70 hover:text-destructive"
-            onClick={() => { if (confirm("Delete this plan and all its goals?")) removePlan.mutate(); }}>
-            Delete plan
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="w-full text-xs text-destructive/70 hover:text-destructive">
+                Delete plan
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete coaching plan?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This permanently deletes the plan and every goal, progress entry, and linked session record. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => removePlan.mutate()}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>
@@ -207,17 +253,25 @@ function AddGoalDialog({ planId, onDone }: { planId: string; onDone: () => void 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", metric: "", target_value: "", target_date: "", weight: "1" });
 
+  const titleTrim = form.title.trim();
+  const targetVal = form.target_value === "" ? null : Number(form.target_value);
+  const weightVal = form.weight === "" ? 1 : Number(form.weight);
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const targetInvalid = form.target_value !== "" && (!Number.isFinite(targetVal!) || (targetVal as number) < 0);
+  const weightInvalid = !Number.isFinite(weightVal) || weightVal < 1 || weightVal > 10;
+  const canSubmit = titleTrim.length >= 3 && !targetInvalid && !weightInvalid;
+
   const create = useMutation({
     mutationFn: async () => {
-      if (form.title.trim().length < 3) throw new Error("Title too short");
+      if (!canSubmit) throw new Error("Check the form fields");
       const payload: any = {
         plan_id: planId,
-        title: form.title.trim(),
+        title: titleTrim,
         description: form.description.trim() || null,
         metric: form.metric.trim() || null,
-        target_value: form.target_value ? Number(form.target_value) : null,
+        target_value: targetVal,
         target_date: form.target_date || null,
-        weight: Number(form.weight) || 1,
+        weight: weightVal,
       };
       const { error } = await supabase.from("coaching_goals").insert(payload);
       if (error) throw error;
@@ -241,8 +295,17 @@ function AddGoalDialog({ planId, onDone }: { planId: string; onDone: () => void 
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="g-title">Title</Label>
-            <Input id="g-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-              placeholder="e.g. Reach 90% CSAT" />
+            <Input
+              id="g-title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="e.g. Reach 90% CSAT"
+              aria-invalid={titleTrim.length > 0 && titleTrim.length < 3}
+              className={cn(titleTrim.length > 0 && titleTrim.length < 3 && "border-destructive/60")}
+            />
+            {titleTrim.length > 0 && titleTrim.length < 3 && (
+              <p className="text-xs text-destructive">Title must be at least 3 characters</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="g-desc">Description</Label>
@@ -257,29 +320,50 @@ function AddGoalDialog({ planId, onDone }: { planId: string; onDone: () => void 
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="g-target">Target value</Label>
-              <Input id="g-target" type="number" value={form.target_value}
-                onChange={(e) => setForm({ ...form, target_value: e.target.value })} placeholder="90" />
+              <Input
+                id="g-target"
+                type="number"
+                min={0}
+                step="any"
+                value={form.target_value}
+                onChange={(e) => setForm({ ...form, target_value: e.target.value })}
+                placeholder="90"
+                aria-invalid={targetInvalid}
+                className={cn(targetInvalid && "border-destructive/60")}
+              />
+              {targetInvalid && <p className="text-xs text-destructive">Must be a number ≥ 0</p>}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="g-date">Target date</Label>
-              <Input id="g-date" type="date" value={form.target_date}
+              <Input id="g-date" type="date" min={todayISO} value={form.target_date}
                 onChange={(e) => setForm({ ...form, target_date: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="g-weight">Weight</Label>
-              <Input id="g-weight" type="number" min={1} max={10} value={form.weight}
-                onChange={(e) => setForm({ ...form, weight: e.target.value })} />
+              <Label htmlFor="g-weight">Weight (1–10)</Label>
+              <Input
+                id="g-weight"
+                type="number"
+                min={1}
+                max={10}
+                step={1}
+                value={form.weight}
+                onChange={(e) => setForm({ ...form, weight: e.target.value })}
+                aria-invalid={weightInvalid}
+                className={cn(weightInvalid && "border-destructive/60")}
+              />
+              {weightInvalid && <p className="text-xs text-destructive">Between 1 and 10</p>}
             </div>
           </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button size="sm" onClick={() => create.mutate()} disabled={create.isPending}>
+          <Button size="sm" onClick={() => create.mutate()} disabled={!canSubmit || create.isPending}>
             {create.isPending ? "Adding…" : "Add goal"}
           </Button>
         </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );
@@ -355,7 +439,7 @@ function GoalRow({ goal, onUpdated }: { goal: any; onUpdated: () => void }) {
           {goal.metric && (
             <div className="text-xs text-muted-foreground mt-0.5 tabular-nums">
               {goal.current_value ?? 0}{goal.target_value ? ` / ${goal.target_value}` : ""} {goal.metric}
-              {goal.target_date && <span> · by {new Date(goal.target_date).toLocaleDateString()}</span>}
+              {goal.target_date && <span> · by {safeDate(goal.target_date)}</span>}
             </div>
           )}
           <div className="mt-2 flex items-center gap-2">
@@ -373,10 +457,30 @@ function GoalRow({ goal, onUpdated }: { goal: any; onUpdated: () => void }) {
               <SelectItem value="missed">Missed</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="ghost" size="icon" className="h-7 w-7"
-            onClick={() => { if (confirm("Delete this goal?")) removeGoal.mutate(); }}>
-            <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Delete goal">
+                <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this goal?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This removes the goal and every progress entry logged against it. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => removeGoal.mutate()}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
@@ -404,7 +508,7 @@ function GoalRow({ goal, onUpdated }: { goal: any; onUpdated: () => void }) {
                 {history.map((h: any) => (
                   <li key={h.id} className="flex items-start gap-2 text-xs">
                     <span className="text-muted-foreground w-32 shrink-0">
-                      {new Date(h.recorded_at).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
+                      {safeDateTime(h.recorded_at)}
                     </span>
                     {h.value !== null && h.value !== undefined && (
                       <span className="font-medium tabular-nums w-16 shrink-0">{h.value}</span>

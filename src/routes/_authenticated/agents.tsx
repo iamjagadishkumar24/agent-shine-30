@@ -98,9 +98,24 @@ function AgentsPage() {
               </tr>
             </thead>
             <tbody>
-              {isLoading && (
-                <tr><td colSpan={6} className="px-4 py-6 text-center text-xs text-muted-foreground">Loading…</td></tr>
-              )}
+              {isLoading && Array.from({ length: 6 }).map((_, i) => (
+                <tr key={`sk-${i}`} className="border-b border-border/40 last:border-0" aria-busy="true">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-muted/40 animate-pulse" />
+                      <div className="space-y-1.5">
+                        <div className="h-3 w-32 bg-muted/40 rounded animate-pulse" />
+                        <div className="h-2.5 w-40 bg-muted/30 rounded animate-pulse" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3"><div className="h-3 w-20 bg-muted/40 rounded animate-pulse" /></td>
+                  <td className="px-4 py-3"><div className="h-3 w-16 bg-muted/40 rounded animate-pulse" /></td>
+                  <td className="px-4 py-3"><div className="h-3 w-24 bg-muted/40 rounded animate-pulse" /></td>
+                  <td className="px-4 py-3 text-right"><div className="ml-auto h-4 w-10 bg-muted/40 rounded animate-pulse" /></td>
+                  <td className="px-4 py-3 text-right"><div className="ml-auto h-3 w-12 bg-muted/40 rounded animate-pulse" /></td>
+                </tr>
+              ))}
               {filtered.map((a) => {
                 const initials = (a.full_name ?? "?").split(" ").filter(Boolean).map((s) => s[0]).slice(0, 2).join("").toUpperCase() || "?";
                 const score = a.qa_score == null ? null : Number(a.qa_score);
