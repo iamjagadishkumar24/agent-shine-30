@@ -1,15 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Send, CheckCircle2, Trash2 } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, Trash2, Mail, MailOpen, MousePointerClick, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { sendFeedbackEmail } from "@/lib/feedback-email.functions";
 
 export const Route = createFileRoute("/_authenticated/feedback/$id")({
   component: FeedbackDetail,
@@ -72,9 +74,24 @@ function FeedbackDetail() {
     return <div className="p-8 text-sm text-muted-foreground">Loading…</div>;
   }
 
-  const send = () => update.mutate({ status: "sent", sent_at: new Date().toISOString() }, { onSuccess: () => toast.success("Feedback sent") });
+  const sendEmailFn = useServerFn(sendFeedbackEmail);
+  const sendMutation = useMutation({
+    mutationFn: () => sendEmailFn({ data: { feedbackId: id } }),
+    onSuccess: (res: any) => {
+      if (res?.ok) toast.success("Feedback email sent");
+      else toast.warning(`Feedback marked as sent, but email failed: ${res?.error ?? "unknown"}`);
+      qc.invalidateQueries({ queryKey: ["feedback", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-list"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["feedback-events", id] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+  const send = () => sendMutation.mutate();
   const acknowledge = () => update.mutate({ status: "acknowledged", acknowledged_at: new Date().toISOString(), acknowledgement_note: ackNote }, { onSuccess: () => toast.success("Acknowledged") });
   const complete = () => update.mutate({ status: "completed" }, { onSuccess: () => toast.success("Marked complete") });
+
+
 
   return (
     <div>
@@ -143,6 +160,29 @@ function FeedbackDetail() {
           </Card>
 
           <Card className="rounded-xl border-border/60 bg-card/60 p-5">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email delivery</div>
+            <ul className="mt-3 space-y-2.5 text-xs">
+              <DeliveryRow icon={<Mail className="h-3.5 w-3.5" />} label="Sent" at={data.sent_at} />
+              <DeliveryRow icon={<Mail className="h-3.5 w-3.5" />} label="Delivered" at={data.delivered_at} />
+              <DeliveryRow icon={<MailOpen className="h-3.5 w-3.5" />} label="Opened" at={data.first_opened_at} extra={data.open_count ? `${data.open_count}×` : undefined} />
+              <DeliveryRow icon={<MousePointerClick className="h-3.5 w-3.5" />} label="Clicked" at={data.clicked_at} extra={data.click_count ? `${data.click_count}×` : undefined} />
+              <DeliveryRow icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Acknowledged" at={data.acknowledged_at} />
+              {(data.reminder_count ?? 0) > 0 && (
+                <li className="flex items-center gap-2 text-[oklch(0.78_0.16_75)]">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span>Escalation reminder sent {data.reminder_count}× {data.last_reminder_at ? `· ${formatDistanceToNow(new Date(data.last_reminder_at), { addSuffix: true })}` : ""}</span>
+                </li>
+              )}
+              {data.email_error && (
+                <li className="flex items-start gap-2 rounded-md bg-destructive/10 p-2 text-destructive">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span className="break-all">{data.email_error}</span>
+                </li>
+              )}
+            </ul>
+          </Card>
+
+          <Card className="rounded-xl border-border/60 bg-card/60 p-5">
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Timeline</div>
             <ul className="mt-3 space-y-3 text-xs">
               <li><span className="text-muted-foreground">Created</span> · {formatDistanceToNow(new Date(data.created_at), { addSuffix: true })}</li>
@@ -167,4 +207,17 @@ function Section({ title, body }: { title: string; body?: string | null }) {
 }
 function Row({ k, v }: { k: string; v: React.ReactNode }) {
   return <div className="flex justify-between"><dt className="text-muted-foreground">{k}</dt><dd>{v}</dd></div>;
+}
+function DeliveryRow({ icon, label, at, extra }: { icon: React.ReactNode; label: string; at?: string | null; extra?: string }) {
+  const pending = !at;
+  return (
+    <li className={cn("flex items-center gap-2", pending ? "text-muted-foreground/70" : "text-foreground")}>
+      <span className={cn("grid h-5 w-5 place-items-center rounded-full", pending ? "bg-muted" : "bg-primary/15 text-primary")}>{icon}</span>
+      <span className="flex-1">{label}</span>
+      <span className="tabular-nums text-muted-foreground">
+        {at ? formatDistanceToNow(new Date(at), { addSuffix: true }) : "—"}
+        {extra ? ` · ${extra}` : ""}
+      </span>
+    </li>
+  );
 }

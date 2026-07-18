@@ -19,6 +19,9 @@ import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated/agents'
 import { Route as AuthenticatedFeedbackNewRouteImport } from './routes/_authenticated/feedback.new'
 import { Route as AuthenticatedFeedbackIdRouteImport } from './routes/_authenticated/feedback.$id'
+import { Route as ApiPublicHooksFeedbackEscalationsRouteImport } from './routes/api/public/hooks/feedback-escalations'
+import { Route as ApiPublicTrackOpenIdRouteImport } from './routes/api/public/track/open.$id'
+import { Route as ApiPublicTrackClickIdRouteImport } from './routes/api/public/track/click.$id'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -70,6 +73,22 @@ const AuthenticatedFeedbackIdRoute = AuthenticatedFeedbackIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedFeedbackRoute,
 } as any)
+const ApiPublicHooksFeedbackEscalationsRoute =
+  ApiPublicHooksFeedbackEscalationsRouteImport.update({
+    id: '/api/public/hooks/feedback-escalations',
+    path: '/api/public/hooks/feedback-escalations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTrackOpenIdRoute = ApiPublicTrackOpenIdRouteImport.update({
+  id: '/api/public/track/open/$id',
+  path: '/api/public/track/open/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTrackClickIdRoute = ApiPublicTrackClickIdRouteImport.update({
+  id: '/api/public/track/click/$id',
+  path: '/api/public/track/click/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -81,6 +100,9 @@ export interface FileRoutesByFullPath {
   '/feedback': typeof AuthenticatedFeedbackRouteWithChildren
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
+  '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
+  '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -92,6 +114,9 @@ export interface FileRoutesByTo {
   '/feedback': typeof AuthenticatedFeedbackRouteWithChildren
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
+  '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
+  '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -105,6 +130,9 @@ export interface FileRoutesById {
   '/_authenticated/feedback': typeof AuthenticatedFeedbackRouteWithChildren
   '/_authenticated/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/_authenticated/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
+  '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
+  '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -118,6 +146,9 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/feedback/$id'
     | '/feedback/new'
+    | '/api/public/hooks/feedback-escalations'
+    | '/api/public/track/click/$id'
+    | '/api/public/track/open/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -129,6 +160,9 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/feedback/$id'
     | '/feedback/new'
+    | '/api/public/hooks/feedback-escalations'
+    | '/api/public/track/click/$id'
+    | '/api/public/track/open/$id'
   id:
     | '__root__'
     | '/'
@@ -141,12 +175,18 @@ export interface FileRouteTypes {
     | '/_authenticated/feedback'
     | '/_authenticated/feedback/$id'
     | '/_authenticated/feedback/new'
+    | '/api/public/hooks/feedback-escalations'
+    | '/api/public/track/click/$id'
+    | '/api/public/track/open/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicHooksFeedbackEscalationsRoute: typeof ApiPublicHooksFeedbackEscalationsRoute
+  ApiPublicTrackClickIdRoute: typeof ApiPublicTrackClickIdRoute
+  ApiPublicTrackOpenIdRoute: typeof ApiPublicTrackOpenIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -221,6 +261,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFeedbackIdRouteImport
       parentRoute: typeof AuthenticatedFeedbackRoute
     }
+    '/api/public/hooks/feedback-escalations': {
+      id: '/api/public/hooks/feedback-escalations'
+      path: '/api/public/hooks/feedback-escalations'
+      fullPath: '/api/public/hooks/feedback-escalations'
+      preLoaderRoute: typeof ApiPublicHooksFeedbackEscalationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/track/open/$id': {
+      id: '/api/public/track/open/$id'
+      path: '/api/public/track/open/$id'
+      fullPath: '/api/public/track/open/$id'
+      preLoaderRoute: typeof ApiPublicTrackOpenIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/track/click/$id': {
+      id: '/api/public/track/click/$id'
+      path: '/api/public/track/click/$id'
+      fullPath: '/api/public/track/click/$id'
+      preLoaderRoute: typeof ApiPublicTrackClickIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -262,6 +323,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicHooksFeedbackEscalationsRoute:
+    ApiPublicHooksFeedbackEscalationsRoute,
+  ApiPublicTrackClickIdRoute: ApiPublicTrackClickIdRoute,
+  ApiPublicTrackOpenIdRoute: ApiPublicTrackOpenIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
