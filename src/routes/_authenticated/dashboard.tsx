@@ -236,6 +236,7 @@ function bucketByWeek<T extends { created_at: string }>(rows: T[], filter: (r: T
 // ---------------------------------------------------------------------------
 function Dashboard() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { data, isLoading, isFetching, refetch } = useDashboardData();
   const [range, setRange] = useState<"Daily" | "Weekly" | "Monthly">("Weekly");
 
