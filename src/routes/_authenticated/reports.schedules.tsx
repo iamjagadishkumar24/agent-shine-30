@@ -238,13 +238,13 @@ function SchedulesPage() {
                   <div>
                     <Label>Day of month</Label>
                     <Input type="number" min={1} max={28} value={editing.day_of_month ?? 1}
-                      onChange={(e) => setEditing({ ...editing, day_of_month: Number(e.target.value) })} />
+                      onChange={(e) => setEditing({ ...editing, day_of_month: clamp(Number(e.target.value), 1, 28) })} />
                   </div>
                 )}
                 <div>
                   <Label>Hour (UTC)</Label>
                   <Input type="number" min={0} max={23} value={editing.hour_utc ?? 13}
-                    onChange={(e) => setEditing({ ...editing, hour_utc: Number(e.target.value) })} />
+                    onChange={(e) => setEditing({ ...editing, hour_utc: clamp(Number(e.target.value), 0, 23) })} />
                 </div>
               </div>
               <div>
