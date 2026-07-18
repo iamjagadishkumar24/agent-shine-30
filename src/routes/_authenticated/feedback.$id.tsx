@@ -6,12 +6,13 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Send, CheckCircle2, Trash2, Mail, MailOpen, MousePointerClick, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, Trash2, Mail, MailOpen, MousePointerClick, AlertTriangle, Paperclip, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { sendFeedbackEmail } from "@/lib/feedback-email.functions";
+import { createUploadUrl, deleteAttachment } from "@/lib/feedback-attachments.functions";
 
 export const Route = createFileRoute("/_authenticated/feedback/$id")({
   component: FeedbackDetail,
@@ -31,6 +32,12 @@ function FeedbackDetail() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [ackNote, setAckNote] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const sendEmailFn = useServerFn(sendFeedbackEmail);
+  const uploadUrlFn = useServerFn(createUploadUrl);
+  const deleteAttFn = useServerFn(deleteAttachment);
 
   const { data, isLoading } = useQuery({
     queryKey: ["feedback", id],
@@ -40,6 +47,33 @@ function FeedbackDetail() {
         .select("*, agent:agents(*)")
         .eq("id", id)
         .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: attachments = [] } = useQuery({
+    queryKey: ["feedback-attachments", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("feedback_attachments")
+        .select("*")
+        .eq("feedback_id", id)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: events = [] } = useQuery({
+    queryKey: ["feedback-events", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("feedback_email_events")
+        .select("*")
+        .eq("feedback_id", id)
+        .order("created_at", { ascending: false })
+        .limit(20);
       if (error) throw error;
       return data;
     },
@@ -70,28 +104,59 @@ function FeedbackDetail() {
     },
   });
 
-  if (isLoading || !data) {
-    return <div className="p-8 text-sm text-muted-foreground">Loading…</div>;
-  }
-
-  const sendEmailFn = useServerFn(sendFeedbackEmail);
   const sendMutation = useMutation({
     mutationFn: () => sendEmailFn({ data: { feedbackId: id } }),
     onSuccess: (res: any) => {
-      if (res?.ok) toast.success("Feedback email sent");
-      else toast.warning(`Feedback marked as sent, but email failed: ${res?.error ?? "unknown"}`);
+      if (res?.ok) toast.success("Feedback email queued");
+      else toast.warning(`Queued with error: ${res?.error ?? "unknown"}`);
       qc.invalidateQueries({ queryKey: ["feedback", id] });
       qc.invalidateQueries({ queryKey: ["feedback-list"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["feedback-events", id] });
+      qc.invalidateQueries({ queryKey: ["email-queue"] });
+      qc.invalidateQueries({ queryKey: ["email-queue-summary"] });
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const uploadFile = async (file: File) => {
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error("Max file size is 20 MB");
+      return;
+    }
+    setUploading(true);
+    try {
+      const info: any = await uploadUrlFn({
+        data: { feedbackId: id, fileName: file.name, mimeType: file.type || "application/octet-stream", sizeBytes: file.size },
+      });
+      const uploadRes = await fetch(info.signedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+        body: file,
+      });
+      if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.status}`);
+      toast.success(`Uploaded ${file.name}`);
+      qc.invalidateQueries({ queryKey: ["feedback-attachments", id] });
+    } catch (e: any) {
+      toast.error(e.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const removeAttachment = useMutation({
+    mutationFn: (attId: string) => deleteAttFn({ data: { id: attId } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["feedback-attachments", id] }),
+  });
+
+  if (isLoading || !data) {
+    return <div className="p-8 text-sm text-muted-foreground">Loading…</div>;
+  }
+
   const send = () => sendMutation.mutate();
   const acknowledge = () => update.mutate({ status: "acknowledged", acknowledged_at: new Date().toISOString(), acknowledgement_note: ackNote }, { onSuccess: () => toast.success("Acknowledged") });
   const complete = () => update.mutate({ status: "completed" }, { onSuccess: () => toast.success("Marked complete") });
-
-
 
   return (
     <div>
@@ -101,7 +166,7 @@ function FeedbackDetail() {
         actions={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild><Link to="/feedback"><ArrowLeft className="mr-1 h-3.5 w-3.5" /> Back</Link></Button>
-            {data.status === "draft" && <Button size="sm" onClick={send}><Send className="mr-1.5 h-3.5 w-3.5" /> Send</Button>}
+            {data.status === "draft" && <Button size="sm" onClick={send} disabled={sendMutation.isPending}><Send className="mr-1.5 h-3.5 w-3.5" /> Send</Button>}
             {data.status === "acknowledged" && <Button size="sm" variant="outline" onClick={complete}><CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Complete</Button>}
             <Button variant="ghost" size="icon" onClick={() => remove.mutate()} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
           </div>
@@ -120,6 +185,40 @@ function FeedbackDetail() {
             <Section title="Strengths" body={data.strengths} />
             <Section title="Areas to improve" body={data.improvements} />
             <Section title="Recommended actions" body={data.recommended_actions} />
+          </Card>
+
+          <Card className="rounded-xl border-border/60 bg-card/60 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium">Attachments</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">Files are attached to outbound emails.</div>
+              </div>
+              <div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0])}
+                />
+                <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading}>
+                  <Upload className="mr-1.5 h-3.5 w-3.5" /> {uploading ? "Uploading…" : "Upload"}
+                </Button>
+              </div>
+            </div>
+            {attachments.length > 0 && (
+              <ul className="mt-4 space-y-2">
+                {attachments.map((a) => (
+                  <li key={a.id} className="flex items-center gap-2 rounded-md border border-border/60 bg-background/40 px-3 py-2 text-sm">
+                    <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="flex-1 truncate">{a.file_name}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">{Math.round((a.size_bytes ?? 0) / 1024)} KB</span>
+                    <Button size="sm" variant="ghost" onClick={() => removeAttachment.mutate(a.id)}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card>
 
           {data.status === "sent" && (
@@ -184,10 +283,18 @@ function FeedbackDetail() {
 
           <Card className="rounded-xl border-border/60 bg-card/60 p-5">
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Timeline</div>
-            <ul className="mt-3 space-y-3 text-xs">
-              <li><span className="text-muted-foreground">Created</span> · {formatDistanceToNow(new Date(data.created_at), { addSuffix: true })}</li>
-              {data.sent_at && <li><span className="text-muted-foreground">Sent</span> · {formatDistanceToNow(new Date(data.sent_at), { addSuffix: true })}</li>}
-              {data.acknowledged_at && <li><span className="text-muted-foreground">Acknowledged</span> · {formatDistanceToNow(new Date(data.acknowledged_at), { addSuffix: true })}</li>}
+            <ul className="mt-3 space-y-2 text-xs">
+              {(events as any[]).map((e) => (
+                <li key={e.id} className="flex items-center justify-between">
+                  <span className="capitalize">{String(e.event_type).replace(/_/g, " ")}</span>
+                  <span className="text-muted-foreground">{formatDistanceToNow(new Date(e.created_at), { addSuffix: true })}</span>
+                </li>
+              ))}
+              {events.length === 0 && (
+                <li className="text-muted-foreground">
+                  Created {formatDistanceToNow(new Date(data.created_at), { addSuffix: true })}
+                </li>
+              )}
             </ul>
           </Card>
         </div>
