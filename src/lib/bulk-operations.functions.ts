@@ -29,7 +29,7 @@ export const bulkApproveFeedback = createServerFn({ method: "POST" })
         status: "approved",
         reviewed_by: context.userId,
         reviewed_at: new Date().toISOString(),
-      }, { count: "exact" })
+      } as any, { count: "exact" })
       .in("id", data.ids)
       .eq("status", "review");
     if (error) throw error;
@@ -51,7 +51,7 @@ export const bulkRejectFeedback = createServerFn({ method: "POST" })
         reviewed_by: context.userId,
         reviewed_at: new Date().toISOString(),
         review_comments: data.reason ?? null,
-      }, { count: "exact" })
+      } as any, { count: "exact" })
       .in("id", data.ids)
       .eq("status", "review");
     if (error) throw error;
