@@ -64,7 +64,7 @@ export const Route = createFileRoute("/_authenticated/analytics")({
 });
 
 function AnalyticsPage() {
-  const { data, isLoading } = useAnalyticsData();
+  const { data, isLoading, isError, error, refetch, isFetching } = useAnalyticsData();
   const feedback = data?.feedback ?? [];
   const agents = data?.agents ?? [];
 
@@ -81,10 +81,13 @@ function AnalyticsPage() {
     const now = Date.now();
     const d30 = now - 30 * 864e5;
     const d60 = now - 60 * 864e5;
-    const last30 = feedback.filter((f) => new Date(f.created_at).getTime() >= d30).length;
+    const last30 = feedback.filter((f) => {
+      const t = parseTime(f.created_at);
+      return t != null && t >= d30;
+    }).length;
     const prev30 = feedback.filter((f) => {
-      const t = new Date(f.created_at).getTime();
-      return t >= d60 && t < d30;
+      const t = parseTime(f.created_at);
+      return t != null && t >= d60 && t < d30;
     }).length;
     const delta = prev30 === 0 ? (last30 ? 100 : 0) : Math.round(((last30 - prev30) / prev30) * 100);
 
