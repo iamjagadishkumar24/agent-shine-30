@@ -32,8 +32,10 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
+  // Preserve the raw Error (with .stack) in Server Logs — do not stringify.
+  console.error(error);
   useEffect(() => {
-    reportLovableError(error, { boundary: "root" });
+    reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
   // Never surface raw stack traces or internal identifiers to end users.
   const rawMessage = (error?.message ?? "").trim();
