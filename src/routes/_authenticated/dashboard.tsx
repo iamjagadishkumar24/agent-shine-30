@@ -669,8 +669,8 @@ function Dashboard() {
                     </div>
                   </div>
                   <div className="shrink-0 text-right text-[10px] text-muted-foreground">
-                    {format(new Date(c.scheduled_at), "MMM d")}
-                    <div>{format(new Date(c.scheduled_at), "p")}</div>
+                    {safeFormat(c.scheduled_at, "MMM d")}
+                    <div>{safeFormat(c.scheduled_at, "p", "")}</div>
                   </div>
                 </Link>
               ))}
