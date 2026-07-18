@@ -101,12 +101,15 @@ function AgentsPage() {
               {isLoading && (
                 <tr><td colSpan={6} className="px-4 py-6 text-center text-xs text-muted-foreground">Loading…</td></tr>
               )}
-              {filtered.map((a) => (
+              {filtered.map((a) => {
+                const initials = (a.full_name ?? "?").split(" ").filter(Boolean).map((s) => s[0]).slice(0, 2).join("").toUpperCase() || "?";
+                const score = a.qa_score == null ? null : Number(a.qa_score);
+                return (
                 <tr key={a.id} className="border-b border-border/40 last:border-0 hover:bg-accent/30">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/15 text-[11px] font-medium text-primary">
-                        {a.full_name.split(" ").map((s) => s[0]).slice(0, 2).join("")}
+                        {initials}
                       </div>
                       <div>
                         <Link to="/feedback/new" search={{ agent: a.id }} className="font-medium hover:underline">{a.full_name}</Link>
@@ -118,25 +121,35 @@ function AgentsPage() {
                   <td className="px-4 py-3 text-muted-foreground">{a.team ?? "—"}</td>
                   <td className="px-4 py-3 text-muted-foreground">{a.manager_name ?? "—"}</td>
                   <td className="px-4 py-3 text-right">
+                    {score == null ? (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    ) : (
                     <span className={cn(
                       "inline-flex rounded-md px-2 py-0.5 text-xs font-medium tabular-nums",
-                      Number(a.qa_score) >= 90 ? "bg-[oklch(0.72_0.16_160)]/15 text-[oklch(0.72_0.16_160)]" :
-                      Number(a.qa_score) >= 75 ? "bg-primary/15 text-primary" :
+                      score >= 90 ? "bg-[oklch(0.72_0.16_160)]/15 text-[oklch(0.72_0.16_160)]" :
+                      score >= 75 ? "bg-primary/15 text-primary" :
                       "bg-destructive/15 text-destructive"
                     )}>
-                      {Number(a.qa_score).toFixed(1)}
+                      {score.toFixed(1)}
                     </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right text-xs">
                     <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.72_0.16_160)]" />
+                      <span className={cn(
+                        "h-1.5 w-1.5 rounded-full",
+                        a.status === "active" ? "bg-[oklch(0.72_0.16_160)]" : "bg-muted-foreground/50"
+                      )} />
                       {a.status}
                     </span>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
               {!isLoading && filtered.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-xs text-muted-foreground">No agents match “{q}”.</td></tr>
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-xs text-muted-foreground">
+                  {data.length === 0 ? "No agents yet. Import a CSV to get started." : `No agents match “${q}”.`}
+                </td></tr>
               )}
             </tbody>
           </table>
