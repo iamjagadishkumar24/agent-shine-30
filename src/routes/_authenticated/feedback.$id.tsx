@@ -208,8 +208,25 @@ function FeedbackDetail() {
         actions={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild><Link to="/feedback"><ArrowLeft className="mr-1 h-3.5 w-3.5" /> Back</Link></Button>
-            {data.status === "draft" && <Button size="sm" onClick={send} disabled={sendMutation.isPending}><Send className="mr-1.5 h-3.5 w-3.5" /> Send</Button>}
-            {data.status === "acknowledged" && <Button size="sm" variant="outline" onClick={complete}><CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Complete</Button>}
+            {(data.status === "draft" || data.status === "revision_required") && (
+              <Button
+                size="sm"
+                onClick={() => transitionMutation.mutate({ type: "submit", feedbackId: id })}
+                disabled={transitionMutation.isPending}
+              >
+                <GitPullRequest className="mr-1.5 h-3.5 w-3.5" /> Submit for review
+              </Button>
+            )}
+            {data.status === "approved" && (
+              <Button size="sm" onClick={send} disabled={sendMutation.isPending}>
+                <Send className="mr-1.5 h-3.5 w-3.5" /> Send
+              </Button>
+            )}
+            {data.status === "acknowledged" && (
+              <Button size="sm" variant="outline" onClick={complete}>
+                <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Complete
+              </Button>
+            )}
             <Button variant="ghost" size="icon" onClick={() => remove.mutate()} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
           </div>
         }
