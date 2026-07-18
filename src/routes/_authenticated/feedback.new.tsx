@@ -122,6 +122,9 @@ function NewFeedback() {
         subtitle="Craft feedback with clear structure. Save as draft or send immediately."
         actions={
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setAiOpen(true)} disabled={create.isPending}>
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" /> AI draft
+            </Button>
             <Button variant="outline" size="sm" onClick={() => create.mutate("draft")} disabled={create.isPending}>Save draft</Button>
             <Button size="sm" onClick={() => create.mutate("sent")} disabled={create.isPending}>Send now</Button>
           </div>
