@@ -36,11 +36,14 @@ const STATUS_ICON = {
 
 function HealthPage() {
   const run = useServerFn(runHealthChecks);
-  const { data, isFetching, refetch, error } = useQuery({
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const { data, isFetching, refetch, error, dataUpdatedAt } = useQuery({
     queryKey: ["health-checks"],
     queryFn: () => run(),
     staleTime: 0,
+    refetchInterval: autoRefresh ? 30_000 : false,
   });
+
 
   const grouped = (data?.checks ?? []).reduce<Record<string, HealthCheck[]>>((acc, c) => {
     (acc[c.module] ||= []).push(c);
