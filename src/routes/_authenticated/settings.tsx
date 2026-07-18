@@ -339,7 +339,7 @@ function QueueMonitor() {
                 <td className="px-4 py-2">{r.to_email}</td>
                 <td className="px-4 py-2 max-w-xs truncate">{r.subject}</td>
                 <td className="px-4 py-2 text-right tabular-nums">{r.attempts}/{r.max_attempts}</td>
-                <td className="px-4 py-2 text-xs text-muted-foreground">{r.next_attempt_at ? formatDistanceToNow(new Date(r.next_attempt_at), { addSuffix: true }) : "—"}</td>
+                <td className="px-4 py-2 text-xs text-muted-foreground">{safeTimeAgo(r.next_attempt_at)}</td>
                 <td className="px-4 py-2 text-right">
                   {(r.status === "failed" || r.status === "paused") && (
                     <Button size="sm" variant="ghost" onClick={async () => { await retryFn({ data: { id: r.id } }); invalidate(); }}>
