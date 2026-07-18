@@ -234,17 +234,20 @@ export const EmailDonutCard = memo(function EmailDonutCard({
           </div>
         </div>
         <div className="min-w-0 flex-1 space-y-2 text-xs">
-          {emailSlices.map((s) => (
-            <div key={s.name} className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
-                <span className="text-muted-foreground">{s.name}</span>
+          {emailSlices.map((s) => {
+            const pct = totalEmails > 0 ? (s.value / totalEmails) * 100 : 0;
+            return (
+              <div key={s.name} className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
+                  <span className="text-muted-foreground">{s.name}</span>
+                </div>
+                <span className="tabular-nums">
+                  {s.value} <span className="text-muted-foreground">({pct.toFixed(1)}%)</span>
+                </span>
               </div>
-              <span className="tabular-nums">
-                {s.value} <span className="text-muted-foreground">({((s.value / totalEmails) * 100).toFixed(1)}%)</span>
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </Card>
