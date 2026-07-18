@@ -10,10 +10,36 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Trash2, Plus, ArrowLeft } from "lucide-react";
+import { CheckCircle2, XCircle, Trash2, Plus, ArrowLeft, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const safeDate = (v: unknown) => {
+  if (!v) return "—";
+  const d = new Date(v as string);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+};
+const safeDateTime = (v: unknown) => {
+  if (!v) return "—";
+  const d = new Date(v as string);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+};
+
+function DetailSkeleton() {
+  return (
+    <div className="mx-auto max-w-5xl px-8 pb-12 pt-6 grid grid-cols-1 lg:grid-cols-3 gap-6" aria-busy="true">
+      <div className="lg:col-span-2 space-y-6">
+        <div className="h-64 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+        <div className="h-32 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+      </div>
+      <div className="space-y-4">
+        <div className="h-40 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+        <div className="h-24 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+      </div>
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/coaching/$id")({
   component: SessionDetail,
