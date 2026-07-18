@@ -234,7 +234,7 @@ function PortalFeedbackDetail() {
                   <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                   <div className="min-w-0 flex-1">
                     <div className="text-xs">
-                      <span className="font-medium capitalize">{e.action.replace(/_/g, " ")}</span>
+                      <span className="font-medium capitalize">{(e.action || "update").replace(/_/g, " ")}</span>
                       {e.from_status && e.to_status && e.from_status !== e.to_status && (
                         <span className="ml-1 text-muted-foreground">
                           {e.from_status} → {e.to_status}
@@ -245,8 +245,9 @@ function PortalFeedbackDetail() {
                       <div className="mt-0.5 whitespace-pre-wrap text-xs text-muted-foreground">{e.comment}</div>
                     )}
                     <div className="mt-0.5 text-[10px] text-muted-foreground">
-                      {formatDistanceToNow(new Date(e.created_at), { addSuffix: true })}
+                      {safeTimeAgo(e.created_at)}
                     </div>
+
                   </div>
                 </li>
               ))}
