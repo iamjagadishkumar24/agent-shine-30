@@ -189,7 +189,7 @@ function SessionDetail() {
                   />
                   <div className="flex-1 min-w-0">
                     <div className={cn("text-sm truncate", it.status === "done" && "line-through text-muted-foreground")}>{it.title}</div>
-                    {it.due_date && <div className="text-[11px] text-muted-foreground">Due {new Date(it.due_date).toLocaleDateString()}</div>}
+                    {it.due_date && <div className="text-[11px] text-muted-foreground">Due {safeDate(it.due_date)}</div>}
                   </div>
                   <Select value={it.status} onValueChange={(v) => updateItem.mutate({ itemId: it.id, patch: { status: v } })}>
                     <SelectTrigger className={cn("h-7 w-32 text-xs border-none", ITEM_STATUS_STYLES[it.status])}>
