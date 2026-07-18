@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Users, MessageSquareText, GraduationCap, BarChart3, Settings, LogOut, Sparkles, Search } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquareText, GraduationCap, BarChart3, FileBarChart, Settings, LogOut, Sparkles, Search } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,7 @@ const NAV = [
   { to: "/feedback", label: "Feedback", icon: MessageSquareText },
   { to: "/coaching", label: "Coaching", icon: GraduationCap },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/reports", label: "Reports", icon: FileBarChart },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 

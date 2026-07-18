@@ -65,6 +65,113 @@ export type Database = {
         }
         Relationships: []
       }
+      coaching_action_items: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          session_id: string
+          status: Database["public"]["Enums"]["action_item_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          session_id: string
+          status?: Database["public"]["Enums"]["action_item_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          session_id?: string
+          status?: Database["public"]["Enums"]["action_item_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_action_items_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coaching_sessions: {
+        Row: {
+          agent_id: string
+          coach_id: string | null
+          completed_at: string | null
+          created_at: string
+          duration_minutes: number
+          feedback_id: string | null
+          id: string
+          notes: string | null
+          outcome: string | null
+          scheduled_at: string
+          status: Database["public"]["Enums"]["coaching_status"]
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          coach_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          duration_minutes?: number
+          feedback_id?: string | null
+          id?: string
+          notes?: string | null
+          outcome?: string | null
+          scheduled_at: string
+          status?: Database["public"]["Enums"]["coaching_status"]
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          coach_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          duration_minutes?: number
+          feedback_id?: string | null
+          id?: string
+          notes?: string | null
+          outcome?: string | null
+          scheduled_at?: string
+          status?: Database["public"]["Enums"]["coaching_status"]
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_sessions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coaching_sessions_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_queue: {
         Row: {
           attachments: Json
@@ -435,7 +542,9 @@ export type Database = {
       }
     }
     Enums: {
+      action_item_status: "open" | "in_progress" | "done" | "blocked"
       app_role: "super_admin" | "qa_admin" | "team_manager" | "read_only"
+      coaching_status: "scheduled" | "completed" | "canceled" | "no_show"
       feedback_severity: "low" | "medium" | "high" | "critical"
       feedback_status:
         | "draft"
@@ -577,7 +686,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      action_item_status: ["open", "in_progress", "done", "blocked"],
       app_role: ["super_admin", "qa_admin", "team_manager", "read_only"],
+      coaching_status: ["scheduled", "completed", "canceled", "no_show"],
       feedback_severity: ["low", "medium", "high", "critical"],
       feedback_status: [
         "draft",

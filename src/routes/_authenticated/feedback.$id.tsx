@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Send, CheckCircle2, Trash2, Mail, MailOpen, MousePointerClick, AlertTriangle, Paperclip, Upload, X } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, Trash2, Mail, MailOpen, MousePointerClick, AlertTriangle, Paperclip, Upload, X, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -279,6 +279,15 @@ function FeedbackDetail() {
                 </li>
               )}
             </ul>
+          </Card>
+
+          <Card className="rounded-xl border-border/60 bg-card/60 p-5">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Coaching</div>
+            <Link to="/coaching/new" search={{ agent: data.agent?.id ?? "", feedback: data.id }}>
+              <Button variant="outline" size="sm" className="mt-3 w-full gap-1.5">
+                <CalendarPlus className="h-3.5 w-3.5" /> Schedule coaching session
+              </Button>
+            </Link>
           </Card>
 
           <Card className="rounded-xl border-border/60 bg-card/60 p-5">
