@@ -6,13 +6,14 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Send, CheckCircle2, Trash2, Mail, MailOpen, MousePointerClick, AlertTriangle, Paperclip, Upload, X, CalendarPlus } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, Trash2, Mail, MailOpen, MousePointerClick, AlertTriangle, Paperclip, Upload, X, CalendarPlus, GitPullRequest, ThumbsUp, ThumbsDown, RotateCcw, History } from "lucide-react";
 import { toast } from "sonner";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { sendFeedbackEmail } from "@/lib/feedback-email.functions";
 import { createUploadUrl, deleteAttachment } from "@/lib/feedback-attachments.functions";
+import { transitionFeedback } from "@/lib/feedback-workflow.functions";
 
 export const Route = createFileRoute("/_authenticated/feedback/$id")({
   component: FeedbackDetail,
@@ -22,6 +23,8 @@ const STATUS_TONE: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
   review: "bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.78_0.16_75)]",
   approved: "bg-primary/15 text-primary",
+  rejected: "bg-destructive/15 text-destructive",
+  revision_required: "bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.78_0.16_75)]",
   sent: "bg-primary/15 text-primary",
   acknowledged: "bg-[oklch(0.72_0.16_160)]/15 text-[oklch(0.72_0.16_160)]",
   completed: "bg-[oklch(0.72_0.16_160)]/15 text-[oklch(0.72_0.16_160)]",
