@@ -25,6 +25,7 @@ import { Route as AuthenticatedCoachingNewRouteImport } from './routes/_authenti
 import { Route as AuthenticatedCoachingIdRouteImport } from './routes/_authenticated/coaching.$id'
 import { Route as ApiPublicHooksFeedbackEscalationsRouteImport } from './routes/api/public/hooks/feedback-escalations'
 import { Route as ApiPublicHooksDrainEmailQueueRouteImport } from './routes/api/public/hooks/drain-email-queue'
+import { Route as ApiPublicHooksDispatchScheduledReportsRouteImport } from './routes/api/public/hooks/dispatch-scheduled-reports'
 import { Route as ApiPublicTrackOpenIdRouteImport } from './routes/api/public/track/open.$id'
 import { Route as ApiPublicTrackClickIdRouteImport } from './routes/api/public/track/click.$id'
 
@@ -111,6 +112,12 @@ const ApiPublicHooksDrainEmailQueueRoute =
     path: '/api/public/hooks/drain-email-queue',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksDispatchScheduledReportsRoute =
+  ApiPublicHooksDispatchScheduledReportsRouteImport.update({
+    id: '/api/public/hooks/dispatch-scheduled-reports',
+    path: '/api/public/hooks/dispatch-scheduled-reports',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicTrackOpenIdRoute = ApiPublicTrackOpenIdRouteImport.update({
   id: '/api/public/track/open/$id',
   path: '/api/public/track/open/$id',
@@ -136,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/coaching/new': typeof AuthenticatedCoachingNewRoute
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
@@ -155,6 +163,7 @@ export interface FileRoutesByTo {
   '/coaching/new': typeof AuthenticatedCoachingNewRoute
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
@@ -176,6 +185,7 @@ export interface FileRoutesById {
   '/_authenticated/coaching/new': typeof AuthenticatedCoachingNewRoute
   '/_authenticated/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/_authenticated/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/coaching/new'
     | '/feedback/$id'
     | '/feedback/new'
+    | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
     | '/api/public/track/click/$id'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/coaching/new'
     | '/feedback/$id'
     | '/feedback/new'
+    | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
     | '/api/public/track/click/$id'
@@ -236,6 +248,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coaching/new'
     | '/_authenticated/feedback/$id'
     | '/_authenticated/feedback/new'
+    | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
     | '/api/public/track/click/$id'
@@ -246,6 +259,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicHooksDispatchScheduledReportsRoute: typeof ApiPublicHooksDispatchScheduledReportsRoute
   ApiPublicHooksDrainEmailQueueRoute: typeof ApiPublicHooksDrainEmailQueueRoute
   ApiPublicHooksFeedbackEscalationsRoute: typeof ApiPublicHooksFeedbackEscalationsRoute
   ApiPublicTrackClickIdRoute: typeof ApiPublicTrackClickIdRoute
@@ -366,6 +380,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksDrainEmailQueueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/dispatch-scheduled-reports': {
+      id: '/api/public/hooks/dispatch-scheduled-reports'
+      path: '/api/public/hooks/dispatch-scheduled-reports'
+      fullPath: '/api/public/hooks/dispatch-scheduled-reports'
+      preLoaderRoute: typeof ApiPublicHooksDispatchScheduledReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/track/open/$id': {
       id: '/api/public/track/open/$id'
       path: '/api/public/track/open/$id'
@@ -440,6 +461,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicHooksDispatchScheduledReportsRoute:
+    ApiPublicHooksDispatchScheduledReportsRoute,
   ApiPublicHooksDrainEmailQueueRoute: ApiPublicHooksDrainEmailQueueRoute,
   ApiPublicHooksFeedbackEscalationsRoute:
     ApiPublicHooksFeedbackEscalationsRoute,
