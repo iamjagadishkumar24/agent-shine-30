@@ -46,7 +46,9 @@ function CoachingList() {
           </Link>
         }
       />
-      <div className="mx-auto max-w-6xl px-8 pb-12 pt-6">
+      <CoachingTabs />
+      <div className="mx-auto max-w-6xl px-8 pb-12 pt-4">
+
         {isLoading ? (
           <Card className="p-10 text-center text-sm text-muted-foreground">Loading…</Card>
         ) : data.length === 0 ? (
