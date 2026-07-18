@@ -20,7 +20,7 @@ export function rowsToCsv(rows: Row[]): string {
   return [headers.join(","), ...rows.map((r) => headers.map((h) => csvEscape(r[h])).join(","))].join("\n");
 }
 
-export function rowsToPdf(opts: { title: string; subtitle?: string; rows: Row[] }): Uint8Array {
+export function rowsToPdf(opts: { title: string; subtitle?: string; rows: Row[] }): ArrayBuffer {
   const doc = new jsPDF({ unit: "pt", format: "letter" });
   const pageW = doc.internal.pageSize.getWidth();
 
