@@ -487,10 +487,10 @@ function Dashboard() {
             delta={monthDelta} sparkline={sparkAll} drillTo="/feedback"
             tooltip="All feedback records regardless of status." />
           <KpiCard label="Pending Reviews" value={pending.toLocaleString()} icon={Clock} tone="amber"
-            sparkline={sparkPending} drillTo="/feedback"
+            sparkline={sparkPending} drillTo="/feedback" drillSearch={{ status: "pending" }}
             tooltip="Drafts and items awaiting review." />
           <KpiCard label="Completed" value={completed.toLocaleString()} icon={CheckCircle2} tone="emerald"
-            sparkline={sparkCompleted} drillTo="/feedback"
+            sparkline={sparkCompleted} drillTo="/feedback" drillSearch={{ status: "completed" }}
             tooltip="Feedback acknowledged or completed." />
           <KpiCard label="Active Agents" value={`${activeAgents}/${totalAgents}`} icon={Users} tone="sky"
             drillTo="/agents"
@@ -506,9 +506,9 @@ function Dashboard() {
           <KpiCard label="Average QA Score" value={`${avgQA.toFixed(1)}%`} icon={Activity} tone="indigo"
             drillTo="/agents"
             tooltip="Average QA score across all agents." />
-          <KpiCard label="Total Reports" value={"—"} icon={FileText} tone="sky"
-            drillTo="/reports"
-            tooltip="Available report types (see Reports)." />
+          <KpiCard label="High Priority" value={highPriority.toLocaleString()} icon={ShieldAlert} tone="rose"
+            drillTo="/feedback" drillSearch={{ status: "high_priority" }}
+            tooltip="Feedback marked high or critical severity." />
           <KpiCard label="Open Tasks" value={openTasks.toLocaleString()} icon={ListChecks} tone="rose"
             drillTo="/coaching"
             tooltip="Coaching action items open or in progress." />
@@ -517,6 +517,7 @@ function Dashboard() {
             tooltip="Completed coaching action items." />
           <KpiCard label="Weekly Trend" value={fbLastWeek.toLocaleString()} icon={Zap} tone="violet"
             delta={{ ...weekDelta, suffix: "vs prev week" }} sparkline={sparkAll.slice(-6)}
+            drillTo="/feedback" drillSearch={{ range: "7d" }}
             tooltip="Feedback created in the last 7 days." />
           </>)}
         </div>
