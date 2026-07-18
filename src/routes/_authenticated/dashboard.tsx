@@ -502,8 +502,8 @@ function Dashboard() {
           <KpiCard label="Quality Score" value={`${qualityScore.toFixed(1)}%`} icon={Sparkles} tone="teal"
             tooltip="Blended score of QA average and completion rate." />
 
-          <KpiCard label="Average CSAT" value={avgCSAT.toFixed(1)} icon={Star} tone="amber"
-            tooltip="Average customer satisfaction score across evaluated feedback." />
+          <KpiCard label="Avg Feedback Score" value={`${avgCSAT.toFixed(1)}%`} icon={Star} tone="amber"
+            tooltip="Average score recorded on scored feedback (0-100)." />
           <KpiCard label="Average QA Score" value={`${avgQA.toFixed(1)}%`} icon={Activity} tone="indigo"
             drillTo="/agents"
             tooltip="Average QA score across all agents." />
