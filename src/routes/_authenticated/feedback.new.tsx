@@ -13,7 +13,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 export const Route = createFileRoute("/_authenticated/feedback/new")({
-  validateSearch: (s: Record<string, unknown>) => ({ agent: (s.agent as string) ?? "" }),
+  validateSearch: (s: Record<string, unknown>): { agent?: string } =>
+    s.agent ? { agent: String(s.agent) } : {},
   component: NewFeedback,
 });
 
