@@ -137,9 +137,21 @@ function SchedulesPage() {
                   <Play className="mr-1.5 h-3 w-3" /> Run now
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setEditing(s)}>Edit</Button>
-                <Button variant="ghost" size="sm" onClick={() => confirm("Delete this schedule?") && delMut.mutate(s.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="sm"><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete schedule?</AlertDialogTitle>
+                      <AlertDialogDescription>"{s.name}" will stop delivering. This cannot be undone.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => delMut.mutate(s.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           </Card>
