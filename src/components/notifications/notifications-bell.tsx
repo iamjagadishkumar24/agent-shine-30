@@ -17,6 +17,18 @@ import {
 } from "@/lib/notifications.functions";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+
+function safeTimeAgo(v: string | null | undefined): string {
+  if (!v) return "";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "";
+  try {
+    return formatDistanceToNow(d, { addSuffix: true });
+  } catch {
+    return "";
+  }
+}
 
 export function NotificationsBell({ userId }: { userId: string }) {
   const list = useServerFn(listMyNotifications);
@@ -52,15 +64,22 @@ export function NotificationsBell({ userId }: { userId: string }) {
   const readMut = useMutation({
     mutationFn: (id: string) => markRead({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
+    onError: (e: any) => toast.error(e?.message ?? "Could not mark as read"),
   });
   const allMut = useMutation({
     mutationFn: () => markAll(),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success("All notifications marked as read");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not mark all as read"),
   });
 
   const handleClick = (n: (typeof notifications)[number]) => {
     if (!n.read_at) readMut.mutate(n.id);
-    if (n.link) navigate({ to: n.link });
+    if (n.link && typeof n.link === "string" && n.link.startsWith("/")) {
+      navigate({ to: n.link as any });
+    }
   };
 
   return (
@@ -128,7 +147,7 @@ export function NotificationsBell({ userId }: { userId: string }) {
                     </div>
                   )}
                   <div className="text-[10px] text-muted-foreground mt-1">
-                    {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                    {safeTimeAgo(n.created_at)}
                   </div>
                 </div>
               </button>
