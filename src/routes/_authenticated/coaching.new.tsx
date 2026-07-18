@@ -13,10 +13,11 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 export const Route = createFileRoute("/_authenticated/coaching/new")({
-  validateSearch: (s: Record<string, unknown>): { agent?: string; feedback?: string } => {
-    const out: { agent?: string; feedback?: string } = {};
+  validateSearch: (s: Record<string, unknown>): { agent?: string; feedback?: string; plan?: string } => {
+    const out: { agent?: string; feedback?: string; plan?: string } = {};
     if (s.agent) out.agent = String(s.agent);
     if (s.feedback) out.feedback = String(s.feedback);
+    if (s.plan) out.plan = String(s.plan);
     return out;
   },
   component: NewSession,
