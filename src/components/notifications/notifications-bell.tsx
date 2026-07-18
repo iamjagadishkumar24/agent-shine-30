@@ -147,7 +147,7 @@ export function NotificationsBell({ userId }: { userId: string }) {
                     </div>
                   )}
                   <div className="text-[10px] text-muted-foreground mt-1">
-                    {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                    {safeTimeAgo(n.created_at)}
                   </div>
                 </div>
               </button>
