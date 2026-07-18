@@ -64,6 +64,28 @@ function ApprovalsPage() {
     },
   });
 
+  const sortedFiltered = useMemo(() => {
+    const arr = Array.isArray(data) ? [...data] : [];
+    arr.sort((a: any, b: any) => {
+      const sa = SEV_ORDER[a.severity] ?? 99;
+      const sb = SEV_ORDER[b.severity] ?? 99;
+      if (sa !== sb) return sa - sb;
+      const ta = a.submitted_for_review_at ? new Date(a.submitted_for_review_at).getTime() : 0;
+      const tb = b.submitted_for_review_at ? new Date(b.submitted_for_review_at).getTime() : 0;
+      return ta - tb;
+    });
+    if (sevFilter === "all") return arr;
+    return arr.filter((f: any) => f.severity === sevFilter);
+  }, [data, sevFilter]);
+
+  const sevCounts = useMemo(() => {
+    const counts: Record<string, number> = { critical: 0, high: 0, medium: 0, low: 0 };
+    for (const f of (data as any[]) ?? []) {
+      if (f.severity && counts[f.severity] !== undefined) counts[f.severity] += 1;
+    }
+    return counts;
+  }, [data]);
+
   const act = useMutation({
     mutationFn: (payload: Parameters<typeof transitionFn>[0]["data"]) =>
       transitionFn({ data: payload }),
