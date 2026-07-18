@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/layout/page-header";
+import { CoachingTabs } from "@/components/coaching/coaching-tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +46,9 @@ function CoachingList() {
           </Link>
         }
       />
-      <div className="mx-auto max-w-6xl px-8 pb-12 pt-6">
+      <CoachingTabs />
+      <div className="mx-auto max-w-6xl px-8 pb-12 pt-4">
+
         {isLoading ? (
           <Card className="p-10 text-center text-sm text-muted-foreground">Loading…</Card>
         ) : data.length === 0 ? (

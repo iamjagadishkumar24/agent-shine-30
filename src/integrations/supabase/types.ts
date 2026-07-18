@@ -112,6 +112,109 @@ export type Database = {
           },
         ]
       }
+      coaching_goals: {
+        Row: {
+          achieved_at: string | null
+          created_at: string
+          current_value: number
+          description: string | null
+          id: string
+          metric: string | null
+          plan_id: string
+          status: Database["public"]["Enums"]["coaching_goal_status"]
+          target_date: string | null
+          target_value: number | null
+          title: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          achieved_at?: string | null
+          created_at?: string
+          current_value?: number
+          description?: string | null
+          id?: string
+          metric?: string | null
+          plan_id: string
+          status?: Database["public"]["Enums"]["coaching_goal_status"]
+          target_date?: string | null
+          target_value?: number | null
+          title: string
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          achieved_at?: string | null
+          created_at?: string
+          current_value?: number
+          description?: string | null
+          id?: string
+          metric?: string | null
+          plan_id?: string
+          status?: Database["public"]["Enums"]["coaching_goal_status"]
+          target_date?: string | null
+          target_value?: number | null
+          title?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_goals_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coaching_plans: {
+        Row: {
+          agent_id: string
+          coach_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          start_date: string
+          status: Database["public"]["Enums"]["coaching_plan_status"]
+          target_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          coach_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["coaching_plan_status"]
+          target_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          coach_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["coaching_plan_status"]
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_plans_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coaching_sessions: {
         Row: {
           agent_id: string
@@ -123,6 +226,7 @@ export type Database = {
           id: string
           notes: string | null
           outcome: string | null
+          plan_id: string | null
           scheduled_at: string
           status: Database["public"]["Enums"]["coaching_status"]
           topic: string
@@ -138,6 +242,7 @@ export type Database = {
           id?: string
           notes?: string | null
           outcome?: string | null
+          plan_id?: string | null
           scheduled_at: string
           status?: Database["public"]["Enums"]["coaching_status"]
           topic: string
@@ -153,6 +258,7 @@ export type Database = {
           id?: string
           notes?: string | null
           outcome?: string | null
+          plan_id?: string | null
           scheduled_at?: string
           status?: Database["public"]["Enums"]["coaching_status"]
           topic?: string
@@ -171,6 +277,13 @@ export type Database = {
             columns: ["feedback_id"]
             isOneToOne: false
             referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coaching_sessions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_plans"
             referencedColumns: ["id"]
           },
         ]
@@ -548,6 +661,41 @@ export type Database = {
           },
         ]
       }
+      goal_progress: {
+        Row: {
+          goal_id: string
+          id: string
+          note: string | null
+          recorded_at: string
+          recorded_by: string | null
+          value: number | null
+        }
+        Insert: {
+          goal_id: string
+          id?: string
+          note?: string | null
+          recorded_at?: string
+          recorded_by?: string | null
+          value?: number | null
+        }
+        Update: {
+          goal_id?: string
+          id?: string
+          note?: string | null
+          recorded_at?: string
+          recorded_by?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_progress_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -681,6 +829,8 @@ export type Database = {
     Enums: {
       action_item_status: "open" | "in_progress" | "done" | "blocked"
       app_role: "super_admin" | "qa_admin" | "team_manager" | "read_only"
+      coaching_goal_status: "on_track" | "at_risk" | "achieved" | "missed"
+      coaching_plan_status: "active" | "completed" | "archived"
       coaching_status: "scheduled" | "completed" | "canceled" | "no_show"
       feedback_severity: "low" | "medium" | "high" | "critical"
       feedback_status:
@@ -830,6 +980,8 @@ export const Constants = {
     Enums: {
       action_item_status: ["open", "in_progress", "done", "blocked"],
       app_role: ["super_admin", "qa_admin", "team_manager", "read_only"],
+      coaching_goal_status: ["on_track", "at_risk", "achieved", "missed"],
+      coaching_plan_status: ["active", "completed", "archived"],
       coaching_status: ["scheduled", "completed", "canceled", "no_show"],
       feedback_severity: ["low", "medium", "high", "critical"],
       feedback_status: [

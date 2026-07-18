@@ -29,6 +29,7 @@ import { Route as AuthenticatedReportsSchedulesRouteImport } from './routes/_aut
 import { Route as AuthenticatedPortalIdRouteImport } from './routes/_authenticated/portal.$id'
 import { Route as AuthenticatedFeedbackNewRouteImport } from './routes/_authenticated/feedback.new'
 import { Route as AuthenticatedFeedbackIdRouteImport } from './routes/_authenticated/feedback.$id'
+import { Route as AuthenticatedCoachingPlansRouteImport } from './routes/_authenticated/coaching.plans'
 import { Route as AuthenticatedCoachingNewRouteImport } from './routes/_authenticated/coaching.new'
 import { Route as AuthenticatedCoachingIdRouteImport } from './routes/_authenticated/coaching.$id'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
@@ -36,6 +37,8 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as ApiPublicHooksFeedbackEscalationsRouteImport } from './routes/api/public/hooks/feedback-escalations'
 import { Route as ApiPublicHooksDrainEmailQueueRouteImport } from './routes/api/public/hooks/drain-email-queue'
 import { Route as ApiPublicHooksDispatchScheduledReportsRouteImport } from './routes/api/public/hooks/dispatch-scheduled-reports'
+import { Route as AuthenticatedCoachingPlansNewRouteImport } from './routes/_authenticated/coaching.plans.new'
+import { Route as AuthenticatedCoachingPlansIdRouteImport } from './routes/_authenticated/coaching.plans.$id'
 import { Route as ApiPublicTrackOpenIdRouteImport } from './routes/api/public/track/open.$id'
 import { Route as ApiPublicTrackClickIdRouteImport } from './routes/api/public/track/click.$id'
 
@@ -142,6 +145,12 @@ const AuthenticatedFeedbackIdRoute = AuthenticatedFeedbackIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedFeedbackRoute,
 } as any)
+const AuthenticatedCoachingPlansRoute =
+  AuthenticatedCoachingPlansRouteImport.update({
+    id: '/plans',
+    path: '/plans',
+    getParentRoute: () => AuthenticatedCoachingRoute,
+  } as any)
 const AuthenticatedCoachingNewRoute =
   AuthenticatedCoachingNewRouteImport.update({
     id: '/new',
@@ -182,6 +191,18 @@ const ApiPublicHooksDispatchScheduledReportsRoute =
     path: '/api/public/hooks/dispatch-scheduled-reports',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedCoachingPlansNewRoute =
+  AuthenticatedCoachingPlansNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedCoachingPlansRoute,
+  } as any)
+const AuthenticatedCoachingPlansIdRoute =
+  AuthenticatedCoachingPlansIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedCoachingPlansRoute,
+  } as any)
 const ApiPublicTrackOpenIdRoute = ApiPublicTrackOpenIdRouteImport.update({
   id: '/api/public/track/open/$id',
   path: '/api/public/track/open/$id',
@@ -213,10 +234,13 @@ export interface FileRoutesByFullPath {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/coaching/$id': typeof AuthenticatedCoachingIdRoute
   '/coaching/new': typeof AuthenticatedCoachingNewRoute
+  '/coaching/plans': typeof AuthenticatedCoachingPlansRouteWithChildren
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/feedback/new': typeof AuthenticatedFeedbackNewRoute
   '/portal/$id': typeof AuthenticatedPortalIdRoute
   '/reports/schedules': typeof AuthenticatedReportsSchedulesRoute
+  '/coaching/plans/$id': typeof AuthenticatedCoachingPlansIdRoute
+  '/coaching/plans/new': typeof AuthenticatedCoachingPlansNewRoute
   '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
@@ -243,10 +267,13 @@ export interface FileRoutesByTo {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/coaching/$id': typeof AuthenticatedCoachingIdRoute
   '/coaching/new': typeof AuthenticatedCoachingNewRoute
+  '/coaching/plans': typeof AuthenticatedCoachingPlansRouteWithChildren
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/feedback/new': typeof AuthenticatedFeedbackNewRoute
   '/portal/$id': typeof AuthenticatedPortalIdRoute
   '/reports/schedules': typeof AuthenticatedReportsSchedulesRoute
+  '/coaching/plans/$id': typeof AuthenticatedCoachingPlansIdRoute
+  '/coaching/plans/new': typeof AuthenticatedCoachingPlansNewRoute
   '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
@@ -275,10 +302,13 @@ export interface FileRoutesById {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/coaching/$id': typeof AuthenticatedCoachingIdRoute
   '/_authenticated/coaching/new': typeof AuthenticatedCoachingNewRoute
+  '/_authenticated/coaching/plans': typeof AuthenticatedCoachingPlansRouteWithChildren
   '/_authenticated/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/_authenticated/feedback/new': typeof AuthenticatedFeedbackNewRoute
   '/_authenticated/portal/$id': typeof AuthenticatedPortalIdRoute
   '/_authenticated/reports/schedules': typeof AuthenticatedReportsSchedulesRoute
+  '/_authenticated/coaching/plans/$id': typeof AuthenticatedCoachingPlansIdRoute
+  '/_authenticated/coaching/plans/new': typeof AuthenticatedCoachingPlansNewRoute
   '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
@@ -307,10 +337,13 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/coaching/$id'
     | '/coaching/new'
+    | '/coaching/plans'
     | '/feedback/$id'
     | '/feedback/new'
     | '/portal/$id'
     | '/reports/schedules'
+    | '/coaching/plans/$id'
+    | '/coaching/plans/new'
     | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
@@ -337,10 +370,13 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/coaching/$id'
     | '/coaching/new'
+    | '/coaching/plans'
     | '/feedback/$id'
     | '/feedback/new'
     | '/portal/$id'
     | '/reports/schedules'
+    | '/coaching/plans/$id'
+    | '/coaching/plans/new'
     | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
@@ -368,10 +404,13 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/coaching/$id'
     | '/_authenticated/coaching/new'
+    | '/_authenticated/coaching/plans'
     | '/_authenticated/feedback/$id'
     | '/_authenticated/feedback/new'
     | '/_authenticated/portal/$id'
     | '/_authenticated/reports/schedules'
+    | '/_authenticated/coaching/plans/$id'
+    | '/_authenticated/coaching/plans/new'
     | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
@@ -537,6 +576,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFeedbackIdRouteImport
       parentRoute: typeof AuthenticatedFeedbackRoute
     }
+    '/_authenticated/coaching/plans': {
+      id: '/_authenticated/coaching/plans'
+      path: '/plans'
+      fullPath: '/coaching/plans'
+      preLoaderRoute: typeof AuthenticatedCoachingPlansRouteImport
+      parentRoute: typeof AuthenticatedCoachingRoute
+    }
     '/_authenticated/coaching/new': {
       id: '/_authenticated/coaching/new'
       path: '/new'
@@ -586,6 +632,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksDispatchScheduledReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/coaching/plans/new': {
+      id: '/_authenticated/coaching/plans/new'
+      path: '/new'
+      fullPath: '/coaching/plans/new'
+      preLoaderRoute: typeof AuthenticatedCoachingPlansNewRouteImport
+      parentRoute: typeof AuthenticatedCoachingPlansRoute
+    }
+    '/_authenticated/coaching/plans/$id': {
+      id: '/_authenticated/coaching/plans/$id'
+      path: '/$id'
+      fullPath: '/coaching/plans/$id'
+      preLoaderRoute: typeof AuthenticatedCoachingPlansIdRouteImport
+      parentRoute: typeof AuthenticatedCoachingPlansRoute
+    }
     '/api/public/track/open/$id': {
       id: '/api/public/track/open/$id'
       path: '/api/public/track/open/$id'
@@ -603,14 +663,32 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedCoachingPlansRouteChildren {
+  AuthenticatedCoachingPlansIdRoute: typeof AuthenticatedCoachingPlansIdRoute
+  AuthenticatedCoachingPlansNewRoute: typeof AuthenticatedCoachingPlansNewRoute
+}
+
+const AuthenticatedCoachingPlansRouteChildren: AuthenticatedCoachingPlansRouteChildren =
+  {
+    AuthenticatedCoachingPlansIdRoute: AuthenticatedCoachingPlansIdRoute,
+    AuthenticatedCoachingPlansNewRoute: AuthenticatedCoachingPlansNewRoute,
+  }
+
+const AuthenticatedCoachingPlansRouteWithChildren =
+  AuthenticatedCoachingPlansRoute._addFileChildren(
+    AuthenticatedCoachingPlansRouteChildren,
+  )
+
 interface AuthenticatedCoachingRouteChildren {
   AuthenticatedCoachingIdRoute: typeof AuthenticatedCoachingIdRoute
   AuthenticatedCoachingNewRoute: typeof AuthenticatedCoachingNewRoute
+  AuthenticatedCoachingPlansRoute: typeof AuthenticatedCoachingPlansRouteWithChildren
 }
 
 const AuthenticatedCoachingRouteChildren: AuthenticatedCoachingRouteChildren = {
   AuthenticatedCoachingIdRoute: AuthenticatedCoachingIdRoute,
   AuthenticatedCoachingNewRoute: AuthenticatedCoachingNewRoute,
+  AuthenticatedCoachingPlansRoute: AuthenticatedCoachingPlansRouteWithChildren,
 }
 
 const AuthenticatedCoachingRouteWithChildren =

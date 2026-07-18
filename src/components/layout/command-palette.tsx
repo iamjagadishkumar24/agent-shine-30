@@ -26,6 +26,7 @@ const NAV = [
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/feedback", label: "Feedback", icon: MessageSquareText },
   { to: "/coaching", label: "Coaching", icon: GraduationCap },
+  { to: "/coaching/plans", label: "Coaching plans", icon: GraduationCap },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/reports", label: "Reports", icon: FileBarChart },
   { to: "/settings", label: "Settings", icon: Settings },
@@ -35,6 +36,7 @@ const NAV = [
 const ACTIONS = [
   { to: "/feedback/new", label: "New feedback", icon: Plus },
   { to: "/coaching/new", label: "New coaching session", icon: Plus },
+  { to: "/coaching/plans/new", label: "New coaching plan", icon: Plus },
   { to: "/reports/schedules", label: "Report schedules", icon: FileBarChart },
 ] as const;
 

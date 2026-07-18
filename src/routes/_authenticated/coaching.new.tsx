@@ -13,10 +13,11 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 export const Route = createFileRoute("/_authenticated/coaching/new")({
-  validateSearch: (s: Record<string, unknown>): { agent?: string; feedback?: string } => {
-    const out: { agent?: string; feedback?: string } = {};
+  validateSearch: (s: Record<string, unknown>): { agent?: string; feedback?: string; plan?: string } => {
+    const out: { agent?: string; feedback?: string; plan?: string } = {};
     if (s.agent) out.agent = String(s.agent);
     if (s.feedback) out.feedback = String(s.feedback);
+    if (s.plan) out.plan = String(s.plan);
     return out;
   },
   component: NewSession,
@@ -29,12 +30,13 @@ const Schema = z.object({
   duration_minutes: z.number().int().min(5).max(480),
   notes: z.string().trim().max(2000).optional(),
   feedback_id: z.string().uuid().optional().or(z.literal("")),
+  plan_id: z.string().uuid().optional().or(z.literal("")),
 });
 
 function NewSession() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { agent = "", feedback = "" } = Route.useSearch();
+  const { agent = "", feedback = "", plan = "" } = Route.useSearch();
 
   const now = new Date(Date.now() + 24 * 60 * 60 * 1000);
   now.setSeconds(0, 0);
@@ -47,6 +49,7 @@ function NewSession() {
     duration_minutes: 30,
     notes: "",
     feedback_id: feedback,
+    plan_id: plan,
   });
 
   const { data: agents = [] } = useQuery({
@@ -68,6 +71,7 @@ function NewSession() {
         duration_minutes: parsed.duration_minutes,
         notes: parsed.notes || null,
         feedback_id: parsed.feedback_id || null,
+        plan_id: parsed.plan_id || null,
       };
       const { data: user } = await supabase.auth.getUser();
       if (user.user) payload.coach_id = user.user.id;
