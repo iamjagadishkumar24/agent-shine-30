@@ -20,6 +20,7 @@ import {
   UserCog,
   Plus,
   ShieldCheck,
+  Activity,
 } from "lucide-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -67,6 +68,7 @@ const AGENT_NAV = [
 ] as const;
 
 const BOTTOM_NAV = [
+  { to: "/health", label: "Health", icon: Activity },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
