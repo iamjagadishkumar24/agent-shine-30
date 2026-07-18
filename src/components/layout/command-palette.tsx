@@ -36,6 +36,7 @@ const NAV = [
 const ACTIONS = [
   { to: "/feedback/new", label: "New feedback", icon: Plus },
   { to: "/coaching/new", label: "New coaching session", icon: Plus },
+  { to: "/coaching/plans/new", label: "New coaching plan", icon: Plus },
   { to: "/reports/schedules", label: "Report schedules", icon: FileBarChart },
 ] as const;
 
