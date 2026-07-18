@@ -137,7 +137,7 @@ function PlanDetail() {
     <div>
       <PageHeader
         title={p.title}
-        subtitle={`${p.agent?.full_name ?? "—"} · started ${new Date(p.start_date).toLocaleDateString()}${p.target_date ? " · target " + new Date(p.target_date).toLocaleDateString() : ""}`}
+        subtitle={`${p.agent?.full_name ?? "—"} · started ${safeDate(p.start_date)}${p.target_date ? " · target " + safeDate(p.target_date) : ""}`}
         actions={
           <Link to="/coaching/plans">
             <Button variant="ghost" size="sm" className="h-8 gap-1"><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
