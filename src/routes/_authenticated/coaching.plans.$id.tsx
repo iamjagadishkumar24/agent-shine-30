@@ -109,7 +109,21 @@ function PlanDetail() {
   });
 
   if (isLoading || !plan) {
-    return <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div>
+        <PageHeader title="Coaching plan" subtitle="Loading…" />
+        <div className="mx-auto max-w-5xl px-8 pb-12 pt-6 grid grid-cols-1 lg:grid-cols-3 gap-6" aria-busy="true">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="h-24 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+            <div className="h-64 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+          </div>
+          <div className="space-y-4">
+            <div className="h-48 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+            <div className="h-32 rounded-xl border border-border/50 bg-muted/30 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
   }
   const p = plan as any;
 
