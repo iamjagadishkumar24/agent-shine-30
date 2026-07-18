@@ -83,21 +83,21 @@ function CoachingList() {
                         </Link>
                       </td>
                       <td className="px-4 py-2.5 text-muted-foreground">
-                        {s.agent?.full_name}
+                        {s.agent?.full_name ?? <span className="italic">Unassigned</span>}
                         {s.agent?.department && <span className="ml-1.5 text-xs">· {s.agent.department}</span>}
                       </td>
                       <td className="px-4 py-2.5 text-muted-foreground">
-                        {new Date(s.scheduled_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+                        {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—"}
                       </td>
                       <td className="px-4 py-2.5 text-muted-foreground">
-                        <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{s.duration_minutes}m</span>
+                        <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{s.duration_minutes ?? 30}m</span>
                       </td>
                       <td className="px-4 py-2.5 text-muted-foreground text-xs">
                         {items.length === 0 ? "—" : `${done}/${items.length} done`}
                       </td>
                       <td className="px-4 py-2.5">
-                        <Badge variant="outline" className={cn("text-xs capitalize", STATUS_STYLES[s.status])}>
-                          {s.status.replace("_", " ")}
+                        <Badge variant="outline" className={cn("text-xs capitalize", STATUS_STYLES[s.status ?? "scheduled"])}>
+                          {(s.status ?? "scheduled").replace("_", " ")}
                         </Badge>
                       </td>
                     </tr>

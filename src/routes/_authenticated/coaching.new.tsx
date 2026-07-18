@@ -63,7 +63,7 @@ function NewSession() {
 
   const create = useMutation({
     mutationFn: async () => {
-      const parsed = Schema.parse({ ...form, duration_minutes: Number(form.duration_minutes) });
+      const parsed = Schema.parse({ ...form, duration_minutes: Number(form.duration_minutes) || 30 });
       const payload: any = {
         topic: parsed.topic,
         agent_id: parsed.agent_id,
@@ -84,7 +84,10 @@ function NewSession() {
       toast.success("Session scheduled");
       navigate({ to: "/coaching/$id", params: { id: row.id } });
     },
-    onError: (e: any) => toast.error(e.message ?? "Could not schedule"),
+    onError: (e: any) => {
+      const msg = e?.issues?.[0]?.message ?? e?.message ?? "Could not schedule";
+      toast.error(msg);
+    },
   });
 
   return (

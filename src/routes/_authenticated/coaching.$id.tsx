@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, Trash2, Plus, ArrowLeft } from "lucide-react";
@@ -200,11 +201,11 @@ function SessionDetail() {
         <div className="space-y-4">
           <Card className="p-5">
             <div className="text-xs text-muted-foreground mb-1">Status</div>
-            <Badge variant="outline" className="capitalize">{s.status.replace("_", " ")}</Badge>
+            <Badge variant="outline" className="capitalize">{(s.status ?? "scheduled").replace("_", " ")}</Badge>
             <div className="mt-4 space-y-2 text-xs">
-              <div><span className="text-muted-foreground">Agent:</span> <span className="font-medium">{s.agent?.full_name}</span></div>
+              <div><span className="text-muted-foreground">Agent:</span> <span className="font-medium">{s.agent?.full_name ?? "Unassigned"}</span></div>
               <div><span className="text-muted-foreground">Department:</span> {s.agent?.department ?? "—"}</div>
-              <div><span className="text-muted-foreground">Duration:</span> {s.duration_minutes} min</div>
+              <div><span className="text-muted-foreground">Duration:</span> {s.duration_minutes ?? 30} min</div>
               {s.feedback && (
                 <div>
                   <span className="text-muted-foreground">Feedback:</span>{" "}
@@ -232,10 +233,27 @@ function SessionDetail() {
             </Card>
           )}
 
-          <Button variant="ghost" size="sm" className="w-full text-xs text-destructive/70 hover:text-destructive"
-            onClick={() => { if (confirm("Delete this session?")) deleteSession.mutate(); }}>
-            Delete session
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="w-full text-xs text-destructive/70 hover:text-destructive">
+                Delete session
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete coaching session?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This permanently deletes the session and its action items. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => deleteSession.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>
