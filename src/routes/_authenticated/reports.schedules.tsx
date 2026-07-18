@@ -48,6 +48,14 @@ const TYPE_LABEL: Record<Schedule["report_type"], string> = {
 };
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+function safeDateTime(v: string | null | undefined): string {
+  if (!v) return "—";
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString();
+}
+const clamp = (n: number, lo: number, hi: number) =>
+  Number.isFinite(n) ? Math.min(hi, Math.max(lo, Math.trunc(n))) : lo;
+
 function SchedulesPage() {
   const qc = useQueryClient();
   const list = useServerFn(listReportSchedules);
