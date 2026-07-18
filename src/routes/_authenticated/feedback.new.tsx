@@ -88,16 +88,26 @@ function NewFeedback() {
     },
   });
 
+  const parsed = Schema.safeParse({
+    ...form,
+    score: form.score ? Number(form.score) : undefined,
+  });
+  const fieldErrors: Record<string, string> = {};
+  if (!parsed.success) {
+    for (const issue of parsed.error.issues) {
+      const key = String(issue.path[0] ?? "");
+      if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+    }
+  }
+  const canSubmit = parsed.success;
+
   const create = useMutation({
     mutationFn: async (status: "draft" | "sent") => {
-      const parsed = Schema.parse({
-        ...form,
-        score: form.score ? Number(form.score) : undefined,
-      });
+      if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Please fix the highlighted fields");
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not signed in");
       const payload = {
-        ...parsed,
+        ...parsed.data,
         status,
         sent_at: status === "sent" ? new Date().toISOString() : null,
         created_by: userData.user.id,
@@ -114,6 +124,7 @@ function NewFeedback() {
     },
     onError: (e: any) => toast.error(e.message ?? "Failed to save"),
   });
+
 
   return (
     <div>
