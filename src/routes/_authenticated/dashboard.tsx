@@ -196,7 +196,7 @@ function Dashboard() {
     delivered: feedback.filter((f) => f.delivered_at).length,
     opened: feedback.filter((f) => f.opened_at).length,
     clicked: feedback.filter((f) => f.clicked_at).length,
-    failed: feedback.filter((f) => (f as any).last_email_error).length,
+    failed: feedback.filter((f) => f.email_error).length,
   };
   const totalEmails = emailStats.delivered || 1;
   const emailSlices = [
