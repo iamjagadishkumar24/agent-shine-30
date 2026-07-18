@@ -129,13 +129,20 @@ function FeedbackDetail() {
       const info: any = await uploadUrlFn({
         data: { feedbackId: id, fileName: file.name, mimeType: file.type || "application/octet-stream", sizeBytes: file.size },
       });
-      const uploadRes = await fetch(info.signedUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type || "application/octet-stream" },
-        body: file,
-      });
-      if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.status}`);
+      const { error } = await supabase.storage
+        .from("feedback-attachments")
+        .uploadToSignedUrl(info.path, info.token, file, { contentType: file.type || "application/octet-stream" });
+      if (error) throw error;
       toast.success(`Uploaded ${file.name}`);
+      qc.invalidateQueries({ queryKey: ["feedback-attachments", id] });
+    } catch (e: any) {
+      toast.error(e.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
       qc.invalidateQueries({ queryKey: ["feedback-attachments", id] });
     } catch (e: any) {
       toast.error(e.message ?? "Upload failed");
