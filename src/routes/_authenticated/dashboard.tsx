@@ -475,9 +475,12 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1600px] px-8 pb-16 pt-6">
+      <div className="mx-auto max-w-[1600px] px-8 pb-16 pt-6 [&_>_*]:animate-in [&_>_*]:fade-in [&_>_*]:duration-300">
         {/* KPI GRID */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+          {isLoading && !data && Array.from({ length: 12 }).map((_, i) => <KpiCardSkeleton key={i} />)}
+          {(!isLoading || data) && (<>
+
           <KpiCard label="Total Feedback" value={totalFeedback.toLocaleString()} icon={Mail} tone="violet"
             delta={monthDelta} sparkline={sparkAll} drillTo="/feedback"
             tooltip="All feedback records regardless of status." />
