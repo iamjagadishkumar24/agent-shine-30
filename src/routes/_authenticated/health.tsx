@@ -108,7 +108,10 @@ function HealthPage() {
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-6" aria-live="polite">
+        {data && Object.keys(grouped).length === 0 && (
+          <Card className="p-6 text-center text-sm text-muted-foreground">No health checks reported.</Card>
+        )}
         {Object.entries(grouped).map(([module, checks]) => (
           <div key={module}>
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
