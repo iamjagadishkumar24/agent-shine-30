@@ -16,9 +16,6 @@ async function timed<T>(fn: () => Promise<T>): Promise<{ result: T; latencyMs: n
   const result = await fn();
   return { result, latencyMs: Date.now() - t };
 }
-  const result = await fn();
-  return { result, latencyMs: Date.now() - t };
-}
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
   const roles = ["qa_admin", "super_admin"];
