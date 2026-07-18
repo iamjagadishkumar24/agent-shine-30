@@ -99,7 +99,8 @@ function ReportsPage() {
     }));
   };
 
-  const run = async (name: string, fn: () => void) => {
+  const run = async (name: string, rows: any[], fn: () => void) => {
+    if (!rows.length) { toast.error("No data to export yet"); return; }
     setBusy(name);
     try { fn(); toast.success("Export ready"); } catch (e: any) { toast.error(e.message ?? "Export failed"); }
     finally { setBusy(null); }
@@ -111,60 +112,54 @@ function ReportsPage() {
       icon: Users,
       title: "Agent Performance",
       desc: "QA scores, feedback counts, and averages per agent.",
-      csv: () => toCsv(perfRows(), "agent-performance.csv"),
-      pdf: () => {
-        const rows = perfRows();
-        toPdf({
-          title: "Agent Performance Report",
-          subtitle: `${rows.length} agents`,
-          filename: "agent-performance.pdf",
-          sections: [{
-            title: "Roster performance",
-            columns: rows.length ? Object.keys(rows[0]) : [],
-            rows: rows.map((r) => Object.values(r) as (string | number)[]),
-          }],
-        });
-      },
+      getRows: perfRows,
+      csv: (rows: any[]) => toCsv(rows, "agent-performance.csv"),
+      pdf: (rows: any[]) => toPdf({
+        title: "Agent Performance Report",
+        subtitle: `${rows.length} agents`,
+        filename: "agent-performance.pdf",
+        sections: [{
+          title: "Roster performance",
+          columns: rows.length ? Object.keys(rows[0]) : [],
+          rows: rows.map((r) => Object.values(r) as (string | number)[]),
+        }],
+      }),
     },
     {
       key: "feedback-trends",
       icon: TrendingUp,
       title: "Feedback Trends",
       desc: "Monthly feedback volume, ack rate, and average score.",
-      csv: () => toCsv(trendRows(), "feedback-trends.csv"),
-      pdf: () => {
-        const rows = trendRows();
-        toPdf({
-          title: "Feedback Trends Report",
-          subtitle: `${rows.length} months`,
-          filename: "feedback-trends.pdf",
-          sections: [{
-            title: "Monthly breakdown",
-            columns: rows.length ? Object.keys(rows[0]) : [],
-            rows: rows.map((r) => Object.values(r) as (string | number)[]),
-          }],
-        });
-      },
+      getRows: trendRows,
+      csv: (rows: any[]) => toCsv(rows, "feedback-trends.csv"),
+      pdf: (rows: any[]) => toPdf({
+        title: "Feedback Trends Report",
+        subtitle: `${rows.length} months`,
+        filename: "feedback-trends.pdf",
+        sections: [{
+          title: "Monthly breakdown",
+          columns: rows.length ? Object.keys(rows[0]) : [],
+          rows: rows.map((r) => Object.values(r) as (string | number)[]),
+        }],
+      }),
     },
     {
       key: "email-delivery",
       icon: Mail,
       title: "Email Delivery",
       desc: "Send / acknowledgement status for every feedback item.",
-      csv: () => toCsv(emailRows(), "email-delivery.csv"),
-      pdf: () => {
-        const rows = emailRows();
-        toPdf({
-          title: "Email Delivery Report",
-          subtitle: `${rows.length} feedback items`,
-          filename: "email-delivery.pdf",
-          sections: [{
-            title: "Delivery status",
-            columns: rows.length ? Object.keys(rows[0]) : [],
-            rows: rows.map((r) => Object.values(r) as (string | number)[]),
-          }],
-        });
-      },
+      getRows: emailRows,
+      csv: (rows: any[]) => toCsv(rows, "email-delivery.csv"),
+      pdf: (rows: any[]) => toPdf({
+        title: "Email Delivery Report",
+        subtitle: `${rows.length} feedback items`,
+        filename: "email-delivery.pdf",
+        sections: [{
+          title: "Delivery status",
+          columns: rows.length ? Object.keys(rows[0]) : [],
+          rows: rows.map((r) => Object.values(r) as (string | number)[]),
+        }],
+      }),
     },
   ];
 
@@ -193,11 +188,11 @@ function ReportsPage() {
             </div>
             <div className="mt-auto pt-5 flex gap-2">
               <Button variant="outline" size="sm" className="flex-1 gap-1.5" disabled={busy === r.key + ":pdf"}
-                onClick={() => run(r.key + ":pdf", r.pdf)}>
+                onClick={() => { const rows = r.getRows(); run(r.key + ":pdf", rows, () => r.pdf(rows)); }}>
                 <FileText className="h-3.5 w-3.5" /> PDF
               </Button>
               <Button variant="outline" size="sm" className="flex-1 gap-1.5" disabled={busy === r.key + ":csv"}
-                onClick={() => run(r.key + ":csv", r.csv)}>
+                onClick={() => { const rows = r.getRows(); run(r.key + ":csv", rows, () => r.csv(rows)); }}>
                 <FileSpreadsheet className="h-3.5 w-3.5" /> CSV
               </Button>
             </div>
