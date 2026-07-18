@@ -457,6 +457,50 @@ export type Database = {
           },
         ]
       }
+      feedback_audit_log: {
+        Row: {
+          action: string
+          actor_id: string
+          comment: string | null
+          created_at: string
+          feedback_id: string
+          from_status: Database["public"]["Enums"]["feedback_status"] | null
+          id: string
+          metadata: Json | null
+          to_status: Database["public"]["Enums"]["feedback_status"] | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          comment?: string | null
+          created_at?: string
+          feedback_id: string
+          from_status?: Database["public"]["Enums"]["feedback_status"] | null
+          id?: string
+          metadata?: Json | null
+          to_status?: Database["public"]["Enums"]["feedback_status"] | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          comment?: string | null
+          created_at?: string
+          feedback_id?: string
+          from_status?: Database["public"]["Enums"]["feedback_status"] | null
+          id?: string
+          metadata?: Json | null
+          to_status?: Database["public"]["Enums"]["feedback_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_audit_log_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback_email_events: {
         Row: {
           created_at: string
