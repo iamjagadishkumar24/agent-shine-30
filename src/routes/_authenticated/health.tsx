@@ -1,12 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
 import { runHealthChecks, type HealthCheck } from "@/lib/health.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, AlertTriangle, XCircle, RefreshCw, Activity } from "lucide-react";
+import { CheckCircle2, AlertTriangle, XCircle, RefreshCw, Activity, Pause, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+function safeDateTime(v: string | null | undefined) {
+  if (!v) return null;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d.toLocaleString();
+}
+
 
 export const Route = createFileRoute("/_authenticated/health")({
   head: () => ({ meta: [{ title: "Health · Signal QMS" }] }),
