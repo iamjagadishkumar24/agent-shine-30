@@ -251,7 +251,8 @@ function Dashboard() {
   const totalFeedback = feedback.length;
   const sent = feedback.filter((f) => ["sent", "acknowledged", "completed"].includes(f.status as string)).length;
   const pending = feedback.filter((f) => ["draft", "review"].includes(f.status as string)).length;
-  const completed = feedback.filter((f) => f.status === "completed" || f.status === "acknowledged").length;
+  const completed = feedback.filter((f) => f.status === "completed").length;
+  const acknowledged = feedback.filter((f) => f.status === "acknowledged" || f.status === "completed").length;
   const highPriority = feedback.filter((f) => f.severity === "critical" || f.severity === "high").length;
   const coachingCount = coaching.length;
   const openTasks = items.filter((i) => i.status === "open" || i.status === "in_progress").length;
