@@ -545,7 +545,12 @@ function Dashboard() {
               {statusRows.map((r) => {
                 const pct = (r.value / statusTotal) * 100;
                 return (
-                  <div key={r.key}>
+                  <Link
+                    key={r.key}
+                    to="/feedback"
+                    search={{ status: r.filter } as any}
+                    className="block rounded-md -mx-1.5 px-1.5 py-1 transition hover:bg-muted/40"
+                  >
                     <div className="mb-1.5 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full" style={{ background: r.color }} />
@@ -559,7 +564,7 @@ function Dashboard() {
                     <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                       <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: r.color }} />
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
