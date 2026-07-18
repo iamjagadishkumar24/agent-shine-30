@@ -516,7 +516,9 @@ function Dashboard() {
           <KpiCard label="Weekly Trend" value={fbLastWeek.toLocaleString()} icon={Zap} tone="violet"
             delta={{ ...weekDelta, suffix: "vs prev week" }} sparkline={sparkAll.slice(-6)}
             tooltip="Feedback created in the last 7 days." />
+          </>)}
         </div>
+
 
         {/* MIDDLE — Trend, Category, QA, Status, Email, Heatmap (charts lazy-loaded) */}
         <div className="mt-5 grid grid-cols-12 gap-5">
