@@ -116,10 +116,9 @@ function PortalPage() {
                     {f.status}
                   </span>
                   <span className="w-28 text-right text-xs text-muted-foreground">
-                    {f.sent_at
-                      ? formatDistanceToNow(new Date(f.sent_at), { addSuffix: true })
-                      : "—"}
+                    {safeTimeAgo(f.sent_at)}
                   </span>
+
                 </Link>
               ))}
             </div>
