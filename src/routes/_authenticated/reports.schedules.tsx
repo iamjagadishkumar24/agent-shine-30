@@ -108,7 +108,17 @@ function SchedulesPage() {
       />
 
       <div className="mx-auto max-w-5xl px-8 pb-12 pt-6 space-y-3">
-        {isLoading && <Card className="p-6 text-sm text-muted-foreground">Loading…</Card>}
+        {isLoading && (
+          <div className="space-y-3" aria-busy="true">
+            {[0, 1, 2].map((i) => (
+              <Card key={i} className="p-5">
+                <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+                <div className="mt-3 h-3 w-2/3 animate-pulse rounded bg-muted" />
+                <div className="mt-2 h-3 w-1/2 animate-pulse rounded bg-muted" />
+              </Card>
+            ))}
+          </div>
+        )}
         {!isLoading && schedules.length === 0 && (
           <Card className="p-8 text-center">
             <CalendarClock className="mx-auto h-8 w-8 text-muted-foreground" />
