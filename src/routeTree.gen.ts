@@ -20,6 +20,7 @@ import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedFeedbackNewRouteImport } from './routes/_authenticated/feedback.new'
 import { Route as AuthenticatedFeedbackIdRouteImport } from './routes/_authenticated/feedback.$id'
 import { Route as ApiPublicHooksFeedbackEscalationsRouteImport } from './routes/api/public/hooks/feedback-escalations'
+import { Route as ApiPublicHooksDrainEmailQueueRouteImport } from './routes/api/public/hooks/drain-email-queue'
 import { Route as ApiPublicTrackOpenIdRouteImport } from './routes/api/public/track/open.$id'
 import { Route as ApiPublicTrackClickIdRouteImport } from './routes/api/public/track/click.$id'
 
@@ -79,6 +80,12 @@ const ApiPublicHooksFeedbackEscalationsRoute =
     path: '/api/public/hooks/feedback-escalations',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksDrainEmailQueueRoute =
+  ApiPublicHooksDrainEmailQueueRouteImport.update({
+    id: '/api/public/hooks/drain-email-queue',
+    path: '/api/public/hooks/drain-email-queue',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicTrackOpenIdRoute = ApiPublicTrackOpenIdRouteImport.update({
   id: '/api/public/track/open/$id',
   path: '/api/public/track/open/$id',
@@ -100,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/feedback': typeof AuthenticatedFeedbackRouteWithChildren
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
   '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
@@ -114,6 +122,7 @@ export interface FileRoutesByTo {
   '/feedback': typeof AuthenticatedFeedbackRouteWithChildren
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
   '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
@@ -130,6 +139,7 @@ export interface FileRoutesById {
   '/_authenticated/feedback': typeof AuthenticatedFeedbackRouteWithChildren
   '/_authenticated/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/_authenticated/feedback/new': typeof AuthenticatedFeedbackNewRoute
+  '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
   '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/feedback/$id'
     | '/feedback/new'
+    | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
     | '/api/public/track/click/$id'
     | '/api/public/track/open/$id'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/feedback/$id'
     | '/feedback/new'
+    | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
     | '/api/public/track/click/$id'
     | '/api/public/track/open/$id'
@@ -175,6 +187,7 @@ export interface FileRouteTypes {
     | '/_authenticated/feedback'
     | '/_authenticated/feedback/$id'
     | '/_authenticated/feedback/new'
+    | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
     | '/api/public/track/click/$id'
     | '/api/public/track/open/$id'
@@ -184,6 +197,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicHooksDrainEmailQueueRoute: typeof ApiPublicHooksDrainEmailQueueRoute
   ApiPublicHooksFeedbackEscalationsRoute: typeof ApiPublicHooksFeedbackEscalationsRoute
   ApiPublicTrackClickIdRoute: typeof ApiPublicTrackClickIdRoute
   ApiPublicTrackOpenIdRoute: typeof ApiPublicTrackOpenIdRoute
@@ -268,6 +282,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksFeedbackEscalationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/drain-email-queue': {
+      id: '/api/public/hooks/drain-email-queue'
+      path: '/api/public/hooks/drain-email-queue'
+      fullPath: '/api/public/hooks/drain-email-queue'
+      preLoaderRoute: typeof ApiPublicHooksDrainEmailQueueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/track/open/$id': {
       id: '/api/public/track/open/$id'
       path: '/api/public/track/open/$id'
@@ -323,6 +344,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicHooksDrainEmailQueueRoute: ApiPublicHooksDrainEmailQueueRoute,
   ApiPublicHooksFeedbackEscalationsRoute:
     ApiPublicHooksFeedbackEscalationsRoute,
   ApiPublicTrackClickIdRoute: ApiPublicTrackClickIdRoute,

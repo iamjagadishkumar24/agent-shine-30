@@ -84,7 +84,8 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
     const atts = Array.isArray(job.attachments) ? (job.attachments as Attachment[]) : [];
     const bytes = atts.length
       ? await loadAttachmentBytes(supabaseAdmin, atts)
-      : ({ ok: true, attachments: [] } as const);
+      : ({ ok: true as const, attachments: [] as Array<{ filename: string; mimeType: string; contentBase64: string }> });
+
 
     if (!bytes.ok) {
       await supabaseAdmin
