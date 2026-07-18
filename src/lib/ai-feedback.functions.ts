@@ -56,7 +56,7 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
     ].join(" ");
 
     const prompt = [
-      `Agent: ${agent?.full_name ?? "(unknown)"} — ${agent?.role ?? ""} in ${agent?.department ?? ""}`.trim(),
+      `Agent: ${agent?.full_name ?? "(unknown)"} in ${agent?.department ?? ""}`.trim(),
       `Category: ${data.category}`,
       `Feedback type: ${data.feedback_type}`,
       `Severity: ${data.severity}`,
