@@ -233,10 +233,27 @@ function SessionDetail() {
             </Card>
           )}
 
-          <Button variant="ghost" size="sm" className="w-full text-xs text-destructive/70 hover:text-destructive"
-            onClick={() => { if (confirm("Delete this session?")) deleteSession.mutate(); }}>
-            Delete session
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="w-full text-xs text-destructive/70 hover:text-destructive">
+                Delete session
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete coaching session?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This permanently deletes the session and its action items. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => deleteSession.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>
