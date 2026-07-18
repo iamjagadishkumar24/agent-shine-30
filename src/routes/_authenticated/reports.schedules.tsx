@@ -250,6 +250,9 @@ function SchedulesPage() {
                 if (!editing) return;
                 if (!editing.name?.trim()) return toast.error("Name is required");
                 if (!editing.recipients?.length) return toast.error("Add at least one recipient");
+                const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                const bad = editing.recipients.filter((e) => !emailRe.test(e));
+                if (bad.length) return toast.error(`Invalid email: ${bad[0]}`);
                 saveMut.mutate({
                   id: editing.id,
                   name: editing.name!.trim(),
