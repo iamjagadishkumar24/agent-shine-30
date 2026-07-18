@@ -64,15 +64,22 @@ export function NotificationsBell({ userId }: { userId: string }) {
   const readMut = useMutation({
     mutationFn: (id: string) => markRead({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
+    onError: (e: any) => toast.error(e?.message ?? "Could not mark as read"),
   });
   const allMut = useMutation({
     mutationFn: () => markAll(),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success("All notifications marked as read");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not mark all as read"),
   });
 
   const handleClick = (n: (typeof notifications)[number]) => {
     if (!n.read_at) readMut.mutate(n.id);
-    if (n.link) navigate({ to: n.link });
+    if (n.link && typeof n.link === "string" && n.link.startsWith("/")) {
+      navigate({ to: n.link as any });
+    }
   };
 
   return (
