@@ -184,11 +184,12 @@ function PortalFeedbackDetail() {
           <Card className="rounded-xl border-border/60 bg-card/60 p-5">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Your acknowledgement</div>
             <div className="mt-1 whitespace-pre-wrap text-sm">{data.acknowledgement_note}</div>
-            {data.acknowledged_at && (
+            {safeTimeAgo(data.acknowledged_at) && (
               <div className="mt-2 text-xs text-muted-foreground">
-                {formatDistanceToNow(new Date(data.acknowledged_at), { addSuffix: true })}
+                {safeTimeAgo(data.acknowledged_at)}
               </div>
             )}
+
           </Card>
         )}
 
