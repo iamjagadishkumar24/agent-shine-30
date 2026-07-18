@@ -98,16 +98,7 @@ function PortalFeedbackDetail() {
     <div>
       <PageHeader
         title={data.title}
-        subtitle={
-          <span className="inline-flex items-center gap-2">
-            <span className={cn("inline-flex rounded-md px-2 py-0.5 text-xs font-medium capitalize", STATUS_TONE[data.status])}>
-              {data.status}
-            </span>
-            <span>{data.category}</span>
-            <span>·</span>
-            <span className="capitalize">{data.feedback_type}</span>
-          </span>
-        }
+        subtitle={`${data.status.toUpperCase()} · ${data.category} · ${data.feedback_type}`}
         actions={
           <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/portal" })}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back
