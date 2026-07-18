@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "sdk_version": "0.23.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://yaxgbnlpjwsrgupcwacl.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "signal-qms-mcp",
+      "version": "0.1.0",
+      "title": "Signal QMS"
+    },
+    "tools": [
+      {
+        "name": "whoami",
+        "title": "Who am I",
+        "description": "Return the signed-in user's profile and roles in this workspace.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_agents",
+        "title": "List agents",
+        "description": "List agents (support/sales/retention team members) visible to the signed-in user. Optionally filter by department, team, or a text search across name and email.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "department": {
+              "description": "Filter by department, e.g. 'Support'.",
+              "type": "string"
+            },
+            "team": {
+              "description": "Filter by team name.",
+              "type": "string"
+            },
+            "search": {
+              "description": "Case-insensitive match on full_name or email.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "Max rows to return. Defaults to 25, hard cap 100.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_feedback",
+        "title": "List feedback",
+        "description": "List feedback items visible to the signed-in user, newest first. Optionally filter by agent, status, or feedback type.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "agent_id": {
+              "description": "Filter to a single agent's feedback.",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "status": {
+              "description": "Filter by workflow status.",
+              "type": "string",
+              "enum": [
+                "draft",
+                "sent",
+                "acknowledged",
+                "completed",
+                "archived"
+              ]
+            },
+            "feedback_type": {
+              "description": "Filter by feedback_type enum value.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "Max rows. Defaults to 25, hard cap 100.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_feedback",
+        "title": "Get feedback",
+        "description": "Fetch the full details of a single feedback item by ID.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Feedback UUID."
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_feedback",
+        "title": "Create feedback draft",
+        "description": "Create a new feedback item in draft status for a given agent. The signed-in user becomes created_by. Use the workflow in the app UI to send or acknowledge it afterwards.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "agent_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Target agent UUID."
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Short headline."
+            },
+            "summary": {
+              "description": "Detailed summary.",
+              "type": "string"
+            },
+            "strengths": {
+              "type": "string"
+            },
+            "improvements": {
+              "type": "string"
+            },
+            "feedback_type": {
+              "description": "feedback_type enum value, e.g. positive/coaching/warning.",
+              "type": "string"
+            },
+            "severity": {
+              "description": "feedback_severity enum value.",
+              "type": "string"
+            },
+            "score": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "category": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "agent_id",
+            "title"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_coaching_sessions",
+        "title": "List coaching sessions",
+        "description": "List coaching sessions visible to the signed-in user, optionally filtered by agent or status. Newest first.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "agent_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "status": {
+              "description": "Filter by session status.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "Max rows. Defaults to 25, hard cap 100.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
