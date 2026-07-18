@@ -3,11 +3,18 @@ import { useMemo, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, TrendingUp, TrendingDown, Users, Target } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Users, Target, AlertCircle } from "lucide-react";
 
 const Charts = lazy(() => import("@/components/analytics/analytics-charts"));
+
+function parseTime(s: string | null | undefined): number | null {
+  if (!s) return null;
+  const t = new Date(s).getTime();
+  return Number.isFinite(t) ? t : null;
+}
 
 type FeedbackRow = {
   id: string;
