@@ -530,7 +530,7 @@ function Dashboard() {
           </Suspense>
 
           <Suspense fallback={<div className="col-span-12 md:col-span-6 xl:col-span-4"><ChartSkeleton height="h-44" /></div>}>
-            <HeavyCharts.Category categories={categories} totalCat={totalCat} />
+            <HeavyCharts.Category categories={categories} totalCat={totalCat} onSliceClick={(name) => navigate({ to: "/feedback", search: { category: name } })} />
           </Suspense>
 
           <Suspense fallback={<div className="col-span-12 md:col-span-6 xl:col-span-4"><ChartSkeleton height="h-52" /></div>}>
