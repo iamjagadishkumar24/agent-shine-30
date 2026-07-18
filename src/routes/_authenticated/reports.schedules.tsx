@@ -142,14 +142,14 @@ function SchedulesPage() {
                   {s.cadence === "weekly"
                     ? `Every ${DOW[s.day_of_week ?? 1]} at ${String(s.hour_utc).padStart(2, "0")}:00 UTC`
                     : `Monthly on day ${s.day_of_month ?? 1} at ${String(s.hour_utc).padStart(2, "0")}:00 UTC`}
-                  {" · "}Next run: {new Date(s.next_run_at).toLocaleString()}
+                  {" · "}Next run: {safeDateTime(s.next_run_at)}
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground truncate">
                   Recipients: {s.recipients.join(", ") || "—"}
                 </div>
                 {s.last_run_at && (
                   <div className="mt-1 text-[11px] text-muted-foreground">
-                    Last run: {new Date(s.last_run_at).toLocaleString()} · {s.last_status ?? "—"}
+                    Last run: {safeDateTime(s.last_run_at)} · {s.last_status ?? "—"}
                     {s.last_error ? ` · ${s.last_error}` : ""}
                   </div>
                 )}
