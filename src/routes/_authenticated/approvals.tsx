@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
@@ -9,10 +9,25 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SkeletonBox } from "@/components/ui/skeleton-blocks";
 import { transitionFeedback } from "@/lib/feedback-workflow.functions";
-import { CheckCircle2, XCircle, RotateCcw, Clock } from "lucide-react";
+import { CheckCircle2, XCircle, RotateCcw, Clock, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+
+function safeTimeAgo(iso: string | null | undefined) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  try {
+    return formatDistanceToNow(d, { addSuffix: true });
+  } catch {
+    return "";
+  }
+}
+
+const SLA_HOURS = 24;
+const SEV_ORDER: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
 
 export const Route = createFileRoute("/_authenticated/approvals")({
   component: ApprovalsPage,
