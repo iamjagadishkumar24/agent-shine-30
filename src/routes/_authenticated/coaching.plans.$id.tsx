@@ -219,10 +219,30 @@ function PlanDetail() {
             </Link>
           </Card>
 
-          <Button variant="ghost" size="sm" className="w-full text-xs text-destructive/70 hover:text-destructive"
-            onClick={() => { if (confirm("Delete this plan and all its goals?")) removePlan.mutate(); }}>
-            Delete plan
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="w-full text-xs text-destructive/70 hover:text-destructive">
+                Delete plan
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete coaching plan?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This permanently deletes the plan and every goal, progress entry, and linked session record. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => removePlan.mutate()}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>
