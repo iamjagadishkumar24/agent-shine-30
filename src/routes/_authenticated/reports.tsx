@@ -188,11 +188,11 @@ function ReportsPage() {
             </div>
             <div className="mt-auto pt-5 flex gap-2">
               <Button variant="outline" size="sm" className="flex-1 gap-1.5" disabled={busy === r.key + ":pdf"}
-                onClick={() => run(r.key + ":pdf", r.pdf)}>
+                onClick={() => { const rows = r.getRows(); run(r.key + ":pdf", rows, () => r.pdf(rows)); }}>
                 <FileText className="h-3.5 w-3.5" /> PDF
               </Button>
               <Button variant="outline" size="sm" className="flex-1 gap-1.5" disabled={busy === r.key + ":csv"}
-                onClick={() => run(r.key + ":csv", r.csv)}>
+                onClick={() => { const rows = r.getRows(); run(r.key + ":csv", rows, () => r.csv(rows)); }}>
                 <FileSpreadsheet className="h-3.5 w-3.5" /> CSV
               </Button>
             </div>
