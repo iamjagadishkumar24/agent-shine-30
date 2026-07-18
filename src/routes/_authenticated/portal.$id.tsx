@@ -121,8 +121,9 @@ function PortalFeedbackDetail() {
   return (
     <div>
       <PageHeader
-        title={data.title}
-        subtitle={`${data.status.toUpperCase()} · ${data.category} · ${data.feedback_type}`}
+        title={data.title || "Feedback"}
+        subtitle={[data.status?.toUpperCase(), data.category, data.feedback_type].filter(Boolean).join(" · ")}
+
         actions={
           <Button size="sm" variant="ghost" onClick={() => navigate({ to: "/portal" })}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back
