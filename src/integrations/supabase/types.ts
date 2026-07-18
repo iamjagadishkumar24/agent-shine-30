@@ -14,16 +14,208 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      agents: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          created_by: string | null
+          department: string
+          email: string
+          employee_id: string
+          full_name: string
+          id: string
+          joining_date: string | null
+          manager_name: string | null
+          qa_score: number | null
+          status: string
+          team: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          department: string
+          email: string
+          employee_id: string
+          full_name: string
+          id?: string
+          joining_date?: string | null
+          manager_name?: string | null
+          qa_score?: number | null
+          status?: string
+          team?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          department?: string
+          email?: string
+          employee_id?: string
+          full_name?: string
+          id?: string
+          joining_date?: string | null
+          manager_name?: string | null
+          qa_score?: number | null
+          status?: string
+          team?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      feedback: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledgement_note: string | null
+          agent_id: string
+          case_id: string | null
+          category: string
+          created_at: string
+          created_by: string
+          due_date: string | null
+          feedback_type: Database["public"]["Enums"]["feedback_type"]
+          id: string
+          improvements: string | null
+          recommended_actions: string | null
+          root_cause: string | null
+          score: number | null
+          sent_at: string | null
+          severity: Database["public"]["Enums"]["feedback_severity"]
+          status: Database["public"]["Enums"]["feedback_status"]
+          strengths: string | null
+          summary: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledgement_note?: string | null
+          agent_id: string
+          case_id?: string | null
+          category: string
+          created_at?: string
+          created_by: string
+          due_date?: string | null
+          feedback_type?: Database["public"]["Enums"]["feedback_type"]
+          id?: string
+          improvements?: string | null
+          recommended_actions?: string | null
+          root_cause?: string | null
+          score?: number | null
+          sent_at?: string | null
+          severity?: Database["public"]["Enums"]["feedback_severity"]
+          status?: Database["public"]["Enums"]["feedback_status"]
+          strengths?: string | null
+          summary?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledgement_note?: string | null
+          agent_id?: string
+          case_id?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string
+          due_date?: string | null
+          feedback_type?: Database["public"]["Enums"]["feedback_type"]
+          id?: string
+          improvements?: string | null
+          recommended_actions?: string | null
+          root_cause?: string | null
+          score?: number | null
+          sent_at?: string | null
+          severity?: Database["public"]["Enums"]["feedback_severity"]
+          status?: Database["public"]["Enums"]["feedback_status"]
+          strengths?: string | null
+          summary?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "qa_admin" | "team_manager" | "read_only"
+      feedback_severity: "low" | "medium" | "high" | "critical"
+      feedback_status:
+        | "draft"
+        | "review"
+        | "approved"
+        | "sent"
+        | "acknowledged"
+        | "completed"
+      feedback_type:
+        | "positive"
+        | "constructive"
+        | "critical"
+        | "compliance"
+        | "coaching"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +342,24 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "qa_admin", "team_manager", "read_only"],
+      feedback_severity: ["low", "medium", "high", "critical"],
+      feedback_status: [
+        "draft",
+        "review",
+        "approved",
+        "sent",
+        "acknowledged",
+        "completed",
+      ],
+      feedback_type: [
+        "positive",
+        "constructive",
+        "critical",
+        "compliance",
+        "coaching",
+      ],
+    },
   },
 } as const
