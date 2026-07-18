@@ -170,6 +170,26 @@ function AnalyticsPage() {
       .slice(0, 10);
   }, [feedback, agents]);
 
+  if (isError) {
+    return (
+      <div>
+        <PageHeader title="Analytics" subtitle="Deep trends across feedback, delivery, and agent performance." />
+        <div className="mx-auto max-w-4xl px-8 pb-12 pt-6">
+          <Card className="rounded-xl border-destructive/50 bg-destructive/5 p-8 text-center">
+            <AlertCircle className="mx-auto h-6 w-6 text-destructive" />
+            <h2 className="mt-3 text-sm font-medium">Couldn't load analytics</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {(error as Error)?.message ?? "Please retry in a moment."}
+            </p>
+            <Button size="sm" className="mt-4" onClick={() => refetch()} disabled={isFetching}>
+              {isFetching ? "Retrying…" : "Retry"}
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div>
