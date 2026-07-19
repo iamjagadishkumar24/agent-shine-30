@@ -268,6 +268,27 @@ html:not(.light) .auth-card {
     0 10px 24px -14px oklch(0 0 0 / 0.35);
 }
 
+/* Unified keyboard focus indicator for every interactive control inside the
+   auth shell. Guarantees a visible ring even for elements whose component
+   styles omit focus-visible utilities. */
+.auth-shell :is(a, button, input, select, textarea, [role="button"], [role="link"], [role="menuitem"], [role="switch"], [role="tab"], [role="checkbox"], [role="radio"], [tabindex]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--ring) 25%, transparent);
+  transition: box-shadow 120ms ease-out, outline-color 120ms ease-out;
+}
+.auth-shell :is(input, textarea, select):focus-visible {
+  outline-offset: 0;
+}
+@media (forced-colors: active) {
+  .auth-shell :is(a, button, input, select, textarea, [role="button"], [tabindex]):focus-visible {
+    outline: 2px solid Highlight;
+    box-shadow: none;
+  }
+}
+
+
+
 
 /* Auth hero panel animations */
 @keyframes blob-slow {
