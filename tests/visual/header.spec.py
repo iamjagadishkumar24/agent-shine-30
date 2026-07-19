@@ -70,16 +70,16 @@ async def restore_session(context, page) -> None:
 
 
 def mean_pixel_diff(a: Path, b: Path) -> float:
+    import numpy as np
+
     ia = Image.open(a).convert("RGB")
     ib = Image.open(b).convert("RGB")
     if ia.size != ib.size:
         # size mismatch is itself a regression
         return 999.0
     diff = ImageChops.difference(ia, ib)
-    hist = diff.histogram()
-    total = ia.size[0] * ia.size[1] * 3
-    weighted = sum(i * c for i, c in enumerate(hist))
-    return weighted / total
+    return float(np.asarray(diff, dtype=np.uint8).mean())
+
 
 
 async def run_one(browser, width: int) -> Result:
