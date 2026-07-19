@@ -1,79 +1,60 @@
-# Zenwork Security & Auth Hardening — Realistic Plan
 
-The prompt is generic enterprise-security boilerplate. Much of it is either **already handled by Supabase Auth / Lovable Cloud** or **not implementable on this runtime**. Below is what's actually already in place, what can't be done, and what I propose to build.
+## Scope decisions
 
----
+Three asks, each handled at the right depth:
 
-## Already handled (no work needed)
+1. **"QA" → "Customer Success"** — global rename in code copy, DB agent department, and email/report exports. Straightforward and I'll do it in full.
+2. **Schedule Session "not working"** — quick investigation showed the save/update/delete/drag-drop paths are wired correctly (`SessionDialog` → `supabase.from("coaching_sessions").insert/update`, overlap trigger active, realtime invalidation subscribed). The DB has 0 sessions because none have been created yet, not because it's broken. I'll add a diagnostic path (surface the exact error text from the overlap trigger and RLS) and run an end-to-end smoke test to confirm it works from your seat. If a real bug shows up I fix it.
+3. **Real calendar integration** — your own closing note is correct: a web app cannot drive desktop Outlook without a per-user OAuth integration. I'll ship the pragmatic universal path now and gate the full OAuth path behind an explicit follow-up.
 
-- **Password hashing** — Supabase Auth uses bcrypt server-side. We never see plaintext.
-- **HIBP breached-password check** — enabled via `configure_auth` (currently on; verified).
-- **Session cookies (httpOnly, SameSite, CSRF)** — Supabase Auth issues secure tokens; our app uses bearer + short-lived JWT, so classic CSRF doesn't apply to server functions.
-- **HTTPS + TLS 1.3** — Cloudflare edge terminates everything.
-- **MFA (TOTP), password reset, email verification, RLS/RBAC, `user_roles` separation, audit log (`feedback_audit_log`)** — already implemented previously.
-- **Login / signup / reset-password UI** — was redesigned two turns ago (glassmorphism, strength meter, remember me, show/hide, Zenwork wordmark). Not redoing unless you want a specific change.
-- **Google OAuth** — configured through Lovable broker.
+## What I'll build
 
-## Cannot be done on this stack (transparent about the gap)
+### A. QA → Customer Success rename
+- **Copy sweep**: `agents.tsx` (`QA Score` column), `dashboard.tsx` (KPI + gauge labels), `analytics.tsx`, `feedback.$id.tsx`, `portal.$id.tsx`, `reports.tsx`, `feedback.new.tsx`, `settings.tsx` (default subject + signature placeholder), `heavy-charts.tsx`, `analytics-charts.tsx`, `command-palette.tsx` keywords, `account.tsx` placeholder, marketing (`index.tsx`, `auth.tsx` copy), AI prompt (`ai-feedback.functions.ts`), template variables (`feedback-email.variables.ts`), reports server (`reports.server.ts`), email test template (`email-settings.functions.ts` sample recommendations).
+- **DB**: `UPDATE public.agents SET department = 'Customer Success' WHERE department = 'QA'`.
+- **Preserve column name** `qa_score` (schema stability) but label it "Quality Score" everywhere in the UI/exports.
 
-- **BullMQ / Redis** — Cloudflare Workers can't run either. Email queue already uses Postgres + pg_cron; that's the durable equivalent.
-- **Backend rate limiting** — Lovable has no standard rate-limit primitive. Auth-route rate limiting is enforced by Supabase Auth itself (login/signup/reset hourly caps). Custom per-endpoint rate limiting on server functions isn't shippable here.
-- **Malware scanning of uploads** — no ClamAV / VirusTotal on Workers. We can validate MIME + magic bytes + size + extension whitelist, and rely on Supabase Storage's isolated bucket.
-- **Argon2id** — Supabase Auth uses bcrypt; we can't swap the hash algo.
-- **AES-256 at rest for arbitrary data** — Postgres storage is already encrypted at rest by the provider; column-level encryption for user data isn't on the roadmap in this scope.
+### B. Schedule Session hardening + smoke test
+- Improve error surfacing in `SessionDialog.save.onError` so trigger errors (overlap, RLS) show the real reason.
+- Ensure the "Schedule Session" entry point on `/coaching` and the "New session" quick action are both wired to open the dialog with sensible defaults.
+- Live smoke test via Playwright against `/coaching`: create → edit → drag-drop reschedule → cancel → verify realtime propagation to dashboard.
 
-## What I propose to build this turn — pick which phases
+### C. "Add to calendar" export menu (universal, no OAuth)
+When a session is saved (and from a menu on every session card), offer:
+- **Outlook Web** — deep link to `outlook.office.com/calendar/0/deeplink/compose` with subject/body/start/end/location.
+- **Outlook.com (consumer)** — deep link to `outlook.live.com/calendar/0/deeplink/compose`.
+- **Google Calendar** — deep link to `calendar.google.com/calendar/render?action=TEMPLATE&...`.
+- **Download .ics** — RFC-5545 file, works with desktop Outlook, Apple Calendar, and every other client. Set `METHOD:REQUEST` with `ATTENDEE` lines so it acts as an invite.
+- **Copy iCal feed URL** — per-user signed feed URL (see D below).
 
-### Phase A — Audit & report (fast, high value)
-1. Run `security--run_security_scan` + `supabase--linter` + `code--dependency_scan`.
-2. Produce a written security report: findings by severity, what's fixed, what's accepted risk, what's platform-limited.
-3. Fix any Critical/High RLS or dependency issues surfaced by scans.
+Component: `src/components/coaching/add-to-calendar-menu.tsx`. Wires from `SessionDialog` after save and from each session card's kebab menu.
 
-### Phase B — Server-side input validation sweep
-- Audit every `createServerFn` under `src/lib/**/*.functions.ts` and every `src/routes/api/**` route.
-- Ensure each has strict `zod` `.inputValidator()` with type/length/format/enum/UUID/email constraints, `.strict()` on objects, and refined error mapping.
-- Return generic user-facing messages; log the real error server-side.
+### D. Personal iCal subscription feed
+- New public route: `src/routes/api/public/calendar/$token.ics.ts` — returns all upcoming sessions for the agent/coach behind the token.
+- New table `calendar_feed_tokens (user_id, token, created_at)` with per-user token minting from `/account`.
+- Users paste the URL into Outlook/Google/Apple as a subscribed calendar; it stays synced without OAuth.
 
-### Phase C — Error-leak hardening
-- Add a global response wrapper in server fns / routes that converts thrown errors to `{ code, message }` with a stable request ID.
-- Replace all `throw new Error(<internal detail>)` with `throw new PublicError(<code>, <friendly>)` and log the internal detail via `console.error`.
-- Update `errorComponent` / `defaultErrorComponent` in the router to show only "Something went wrong · request ID xxx".
+### E. Notifications
+Already wired in DB triggers (`tg_coaching_session_notifications`) — I'll verify the create/reschedule/cancel branches fire and hook the "reminder due" email to the existing `pg_cron` dispatcher.
 
-### Phase D — Secure file uploads
-- Add magic-byte sniff + MIME + extension whitelist + size cap on `feedback_attachments` uploads.
-- Random UUID filenames (already in place, verify).
-- Reject executables / SVG-with-scripts.
+## What I'm NOT doing (needs your explicit go-ahead)
 
-### Phase E — Security headers (edge response)
-- Add a request middleware in `src/start.ts` that sets on every HTML response: `Content-Security-Policy` (nonce-based), `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`, `Cross-Origin-Opener-Policy: same-origin`.
-- Verify with `curl -I` and browser DevTools.
+- **Google Calendar App User Connector** (per-user OAuth for direct event create/update via Google API). Requires you to create a Google OAuth client in Google Cloud Console and link it via App User Connectors. If you want this, say so and I'll walk you through the client setup.
+- **Microsoft Graph App User Connector** (same story for Outlook 365 / Exchange).
+- **Recurring meetings / Google Meet auto-generation** — these depend on the OAuth path above.
+- **Desktop Outlook auto-open** — impossible from a web app; .ics is the correct substitute.
 
-### Phase F — Security dashboard for admins
-- New route `_authenticated/security` (admin/qa_admin only) showing:
-  - Recent sign-ins (from `auth.audit_log_entries`, read via server fn with `supabaseAdmin`).
-  - Active user list + last-seen.
-  - `feedback_audit_log` events (last 200).
-  - Email queue failures.
-  - Supabase linter status snapshot.
-- Read-only, RLS-scoped.
+## Order of execution
 
-### Phase G — Dependency upgrades
-- Run `bun update` for anything the dep-scan flags as High/Critical.
-- Note any unresolvable transitive advisories.
+1. DB migration (`agents.department = 'Customer Success'`, new `calendar_feed_tokens` table) — one migration, needs your approval.
+2. QA→Customer Success code sweep.
+3. Session dialog error-surfacing + smoke test.
+4. `.ics` generator + deep-link menu.
+5. iCal feed route + token minting UI.
+6. Playwright end-to-end verification, screenshots.
 
----
+## Files touched (est.)
 
-## Suggested execution order
+~18 files edited, 3 new files, 1 migration. No breaking changes to schema column names or the coaching_sessions API.
 
-If you want everything, we ship A + C + E + F this turn (highest security ROI, low regression risk), then B + D + G in a follow-up.
-
-If you want it all in one shot, expect a large diff and I'll need to move in phases anyway — I'll implement, run typecheck + scans between phases, and post the audit report at the end.
-
-## Not doing unless you insist
-
-- Rewriting login/signup UI — already premium and matches the brief.
-- Building custom rate-limiting middleware — Supabase already caps auth routes, and the platform has no primitive for the rest.
-- Swapping password hash to Argon2id — not user-configurable.
-- BullMQ/Redis — replaced by pg_cron queue, already in place.
-
-**Reply with the phases you want (e.g. "A, C, E, F") or "all of it" and I'll execute.**
+Reply **"go"** to execute A–E as above, or **"go + oauth"** if you also want me to start the Google/Microsoft App User Connector setup (I'll ask for the OAuth client details when we get there).
