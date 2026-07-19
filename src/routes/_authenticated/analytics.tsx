@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, TrendingUp, TrendingDown, Users, Target, AlertCircle } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Users, Target, AlertCircle, Mail, ArrowRight } from "lucide-react";
 
 const Charts = lazy(() => import("@/components/analytics/analytics-charts"));
 
