@@ -92,7 +92,7 @@ export const Route = createFileRoute("/api/public/hooks/feedback-escalations")({
             isReminder: true,
             reminderCount: nextCount,
             senderName: settings.sender_name,
-            logoUrl: settings.logo_url,
+            logoUrl: settings.logo_url ?? `${appBaseUrl}${zenworkLogo.url}`,
             signatureHtml: settings.signature_html,
             confidentialityNotice: settings.confidentiality_notice,
             attachmentLinks,
