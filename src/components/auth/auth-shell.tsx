@@ -107,7 +107,7 @@ export function AuthShell({
               {children}
             </div>
             {showLearnMore && (
-              <div className="mt-5 flex justify-center">
+              <div className="mt-4 flex justify-center">
                 <LearnMoreDialog />
               </div>
             )}
