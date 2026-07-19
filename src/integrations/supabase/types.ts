@@ -1039,6 +1039,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      recalc_agent_qa_score: { Args: { _agent_id: string }; Returns: undefined }
     }
     Enums: {
       action_item_status: "open" | "in_progress" | "done" | "blocked"
