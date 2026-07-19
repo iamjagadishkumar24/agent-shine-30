@@ -341,6 +341,144 @@ function EmailConfig() {
 }
 
 // ---------------------------------------------------------------------------
+// Provider card — persistent connected-state pill + optional diagnostic
+// ---------------------------------------------------------------------------
+const LAST_VERIFIED_KEY = "zenwork.email.lastVerifiedAt";
+
+function ProviderCard({
+  s,
+  set,
+  verify,
+  verifyResult,
+}: {
+  s: any;
+  set: (patch: any) => void;
+  verify: { mutate: () => void; isPending: boolean };
+  verifyResult: any;
+}) {
+  const [lastVerifiedAt, setLastVerifiedAt] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return window.localStorage.getItem(LAST_VERIFIED_KEY);
+  });
+  const [diagOpen, setDiagOpen] = useState(false);
+
+  // Cache last successful verification so the pill survives page reloads.
+  useEffect(() => {
+    if (verifyResult?.ok) {
+      const iso = new Date().toISOString();
+      setLastVerifiedAt(iso);
+      try { window.localStorage.setItem(LAST_VERIFIED_KEY, iso); } catch { /* ignore */ }
+    }
+  }, [verifyResult]);
+
+  const account = verifyResult?.ok ? verifyResult.account : s?.sender_email;
+  const isGmail = s.provider === "gmail";
+  // Optimistic: treat the connection as connected whenever email service is on
+  // and a Gmail account is configured. Verification is diagnostic only.
+  const showConnected = isGmail && !!account && !!s.enabled && (!verifyResult || verifyResult.ok);
+  const showFailure = verifyResult && !verifyResult.ok;
+
+  return (
+    <Card className="p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="text-sm font-semibold">Provider</div>
+          <div className="mt-0.5 text-xs text-muted-foreground">
+            Gmail is linked once via secure OAuth at the workspace level. No sign-in is required per session.
+          </div>
+        </div>
+        {showConnected && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Connected
+          </span>
+        )}
+        {showFailure && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-destructive/30 bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive">
+            <AlertCircle className="h-3.5 w-3.5" />
+            Attention
+          </span>
+        )}
+      </div>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <Label>Provider</Label>
+          <Select value={s.provider} onValueChange={(v) => set({ provider: v })}>
+            <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="gmail">Gmail (OAuth) — Development</SelectItem>
+              <SelectItem value="ms_graph" disabled>Microsoft 365 (Graph) — Production (coming soon)</SelectItem>
+              <SelectItem value="sendgrid" disabled>SendGrid — Production (coming soon)</SelectItem>
+              <SelectItem value="ses" disabled>Amazon SES — Production (coming soon)</SelectItem>
+              <SelectItem value="mailgun" disabled>Mailgun — Production (coming soon)</SelectItem>
+              <SelectItem value="resend" disabled>Resend — Production (coming soon)</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="mt-1.5 text-xs text-muted-foreground">Tokens are refreshed automatically — no SMTP passwords stored.</p>
+        </div>
+
+        <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+          <div className="text-xs font-medium text-muted-foreground">Sending as</div>
+          <div className="mt-1 truncate text-sm font-medium">{account || "—"}</div>
+          <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            <span>Last verified {safeTimeAgo(lastVerifiedAt)}</span>
+          </div>
+        </div>
+      </div>
+
+      {showFailure && (
+        <div className="mt-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+          <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <div>
+            <div className="font-medium">Diagnostic reported an issue</div>
+            <div className="mt-0.5 opacity-90">{verifyResult.error}</div>
+            <div className="mt-1 opacity-80">
+              This does not sign you out. Emails continue to attempt delivery; the queue will surface any real send failures.
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Collapsible open={diagOpen} onOpenChange={setDiagOpen} className="mt-4">
+        <div className="flex items-center justify-between">
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground">
+              <Stethoscope className="h-3.5 w-3.5" />
+              Advanced diagnostics
+              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", diagOpen && "rotate-180")} />
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+        <CollapsibleContent className="mt-3">
+          <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+            <div className="text-xs font-medium">Optional connection check</div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Runs a read-only Gmail profile call through the OAuth gateway to confirm token freshness and API reachability.
+              This is a diagnostic — you don't need to run it before sending email, and it never triggers a reconnection.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => verify.mutate()} disabled={verify.isPending}>
+                {verify.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Zap className="mr-2 h-3.5 w-3.5" />}
+                Run diagnostic
+              </Button>
+              {verifyResult?.ok && (
+                <span className="inline-flex items-center gap-1.5 text-xs text-primary">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  OK · {verifyResult.account} · {verifyResult.latencyMs}ms
+                </span>
+              )}
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
+  );
+}
+
+
+// ---------------------------------------------------------------------------
 // Queue monitor tab
 // ---------------------------------------------------------------------------
 const STATUS_TONE: Record<string, string> = {
