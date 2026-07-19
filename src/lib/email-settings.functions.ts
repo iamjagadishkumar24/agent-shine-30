@@ -84,8 +84,11 @@ export const saveEmailSettings = createServerFn({ method: "POST" })
       sender_name: sanitizeHeader(data.sender_name),
       reply_to: data.reply_to ? data.reply_to : null,
       logo_url: data.logo_url ? data.logo_url : null,
+      dev_override_enabled: !!data.dev_override_enabled,
+      dev_override_recipient: data.dev_override_recipient ? data.dev_override_recipient : null,
       updated_by: context.userId,
     };
+
     const { data: row, error } = await context.supabase
       .from("email_settings")
       .update(patch)
