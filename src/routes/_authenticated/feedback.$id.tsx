@@ -18,6 +18,9 @@ import { createUploadUrl, deleteAttachment } from "@/lib/feedback-attachments.fu
 import { transitionFeedback } from "@/lib/feedback-workflow.functions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { analyzeEmailForSpamRisk } from "@/lib/email-spam-check";
+import { useMemo } from "react";
+import { ShieldCheck, ShieldAlert, ShieldX } from "lucide-react";
 
 function safeTimeAgo(v: string | null | undefined): string | null {
   if (!v) return null;
