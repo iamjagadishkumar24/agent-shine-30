@@ -184,27 +184,35 @@ function AuthPage() {
   return (
     <div className="min-h-dvh bg-white text-slate-900 lg:grid lg:grid-cols-2">
       {/* ============ LEFT — Auth panel ============ */}
-      <main className="flex min-h-dvh flex-col justify-center px-6 py-10 sm:px-10 lg:px-16 xl:px-24">
-        <div className="mx-auto w-full max-w-md">
-          {/* Logo */}
-          <Link
-            to="/"
-            aria-label="Zenwork Performance Manager — go to home"
-            className="group inline-flex items-center gap-3 rounded-lg outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2"
-          >
-            <img src={zenworkLogo.url} alt="" aria-hidden="true" className="h-11 w-11 object-contain transition-transform group-hover:scale-105" />
-            <span className="flex flex-col leading-tight">
-              <span className="brand-wordmark text-xl font-semibold tracking-tight sm:text-2xl">
+      <main className="flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10 lg:px-16 xl:px-24">
+        <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
+          {/* Prominent brand — top-center */}
+          <div className="flex flex-col items-center pt-2 text-center animate-fade-in">
+            <Link
+              to="/"
+              aria-label="Zenwork Performance Manager — go to home"
+              className="group flex flex-col items-center gap-4 rounded-2xl outline-none transition-opacity hover:opacity-95 focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:ring-offset-4 focus-visible:ring-offset-white"
+            >
+              <h1
+                className="brand-wordmark font-display font-extrabold leading-[1.05] tracking-tight text-[clamp(1.75rem,5.5vw,3rem)] drop-shadow-[0_1px_16px_rgba(99,102,241,0.18)]"
+              >
                 Zenwork Performance Manager
-              </span>
-              <span className="text-[10.5px] font-medium uppercase tracking-[0.16em] text-slate-500">
-                Driving Customer Success
-              </span>
-            </span>
-          </Link>
+              </h1>
+              <img
+                src={zenworkLogo.url}
+                alt=""
+                aria-hidden="true"
+                className="h-14 w-14 object-contain transition-transform duration-300 group-hover:scale-105 sm:h-16 sm:w-16"
+              />
+            </Link>
+            <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+              Driving Customer Success
+            </p>
+          </div>
 
-          {/* Header */}
-          <div className="mt-10 text-center">
+          {/* Auth card */}
+          <div className="mt-10 flex flex-1 flex-col justify-center">
+          <div className="text-center">
             {mode === "forgot" && (
               <button
                 type="button"
@@ -214,17 +222,18 @@ function AuthPage() {
                 <ArrowLeft className="h-3.5 w-3.5" /> Back to sign in
               </button>
             )}
-            <h1 className="text-[28px] font-semibold tracking-tight text-slate-900">
-              {mode === "signin" && "Welcome Back!"}
+            <h2 className="text-[26px] font-semibold tracking-tight text-slate-900 sm:text-[28px]">
+              {mode === "signin" && "Welcome Back"}
               {mode === "signup" && "Create your account"}
               {mode === "forgot" && "Reset your password"}
-            </h1>
+            </h2>
             <p className="mt-2 text-sm text-slate-500">
               {mode === "signin" && "Sign in to continue to Zenwork Performance Manager"}
-              {mode === "signup" && "Get started with your workspace in seconds"}
+              {mode === "signup" && "Join Zenwork Performance Manager and start managing customer success, coaching, feedback, and performance from a single platform."}
               {mode === "forgot" && "We'll email you a secure link to set a new password"}
             </p>
           </div>
+
 
           {/* Forgot success */}
           {mode === "forgot" && resetSent ? (
