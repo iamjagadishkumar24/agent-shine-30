@@ -40,9 +40,11 @@ const APP_VERSION = "v1.0.0";
 export function AuthShell({
   children,
   showLearnMore = true,
+  sidePanel,
 }: {
   children: ReactNode;
   showLearnMore?: boolean;
+  sidePanel?: ReactNode;
 }) {
   return (
     <div className="relative flex min-h-dvh flex-col bg-background text-foreground">
@@ -58,16 +60,32 @@ export function AuthShell({
       </header>
 
       <main className="relative z-10 flex flex-1 items-center justify-center px-5 py-8 sm:px-8">
-        <div className="w-full max-w-[440px]">
-          <div className="rounded-2xl border border-border/70 bg-card/70 p-6 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-8">
-            {children}
-          </div>
-          {showLearnMore && (
-            <div className="mt-5 flex justify-center">
-              <LearnMoreDialog />
+        {sidePanel ? (
+          <div className="grid w-full max-w-6xl items-center gap-10 lg:grid-cols-2">
+            <div className="mx-auto w-full max-w-[440px] lg:mx-0">
+              <div className="rounded-2xl border border-border/70 bg-card/70 p-6 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-8">
+                {children}
+              </div>
+              {showLearnMore && (
+                <div className="mt-5 flex justify-center lg:justify-start">
+                  <LearnMoreDialog />
+                </div>
+              )}
             </div>
-          )}
-        </div>
+            <div className="hidden lg:block">{sidePanel}</div>
+          </div>
+        ) : (
+          <div className="w-full max-w-[440px]">
+            <div className="rounded-2xl border border-border/70 bg-card/70 p-6 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-8">
+              {children}
+            </div>
+            {showLearnMore && (
+              <div className="mt-5 flex justify-center">
+                <LearnMoreDialog />
+              </div>
+            )}
+          </div>
+        )}
       </main>
 
       <footer className="relative z-10 border-t border-border/50 bg-background/50 backdrop-blur">
