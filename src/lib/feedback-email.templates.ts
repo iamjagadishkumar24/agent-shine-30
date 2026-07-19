@@ -257,9 +257,9 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
         : "—";
 
   const logoImg = d.logoUrl
-    ? `<img src="${escape(d.logoUrl)}" alt="${escape(d.senderName ?? BRAND.name)}" height="36" style="display:block;height:36px;width:auto;max-width:180px;border:0;outline:none;text-decoration:none;" />`
-    : `<div style="font:800 18px/1 ${FONT};color:${BRAND.accent};letter-spacing:.04em;">ZENWORK</div>`;
-  const logoHeader = `<a href="${escape(BRAND.website)}" target="_blank" style="display:inline-block;padding:10px 16px;background:#ffffff;border-radius:12px;text-decoration:none;box-shadow:0 4px 14px rgba(15,23,42,.12);">${logoImg}</a>`;
+    ? `<img src="${escape(d.logoUrl)}" alt="${escape(d.senderName ?? BRAND.name)}" height="44" style="display:block;height:44px;width:auto;max-width:200px;border:0;outline:none;text-decoration:none;background:transparent;" />`
+    : `<div style="font:800 20px/1 ${FONT};color:#ffffff;letter-spacing:.06em;">ZENWORK</div>`;
+  const logoHeader = `<a href="${escape(BRAND.website)}" target="_blank" style="display:inline-block;text-decoration:none;background:transparent;">${logoImg}</a>`;
 
   const reminderBanner = isReminder
     ? `<tr><td style="padding:0 24px 4px;">
