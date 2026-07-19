@@ -323,4 +323,3 @@ export const sendFeedbackTemplateTest = createServerFn({ method: "POST" })
 
 // Expose the current variable-map derivation for demo use (unused server-side; kept
 // as an intentional touch so `buildVariableMap` stays imported alongside the sample map).
-export const _touchVars = buildVariableMap;
