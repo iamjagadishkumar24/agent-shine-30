@@ -683,11 +683,20 @@ function FeedbackDetail() {
               />
               <Button
                 variant="secondary"
-                onClick={() => testSend.mutate(testTo.trim())}
+                onClick={() => {
+                  if (spamRisk?.level === "high") {
+                    const ok = window.confirm(
+                      `Deliverability risk is HIGH (${spamRisk.score}/100). Send the test anyway?`,
+                    );
+                    if (!ok) return;
+                  }
+                  testSend.mutate(testTo.trim());
+                }}
                 disabled={testSend.isPending || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testTo.trim())}
+                title={spamRisk?.level === "high" ? "High deliverability risk — click to override" : undefined}
               >
                 {testSend.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Mail className="mr-1.5 h-3.5 w-3.5" />}
-                Send test
+                {spamRisk?.level === "high" ? "Send test anyway" : "Send test"}
               </Button>
             </div>
             {testResult && (
