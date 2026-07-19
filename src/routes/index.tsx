@@ -47,8 +47,9 @@ function Landing() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/60">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-          <Link to="/" className="flex items-center">
-            <img src={zenworkLogo.url} alt="Zenwork Performance Manager" className="h-7 w-auto object-contain" />
+          <Link to="/" className="flex items-center gap-2.5">
+            <img src={zenworkLogo.url} alt="Zenwork" className="h-8 w-8 object-contain" />
+            <span className="text-sm font-semibold tracking-tight sm:text-base">Zenwork <span className="text-muted-foreground font-medium">Performance Manager</span></span>
           </Link>
           <div className="flex items-center gap-2">
             {authed ? (

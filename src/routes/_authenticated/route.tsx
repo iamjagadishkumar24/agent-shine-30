@@ -136,11 +136,13 @@ function AuthedLayout() {
           collapsed ? "w-16" : "w-60",
         )}
       >
-        <div className={cn("flex h-14 items-center border-b border-sidebar-border", collapsed ? "justify-center px-2" : "gap-2 px-4")}>
-          {collapsed ? (
-            <img src={zenworkMark.url} alt="Zenwork" className="h-7 w-7 object-contain" />
-          ) : (
-            <img src={zenworkLogo.url} alt="Zenwork Performance Manager" className="h-7 w-auto object-contain" />
+        <div className={cn("flex h-14 items-center border-b border-sidebar-border", collapsed ? "justify-center px-2" : "gap-2.5 px-4")}>
+          <img src={zenworkMark.url} alt="Zenwork" className="h-7 w-7 shrink-0 object-contain" />
+          {!collapsed && (
+            <div className="flex min-w-0 flex-col leading-tight">
+              <span className="truncate text-[13px] font-semibold tracking-tight text-sidebar-foreground">Zenwork</span>
+              <span className="truncate text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Performance Manager</span>
+            </div>
           )}
         </div>
 
