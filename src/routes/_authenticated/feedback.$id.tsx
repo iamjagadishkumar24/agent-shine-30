@@ -70,7 +70,7 @@ function FeedbackDetail() {
   const testSendFn = useServerFn(sendFeedbackTestEmail);
   const uploadUrlFn = useServerFn(createUploadUrl);
   const deleteAttFn = useServerFn(deleteAttachment);
-  const transitionFn = useServerFn(transitionFeedback);
+  
 
   const preview = useQuery({
     queryKey: ["feedback-preview", id],
