@@ -96,6 +96,14 @@ function FeedbackDetail() {
     },
   });
 
+  useEffect(() => {
+    if (previewOpen && preview.data?.recipient && !testTo) {
+      setTestTo(preview.data.recipient);
+    }
+  }, [previewOpen, preview.data?.recipient, testTo]);
+
+
+
   const { data, isLoading } = useQuery({
     queryKey: ["feedback", id],
     queryFn: async () => {
