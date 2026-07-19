@@ -79,6 +79,10 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
   const provider = getProvider(settings.provider);
   const results: any[] = [];
 
+  const overrideEnabled = !!settings.dev_override_enabled;
+  const overrideRecipient = (settings.dev_override_recipient ?? "").trim();
+  const applyOverride = overrideEnabled && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(overrideRecipient);
+
   for (const job of claimed ?? []) {
     const attempt = (job.attempts ?? 0) + 1;
     const atts = Array.isArray(job.attachments) ? (job.attachments as Attachment[]) : [];
@@ -101,15 +105,20 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
       continue;
     }
 
+    const intendedTo = job.to_email_intended ?? job.to_email;
+    const actualTo = applyOverride ? overrideRecipient : intendedTo;
+    const subject = applyOverride ? `[DEV → ${intendedTo}] ${job.subject}` : job.subject;
+
     const res = await provider.send({
       from: { name: settings.sender_name, email: settings.sender_email ?? "" },
-      to: job.to_email,
+      to: actualTo,
       replyTo: settings.reply_to,
-      subject: job.subject,
+      subject,
       html: job.html,
       text: job.text_body,
       attachments: bytes.attachments,
     });
+
 
     const now2 = new Date().toISOString();
     if (res.ok) {
@@ -122,6 +131,8 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
           delivered_at: now2,
           provider: res.provider,
           provider_message_id: res.messageId ?? null,
+          to_email: actualTo,
+          to_email_intended: intendedTo,
           last_error: null,
         })
         .eq("id", job.id);
@@ -145,9 +156,17 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
         await supabaseAdmin.from("feedback_email_events").insert({
           feedback_id: job.feedback_id,
           event_type: job.kind === "reminder" ? "reminder_sent" : "sent",
-          detail: { provider: res.provider, message_id: res.messageId ?? null, queue_id: job.id },
+          detail: {
+            provider: res.provider,
+            message_id: res.messageId ?? null,
+            queue_id: job.id,
+            intended_to: intendedTo,
+            actual_to: actualTo,
+            dev_override: applyOverride,
+          },
         });
       }
+
       results.push({ id: job.id, ok: true });
     } else {
       const done = attempt >= (job.max_attempts ?? 5);
