@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { renderFeedbackEmail } from "@/lib/feedback-email.templates";
+import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
 
 const SLA_HOURS = 48;
 const MAX_REMINDERS = 3;
@@ -91,7 +92,7 @@ export const Route = createFileRoute("/api/public/hooks/feedback-escalations")({
             isReminder: true,
             reminderCount: nextCount,
             senderName: settings.sender_name,
-            logoUrl: settings.logo_url,
+            logoUrl: settings.logo_url ?? `${appBaseUrl}${zenworkLogo.url}`,
             signatureHtml: settings.signature_html,
             confidentialityNotice: settings.confidentiality_notice,
             attachmentLinks,
