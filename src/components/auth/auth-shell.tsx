@@ -172,8 +172,9 @@ function AuthCard({
       {error && (
         <div
           role="alert"
-          aria-live="polite"
-          className="mb-4 flex items-start gap-2.5 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-[13px] text-destructive motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1 motion-safe:duration-300"
+          aria-live="assertive"
+          tabIndex={-1}
+          className="mb-4 flex items-start gap-2.5 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-[13px] text-destructive outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1 motion-safe:duration-300"
         >
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
           <span className="min-w-0 flex-1 leading-snug">{error}</span>
@@ -189,6 +190,7 @@ function AuthCard({
           )}
         </div>
       )}
+
 
       <div className={cn("relative transition-opacity duration-200", loading && "opacity-70")}>
         {children}
