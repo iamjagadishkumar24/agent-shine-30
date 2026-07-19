@@ -36,6 +36,7 @@ const SEV_TONE: Record<string, string> = {
 };
 
 function PortalPage() {
+  useRealtimeInvalidate("feedback", [["my-feedback"]]);
   const fetchAgent = useServerFn(getMyAgent);
   const fetchList = useServerFn(listMyFeedback);
 
