@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { MEANINGFUL_NOTIFICATION_TYPES } from "@/lib/notification-types";
 
 const NOTIF_LIST_MAX = 100;
+const MEANINGFUL_TYPES = Array.from(MEANINGFUL_NOTIFICATION_TYPES);
 
 function fail(message: string, status: number, err?: unknown): never {
   if (err) console.error(`[notifications] ${message}`, err);
@@ -26,6 +28,7 @@ export const listMyNotifications = createServerFn({ method: "GET" })
       .from("notifications")
       .select("*")
       .eq("user_id", context.userId)
+      .in("type", MEANINGFUL_TYPES)
       .order("created_at", { ascending: false })
       .limit(limit);
     if (data?.unreadOnly) query = query.is("read_at", null);
@@ -41,6 +44,7 @@ export const getUnreadCount = createServerFn({ method: "GET" })
       .from("notifications")
       .select("id", { count: "exact", head: true })
       .eq("user_id", context.userId)
+      .in("type", MEANINGFUL_TYPES)
       .is("read_at", null);
     if (error) fail("Unable to load unread count", 500, error);
     return count ?? 0;
