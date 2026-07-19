@@ -41,6 +41,7 @@ import { Route as ApiPublicHooksDrainEmailQueueRouteImport } from './routes/api/
 import { Route as ApiPublicHooksDispatchScheduledReportsRouteImport } from './routes/api/public/hooks/dispatch-scheduled-reports'
 import { Route as AuthenticatedCoachingPlansNewRouteImport } from './routes/_authenticated/coaching.plans.new'
 import { Route as AuthenticatedCoachingPlansIdRouteImport } from './routes/_authenticated/coaching.plans.$id'
+import { Route as ApiPublicWebhooksEmailProviderRouteImport } from './routes/api/public/webhooks/email.$provider'
 import { Route as ApiPublicTrackOpenIdRouteImport } from './routes/api/public/track/open.$id'
 import { Route as ApiPublicTrackClickIdRouteImport } from './routes/api/public/track/click.$id'
 import { Route as ApiPublicCalendarTokenIcsRouteImport } from './routes/api/public/calendar/$token.ics'
@@ -218,6 +219,12 @@ const AuthenticatedCoachingPlansIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedCoachingPlansRoute,
   } as any)
+const ApiPublicWebhooksEmailProviderRoute =
+  ApiPublicWebhooksEmailProviderRouteImport.update({
+    id: '/api/public/webhooks/email/$provider',
+    path: '/api/public/webhooks/email/$provider',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicTrackOpenIdRoute = ApiPublicTrackOpenIdRouteImport.update({
   id: '/api/public/track/open/$id',
   path: '/api/public/track/open/$id',
@@ -270,6 +277,7 @@ export interface FileRoutesByFullPath {
   '/api/public/calendar/$token/ics': typeof ApiPublicCalendarTokenIcsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
   '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
+  '/api/public/webhooks/email/$provider': typeof ApiPublicWebhooksEmailProviderRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -306,6 +314,7 @@ export interface FileRoutesByTo {
   '/api/public/calendar/$token/ics': typeof ApiPublicCalendarTokenIcsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
   '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
+  '/api/public/webhooks/email/$provider': typeof ApiPublicWebhooksEmailProviderRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -344,6 +353,7 @@ export interface FileRoutesById {
   '/api/public/calendar/$token/ics': typeof ApiPublicCalendarTokenIcsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
   '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
+  '/api/public/webhooks/email/$provider': typeof ApiPublicWebhooksEmailProviderRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -382,6 +392,7 @@ export interface FileRouteTypes {
     | '/api/public/calendar/$token/ics'
     | '/api/public/track/click/$id'
     | '/api/public/track/open/$id'
+    | '/api/public/webhooks/email/$provider'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -418,6 +429,7 @@ export interface FileRouteTypes {
     | '/api/public/calendar/$token/ics'
     | '/api/public/track/click/$id'
     | '/api/public/track/open/$id'
+    | '/api/public/webhooks/email/$provider'
   id:
     | '__root__'
     | '/'
@@ -455,6 +467,7 @@ export interface FileRouteTypes {
     | '/api/public/calendar/$token/ics'
     | '/api/public/track/click/$id'
     | '/api/public/track/open/$id'
+    | '/api/public/webhooks/email/$provider'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -473,6 +486,7 @@ export interface RootRouteChildren {
   ApiPublicCalendarTokenIcsRoute: typeof ApiPublicCalendarTokenIcsRoute
   ApiPublicTrackClickIdRoute: typeof ApiPublicTrackClickIdRoute
   ApiPublicTrackOpenIdRoute: typeof ApiPublicTrackOpenIdRoute
+  ApiPublicWebhooksEmailProviderRoute: typeof ApiPublicWebhooksEmailProviderRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -701,6 +715,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachingPlansIdRouteImport
       parentRoute: typeof AuthenticatedCoachingPlansRoute
     }
+    '/api/public/webhooks/email/$provider': {
+      id: '/api/public/webhooks/email/$provider'
+      path: '/api/public/webhooks/email/$provider'
+      fullPath: '/api/public/webhooks/email/$provider'
+      preLoaderRoute: typeof ApiPublicWebhooksEmailProviderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/track/open/$id': {
       id: '/api/public/track/open/$id'
       path: '/api/public/track/open/$id'
@@ -834,6 +855,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCalendarTokenIcsRoute: ApiPublicCalendarTokenIcsRoute,
   ApiPublicTrackClickIdRoute: ApiPublicTrackClickIdRoute,
   ApiPublicTrackOpenIdRoute: ApiPublicTrackOpenIdRoute,
+  ApiPublicWebhooksEmailProviderRoute: ApiPublicWebhooksEmailProviderRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

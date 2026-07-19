@@ -128,22 +128,22 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
           status: "sent",
           attempts: attempt,
           sent_at: now2,
-          delivered_at: now2,
           provider: res.provider,
+          provider_status: "accepted",
           provider_message_id: res.messageId ?? null,
           to_email: actualTo,
           to_email_intended: intendedTo,
           last_error: null,
         })
         .eq("id", job.id);
-      // Reflect on the feedback record too
+      // Reflect on the feedback record too (sent = provider accepted; delivered
+      // is set later by the provider webhook).
       if (job.feedback_id) {
         await supabaseAdmin
           .from("feedback")
           .update({
             status: job.kind === "reminder" ? undefined : "sent",
             sent_at: now2,
-            delivered_at: now2,
             email_error: null,
             ...(job.kind === "reminder"
               ? {

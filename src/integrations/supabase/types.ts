@@ -353,19 +353,27 @@ export type Database = {
         Row: {
           attachments: Json
           attempts: number
+          bounce_reason: string | null
+          bounced_at: string | null
+          complained_at: string | null
+          complaint_reason: string | null
           created_at: string
           created_by: string | null
+          defer_reason: string | null
+          deferred_until: string | null
           delivered_at: string | null
           feedback_id: string | null
           html: string
           id: string
           kind: string
           last_error: string | null
+          last_event_at: string | null
           max_attempts: number
           next_attempt_at: string
           priority: number
           provider: string | null
           provider_message_id: string | null
+          provider_status: string | null
           sent_at: string | null
           status: string
           subject: string
@@ -378,19 +386,27 @@ export type Database = {
         Insert: {
           attachments?: Json
           attempts?: number
+          bounce_reason?: string | null
+          bounced_at?: string | null
+          complained_at?: string | null
+          complaint_reason?: string | null
           created_at?: string
           created_by?: string | null
+          defer_reason?: string | null
+          deferred_until?: string | null
           delivered_at?: string | null
           feedback_id?: string | null
           html: string
           id?: string
           kind?: string
           last_error?: string | null
+          last_event_at?: string | null
           max_attempts?: number
           next_attempt_at?: string
           priority?: number
           provider?: string | null
           provider_message_id?: string | null
+          provider_status?: string | null
           sent_at?: string | null
           status?: string
           subject: string
@@ -403,19 +419,27 @@ export type Database = {
         Update: {
           attachments?: Json
           attempts?: number
+          bounce_reason?: string | null
+          bounced_at?: string | null
+          complained_at?: string | null
+          complaint_reason?: string | null
           created_at?: string
           created_by?: string | null
+          defer_reason?: string | null
+          deferred_until?: string | null
           delivered_at?: string | null
           feedback_id?: string | null
           html?: string
           id?: string
           kind?: string
           last_error?: string | null
+          last_event_at?: string | null
           max_attempts?: number
           next_attempt_at?: string
           priority?: number
           provider?: string | null
           provider_message_id?: string | null
+          provider_status?: string | null
           sent_at?: string | null
           status?: string
           subject?: string
@@ -500,6 +524,63 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      email_webhook_events: {
+        Row: {
+          created_at: string
+          error: string | null
+          event_type: string | null
+          id: string
+          matched_feedback_id: string | null
+          matched_queue_id: string | null
+          payload: Json
+          provider: string
+          provider_message_id: string | null
+          recipient: string | null
+          signature_valid: boolean
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          event_type?: string | null
+          id?: string
+          matched_feedback_id?: string | null
+          matched_queue_id?: string | null
+          payload?: Json
+          provider: string
+          provider_message_id?: string | null
+          recipient?: string | null
+          signature_valid?: boolean
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          event_type?: string | null
+          id?: string
+          matched_feedback_id?: string | null
+          matched_queue_id?: string | null
+          payload?: Json
+          provider?: string
+          provider_message_id?: string | null
+          recipient?: string | null
+          signature_valid?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_webhook_events_matched_feedback_id_fkey"
+            columns: ["matched_feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_webhook_events_matched_queue_id_fkey"
+            columns: ["matched_queue_id"]
+            isOneToOne: false
+            referencedRelation: "email_queue"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       feedback: {
         Row: {
