@@ -356,11 +356,27 @@ function ProviderCard({
   verify: { mutate: () => void; isPending: boolean };
   verifyResult: any;
 }) {
+  const testFn = useServerFn(sendTestEmail);
   const [lastVerifiedAt, setLastVerifiedAt] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     return window.localStorage.getItem(LAST_VERIFIED_KEY);
   });
   const [diagOpen, setDiagOpen] = useState(false);
+  const [diagTestTo, setDiagTestTo] = useState("");
+  const [diagTestResult, setDiagTestResult] = useState<any>(null);
+  const diagTestEmailValid = EMAIL_RE.test(diagTestTo.trim());
+  const diagTest = useMutation({
+    mutationFn: () => testFn({ data: { to: diagTestTo.trim() } }),
+    onSuccess: (r: any) => {
+      setDiagTestResult(r);
+      if (r.ok) toast.success(`Test email sent (${r.latencyMs}ms)`);
+      else toast.error(r.error ?? "Send failed");
+    },
+    onError: (e: any) => {
+      setDiagTestResult({ ok: false, error: e?.message ?? "Send failed" });
+      toast.error(e?.message ?? "Send failed");
+    },
+  });
 
   // Cache last successful verification so the pill survives page reloads.
   useEffect(() => {
@@ -470,6 +486,68 @@ function ProviderCard({
                 </span>
               )}
             </div>
+          </div>
+
+          <div className="mt-3 rounded-lg border border-border/60 bg-muted/20 p-4">
+            <div className="text-xs font-medium">Send test email</div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Sends a live test through the cached provider sender ({s?.sender_email || "—"}).
+              Reports the raw provider response — success, latency, and message ID, or the exact failure reason.
+              Does not modify settings or trigger a reconnection.
+            </p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <Input
+                placeholder="destination@example.com"
+                value={diagTestTo}
+                onChange={(e) => setDiagTestTo(e.target.value)}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => diagTest.mutate()}
+                disabled={diagTest.isPending || !diagTestEmailValid || !s?.enabled}
+                title={!s?.enabled ? "Enable email service to send" : undefined}
+              >
+                {diagTest.isPending ? (
+                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Send className="mr-2 h-3.5 w-3.5" />
+                )}
+                Send test email
+              </Button>
+            </div>
+            {diagTestResult && (
+              <div
+                className={cn(
+                  "mt-3 rounded-md p-3 text-xs",
+                  diagTestResult.ok
+                    ? "bg-primary/10 text-primary"
+                    : "bg-destructive/10 text-destructive",
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  {diagTestResult.ok ? (
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  ) : (
+                    <AlertCircle className="h-3.5 w-3.5" />
+                  )}
+                  <span className="font-medium">
+                    {diagTestResult.ok ? "Delivered" : "Failed"}
+                  </span>
+                  {typeof diagTestResult.latencyMs === "number" && (
+                    <span className="text-muted-foreground">· {diagTestResult.latencyMs}ms</span>
+                  )}
+                  {diagTestResult.provider && (
+                    <span className="text-muted-foreground">· {diagTestResult.provider}</span>
+                  )}
+                </div>
+                <div className="mt-1 break-all">
+                  {diagTestResult.ok
+                    ? `Message ID: ${diagTestResult.messageId ?? "n/a"}`
+                    : diagTestResult.error}
+                </div>
+              </div>
+            )}
           </div>
         </CollapsibleContent>
       </Collapsible>
