@@ -218,6 +218,13 @@ function AuthPage() {
     setErrorMsg(null);
     setLoading(true);
     try {
+      // Preserve typed input across the OAuth round-trip (password intentionally excluded).
+      try {
+        sessionStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({ email: trimmedEmail, name: name.trim(), mode }),
+        );
+      } catch {}
       const redirectUri = `${window.location.origin}/auth${next ? `?next=${encodeURIComponent(next)}` : ""}`;
       const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectUri });
       if (result.error) {
