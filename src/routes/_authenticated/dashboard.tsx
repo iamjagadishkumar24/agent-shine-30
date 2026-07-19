@@ -255,6 +255,9 @@ function bucketByWeek<T extends { created_at: string }>(rows: T[], filter: (r: T
 // ---------------------------------------------------------------------------
 function Dashboard() {
   const qc = useQueryClient();
+  useRealtimeInvalidate("feedback", [["dashboard"]]);
+  useRealtimeInvalidate("coaching_sessions", [["dashboard"]]);
+  useRealtimeInvalidate("email_queue", [["dashboard"]]);
   const navigate = useNavigate();
   const { data, isLoading, isFetching, isError, error, refetch } = useDashboardData();
   const [range, setRange] = useState<"Daily" | "Weekly" | "Monthly">("Weekly");
