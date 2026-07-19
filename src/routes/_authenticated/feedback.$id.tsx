@@ -819,7 +819,7 @@ function computeStages(
           ? "failed"
           : "pending",
     at: queue.sent_at,
-    detail: queue.provider_message_id ? `id ${queue.provider_message_id.slice(0, 20)}…` : null,
+    detail: null,
   };
   const deliveredStage: Stage = {
     key: "delivered",
