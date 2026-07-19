@@ -8,14 +8,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, CheckCircle2, Trash2, Mail, MailOpen, MousePointerClick, AlertTriangle, Paperclip, Upload, X, CalendarPlus, GitPullRequest, ThumbsUp, ThumbsDown, RotateCcw, History, Eye, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, Trash2, Mail, MailOpen, MousePointerClick, AlertTriangle, Paperclip, Upload, X, CalendarPlus, History, Eye, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRef, useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { sendFeedbackEmail, previewFeedbackEmail, sendFeedbackTestEmail } from "@/lib/feedback-email.functions";
 import { createUploadUrl, deleteAttachment } from "@/lib/feedback-attachments.functions";
-import { transitionFeedback } from "@/lib/feedback-workflow.functions";
+// review workflow retired — feedback flows draft → ready_to_send → sent
 import { completeFeedback } from "@/lib/agent-portal.functions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -34,14 +34,13 @@ export const Route = createFileRoute("/_authenticated/feedback/$id")({
 
 const STATUS_TONE: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
-  review: "bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.78_0.16_75)]",
-  approved: "bg-primary/15 text-primary",
-  rejected: "bg-destructive/15 text-destructive",
-  revision_required: "bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.78_0.16_75)]",
+  ready_to_send: "bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.78_0.16_75)]",
   sent: "bg-primary/15 text-primary",
+  failed: "bg-destructive/15 text-destructive",
   acknowledged: "bg-[oklch(0.72_0.16_160)]/15 text-[oklch(0.72_0.16_160)]",
   completed: "bg-[oklch(0.72_0.16_160)]/15 text-[oklch(0.72_0.16_160)]",
 };
+
 
 function FeedbackDetail() {
   const { id } = Route.useParams();
@@ -51,7 +50,7 @@ function FeedbackDetail() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [ackNote, setAckNote] = useState("");
-  const [reviewNote, setReviewNote] = useState("");
+  
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -70,7 +69,7 @@ function FeedbackDetail() {
   const testSendFn = useServerFn(sendFeedbackTestEmail);
   const uploadUrlFn = useServerFn(createUploadUrl);
   const deleteAttFn = useServerFn(deleteAttachment);
-  const transitionFn = useServerFn(transitionFeedback);
+  
 
   const preview = useQuery({
     queryKey: ["feedback-preview", id],
@@ -257,28 +256,9 @@ function FeedbackDetail() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const transitionMutation = useMutation({
-    mutationFn: (payload: Parameters<typeof transitionFn>[0]["data"]) =>
-      transitionFn({ data: payload }),
-    onSuccess: (_, vars) => {
-      const label =
-        vars.type === "submit"
-          ? "Submitted for review"
-          : vars.type === "approve"
-            ? "Approved"
-            : vars.type === "reject"
-              ? "Rejected"
-              : "Revision requested";
-      toast.success(label);
-      setReviewNote("");
-      qc.invalidateQueries({ queryKey: ["feedback", id] });
-      qc.invalidateQueries({ queryKey: ["feedback-audit", id] });
-      qc.invalidateQueries({ queryKey: ["feedback-list"] });
-      qc.invalidateQueries({ queryKey: ["approval-queue"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
+  // review workflow removed — no transition mutation needed here.
+
+
 
   const { data: auditLog = [] } = useQuery({
     queryKey: ["feedback-audit", id],
@@ -357,22 +337,13 @@ function FeedbackDetail() {
         actions={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild><Link to="/feedback"><ArrowLeft className="mr-1 h-3.5 w-3.5" /> Back</Link></Button>
-            {(data.status === "draft" || data.status === "revision_required") && (
-              <Button
-                size="sm"
-                onClick={() => transitionMutation.mutate({ type: "submit", feedbackId: id })}
-                disabled={transitionMutation.isPending}
-              >
-                <GitPullRequest className="mr-1.5 h-3.5 w-3.5" /> Submit for review
-              </Button>
-            )}
-            {data.status === "approved" && (
+            {(data.status === "draft" || data.status === "ready_to_send" || data.status === "failed") && (
               <>
                 <Button size="sm" variant="outline" onClick={() => setPreviewOpen(true)}>
                   <Eye className="mr-1.5 h-3.5 w-3.5" /> Preview email
                 </Button>
                 <Button size="sm" onClick={send} disabled={sendMutation.isPending}>
-                  <Send className="mr-1.5 h-3.5 w-3.5" /> Send
+                  <Send className="mr-1.5 h-3.5 w-3.5" /> {data.status === "failed" ? "Retry send" : "Send now"}
                 </Button>
               </>
             )}
@@ -381,6 +352,7 @@ function FeedbackDetail() {
                 <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Complete
               </Button>
             )}
+
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="icon" disabled={remove.isPending} className="text-muted-foreground hover:text-destructive" aria-label="Delete feedback"><Trash2 className="h-3.5 w-3.5" /></Button>
@@ -416,70 +388,18 @@ function FeedbackDetail() {
             <Section title="Recommended actions" body={data.recommended_actions} />
           </Card>
 
-          {data.status === "review" && (
-            <Card className="rounded-xl border-border/60 bg-card/60 p-6">
-              <div className="text-sm font-medium">Review this feedback</div>
-              <div className="mt-0.5 text-xs text-muted-foreground">
-                Approve to unlock sending, request revision to send it back to the author, or reject.
+          {data.status === "failed" && (
+            <Card className="rounded-xl border-destructive/40 bg-destructive/5 p-6">
+              <div className="flex items-center gap-2 text-sm font-medium text-destructive">
+                <AlertTriangle className="h-4 w-4" /> Delivery failed
               </div>
-              <Textarea
-                rows={3}
-                className="mt-3"
-                value={reviewNote}
-                onChange={(e) => setReviewNote(e.target.value)}
-                placeholder="Reviewer note (required for reject / request revision)"
-              />
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    transitionMutation.mutate({ type: "approve", feedbackId: id, note: reviewNote || undefined })
-                  }
-                  disabled={transitionMutation.isPending}
-                >
-                  <ThumbsUp className="mr-1.5 h-3.5 w-3.5" /> Approve
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    if (!reviewNote.trim()) return toast.error("Add a note explaining what to revise");
-                    transitionMutation.mutate({ type: "request_revision", feedbackId: id, note: reviewNote });
-                  }}
-                  disabled={transitionMutation.isPending}
-                >
-                  <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> Request revision
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-destructive hover:text-destructive"
-                  onClick={() => {
-                    if (!reviewNote.trim()) return toast.error("Add a rejection reason");
-                    transitionMutation.mutate({ type: "reject", feedbackId: id, note: reviewNote });
-                  }}
-                  disabled={transitionMutation.isPending}
-                >
-                  <ThumbsDown className="mr-1.5 h-3.5 w-3.5" /> Reject
-                </Button>
-              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {data.email_error ?? "The email provider rejected this message. Retry after checking recipient and settings."}
+              </p>
             </Card>
           )}
 
-          {(data.status === "rejected" || data.status === "revision_required" || data.status === "approved") &&
-            data.review_note && (
-              <Card className="rounded-xl border-border/60 bg-card/60 p-6">
-                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Reviewer note
-                </div>
-                <p className="mt-2 whitespace-pre-wrap text-sm">{data.review_note}</p>
-                {data.reviewed_at && (
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    {(safeTimeAgo(data.reviewed_at) ?? "—")}
-                  </div>
-                )}
-              </Card>
-            )}
+
 
 
           <Card className="rounded-xl border-border/60 bg-card/60 p-6">
@@ -779,7 +699,7 @@ function FeedbackDetail() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setPreviewOpen(false)}>Close</Button>
-            {data?.status === "approved" && (
+            {["draft", "ready_to_send", "failed"].includes(data?.status ?? "") && (
               <Button
                 onClick={() => {
                   setPreviewOpen(false);
@@ -790,6 +710,7 @@ function FeedbackDetail() {
                 <Send className="mr-1.5 h-3.5 w-3.5" /> Send to agent
               </Button>
             )}
+
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -861,7 +782,7 @@ function computeStages(
 ): { stages: Stage[]; finalState: "delivered" | "failed" | "in_progress" | "idle"; failReason?: string | null } {
   // No queue row yet — feedback hasn't been sent.
   if (!queue) {
-    const isPre = ["draft", "review", "approved", "revision_required", "rejected"].includes(feedbackStatus);
+    const isPre = ["draft", "ready_to_send", "failed"].includes(feedbackStatus);
     return {
       stages: [
         { key: "preparing", label: "Preparing", state: sending ? "active" : isPre ? "active" : "pending" },

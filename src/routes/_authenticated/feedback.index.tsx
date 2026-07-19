@@ -10,16 +10,13 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, X, Filter, Download, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { Plus, X, Filter, Download, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, subDays, format } from "date-fns";
 import { SkeletonBox } from "@/components/ui/skeleton-blocks";
 import { toCsv, downloadCsv } from "@/lib/csv";
-import {
-  bulkApproveFeedback,
-  bulkRejectFeedback,
-  bulkDeleteFeedback,
-} from "@/lib/bulk-operations.functions";
+import { bulkDeleteFeedback } from "@/lib/bulk-operations.functions";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,8 +52,8 @@ type FeedbackSearch = {
 };
 
 const ALLOWED_STATUS = new Set([
-  "draft", "review", "approved", "rejected", "revision_required",
-  "sent", "acknowledged", "completed", "pending", "high_priority",
+  "draft", "ready_to_send", "sent", "acknowledged", "completed", "failed",
+  "pending", "high_priority",
 ]);
 const ALLOWED_SEV = new Set(["low", "medium", "high", "critical"]);
 const ALLOWED_RANGE = new Set(["7d", "30d", "90d", "all"]);
@@ -78,14 +75,13 @@ export const Route = createFileRoute("/_authenticated/feedback/")({
 
 const STATUS_TONE: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
-  review: "bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.78_0.16_75)]",
-  approved: "bg-primary/15 text-primary",
-  rejected: "bg-destructive/15 text-destructive",
-  revision_required: "bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.78_0.16_75)]",
+  ready_to_send: "bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.78_0.16_75)]",
   sent: "bg-primary/15 text-primary",
+  failed: "bg-destructive/15 text-destructive",
   acknowledged: "bg-[oklch(0.72_0.16_160)]/15 text-[oklch(0.72_0.16_160)]",
   completed: "bg-[oklch(0.72_0.16_160)]/15 text-[oklch(0.72_0.16_160)]",
 };
+
 
 const SEV_TONE: Record<string, string> = {
   low: "text-muted-foreground",
@@ -104,9 +100,8 @@ function FeedbackPage() {
   const qc = useQueryClient();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  const approve = useServerFn(bulkApproveFeedback);
-  const reject = useServerFn(bulkRejectFeedback);
   const del = useServerFn(bulkDeleteFeedback);
+
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["feedback-list"],
@@ -129,7 +124,8 @@ function FeedbackPage() {
 
     return all.filter((f) => {
       if (search.status === "pending") {
-        if (!["draft", "review"].includes(f.status)) return false;
+        if (!["draft", "ready_to_send"].includes(f.status)) return false;
+
       } else if (search.status === "high_priority") {
         if (!["critical", "high"].includes(f.severity)) return false;
       } else if (search.status && f.status !== search.status) return false;
@@ -182,16 +178,8 @@ function FeedbackPage() {
     qc.invalidateQueries({ queryKey: ["feedback-list"] });
   };
 
-  const approveMut = useMutation({
-    mutationFn: () => approve({ data: { ids: [...selected] } }),
-    onSuccess: (r) => { toast.success(`Approved ${r.updated} feedback item(s)`); invalidate(); },
-    onError: (e: any) => toast.error(e.message ?? "Failed to approve"),
-  });
-  const rejectMut = useMutation({
-    mutationFn: () => reject({ data: { ids: [...selected] } }),
-    onSuccess: (r) => { toast.success(`Rejected ${r.updated} feedback item(s)`); invalidate(); },
-    onError: (e: any) => toast.error(e.message ?? "Failed to reject"),
-  });
+
+
   const delMut = useMutation({
     mutationFn: () => del({ data: { ids: [...selected] } }),
     onSuccess: (r) => { toast.success(`Deleted ${r.deleted} feedback item(s)`); invalidate(); },
@@ -254,15 +242,10 @@ function FeedbackPage() {
           <div className="mb-3 flex items-center justify-between rounded-lg border border-primary/40 bg-primary/5 px-4 py-2.5 text-sm animate-in fade-in slide-in-from-top-1">
             <div className="font-medium">{selected.size} selected</div>
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={() => approveMut.mutate()} disabled={approveMut.isPending}>
-                <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Approve
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => rejectMut.mutate()} disabled={rejectMut.isPending}>
-                <XCircle className="mr-1.5 h-3.5 w-3.5" /> Reject
-              </Button>
               <Button size="sm" variant="outline" onClick={exportCsv}>
                 <Download className="mr-1.5 h-3.5 w-3.5" /> Export
               </Button>
+
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button size="sm" variant="destructive" disabled={delMut.isPending}>

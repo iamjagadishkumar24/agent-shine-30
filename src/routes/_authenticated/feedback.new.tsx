@@ -113,14 +113,16 @@ function NewFeedback() {
       if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Please fix the highlighted fields");
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not signed in");
-      // Insert first; for "send" we insert as approved so the email pipeline
-      // can transition approved → queued → sent based on the real provider response.
+      // Insert first; for "send" we mark it ready_to_send so the email
+      // pipeline can transition ready_to_send → sent (or → failed) based on
+      // the real provider response.
       const payload = {
         ...parsed.data,
-        status: (mode === "send" ? "approved" : "draft") as "approved" | "draft",
+        status: (mode === "send" ? "ready_to_send" : "draft") as "ready_to_send" | "draft",
         sent_at: null,
         created_by: userData.user.id,
       };
+
       const { data: row, error } = await supabase.from("feedback").insert(payload).select("id").single();
       if (error) throw error;
       if (mode === "draft") return { id: row.id, mode, sendResult: null as any };

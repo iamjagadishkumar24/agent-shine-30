@@ -272,7 +272,7 @@ function Dashboard() {
   const activeAgents = agents.filter((a) => a.status === "active").length;
   const totalFeedback = feedback.length;
   const sent = feedback.filter((f) => ["sent", "acknowledged", "completed"].includes(f.status as string)).length;
-  const pending = feedback.filter((f) => ["draft", "review"].includes(f.status as string)).length;
+  const pending = feedback.filter((f) => ["draft", "ready_to_send"].includes(f.status as string)).length;
   const completed = feedback.filter((f) => f.status === "completed").length;
   const acknowledged = feedback.filter((f) => f.status === "acknowledged" || f.status === "completed").length;
   const highPriority = feedback.filter((f) => f.severity === "critical" || f.severity === "high").length;
@@ -287,7 +287,7 @@ function Dashboard() {
   // Sparklines (12 weeks)
   const sparkAll = useMemo(() => bucketByWeek(feedback, () => true), [feedback]);
   const sparkSent = useMemo(() => bucketByWeek(feedback, (f) => ["sent", "acknowledged", "completed"].includes(f.status as string)), [feedback]);
-  const sparkPending = useMemo(() => bucketByWeek(feedback, (f) => ["draft", "review"].includes(f.status as string)), [feedback]);
+  const sparkPending = useMemo(() => bucketByWeek(feedback, (f) => ["draft", "ready_to_send"].includes(f.status as string)), [feedback]);
   const sparkCompleted = useMemo(() => bucketByWeek(feedback, (f) => f.status === "completed"), [feedback]);
   const sparkHigh = useMemo(() => bucketByWeek(feedback, (f) => f.severity === "critical" || f.severity === "high"), [feedback]);
   const sparkCoaching = useMemo(() => bucketByWeek(coaching as any, () => true), [coaching]);
@@ -393,17 +393,20 @@ function Dashboard() {
   // Status rows
   const statusCounts = {
     draft: feedback.filter((f) => f.status === "draft").length,
-    review: feedback.filter((f) => f.status === "review").length,
+    ready: feedback.filter((f) => f.status === "ready_to_send").length,
     sent: feedback.filter((f) => f.status === "sent").length,
     acknowledged: feedback.filter((f) => f.status === "acknowledged" || f.status === "completed").length,
+    failed: feedback.filter((f) => f.status === "failed").length,
   };
   const statusTotal = Math.max(1, Object.values(statusCounts).reduce((a, b) => a + b, 0));
   const statusRows: Array<{ key: string; value: number; color: string; filter: string }> = [
     { key: "Draft", value: statusCounts.draft, color: "oklch(0.65 0.20 285)", filter: "draft" },
-    { key: "Pending", value: statusCounts.review, color: "oklch(0.80 0.16 75)", filter: "review" },
+    { key: "Ready to send", value: statusCounts.ready, color: "oklch(0.80 0.16 75)", filter: "ready_to_send" },
     { key: "Sent", value: statusCounts.sent, color: "oklch(0.70 0.14 235)", filter: "sent" },
     { key: "Acknowledged", value: statusCounts.acknowledged, color: "oklch(0.72 0.16 160)", filter: "acknowledged" },
+    { key: "Failed", value: statusCounts.failed, color: "oklch(0.62 0.22 25)", filter: "failed" },
   ];
+
 
   // Email — providers without webhooks (Gmail SMTP) never stamp delivered_at,
   // so treat a stamped sent_at with no error as "delivered" for widget purposes.

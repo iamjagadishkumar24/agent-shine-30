@@ -24,17 +24,13 @@ function getAppBaseUrl(): string {
   return "https://app.example.com";
 }
 
-async function assertStaff(supabase: any, userId: string) {
-  const { data, error } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId);
-  if (error) fail("Unable to verify permissions", 500, error);
-  const roles = new Set((data ?? []).map((r: any) => r.role));
-  if (!STAFF_ROLES.some((r) => roles.has(r))) {
-    throw new Response("Staff role required", { status: 403 });
-  }
+// Kept for reference — the review workflow has been retired, so we no longer
+// gate feedback sends behind qa_* roles. RLS still enforces who can read/write
+// the underlying feedback row.
+async function assertStaff(_supabase: unknown, _userId: string) {
+  return;
 }
+
 
 // Enqueue a feedback email. The background drainer sends it and updates
 // feedback.status = "sent" once the provider accepts it.
@@ -55,12 +51,14 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
     if (error) fail("Unable to load feedback", 500, error);
     if (!fb) throw new Response("Feedback not found", { status: 404 });
     if (!fb.agent?.email) throw new Response("Agent has no email on file", { status: 400 });
-    if (fb.status !== "approved") {
+    if (!["draft", "ready_to_send", "failed"].includes(fb.status as string)) {
       throw new Response(
-        `Cannot send from status "${fb.status}" — feedback must be approved first`,
+        `Cannot send from status "${fb.status}"`,
         { status: 409 },
       );
     }
+    const sourceStatus = fb.status as string;
+
 
     const { data: settings, error: settingsErr } = await supabase
       .from("email_settings")
@@ -169,19 +167,19 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       throw new Response(`Agent email "${recipient}" is not a valid address`, { status: 400 });
     }
 
-    // Optimistic status transition: approved → queued. The drainer flips
-    // queued → sent only after the email provider accepts the message.
+    // Optimistic status transition: {draft|ready_to_send|failed} → ready_to_send.
+    // The drainer flips ready_to_send → sent once the provider accepts.
     const nowIso = new Date().toISOString();
     const { data: transitioned, error: txErr } = await supabaseAdmin
       .from("feedback")
-      .update({ status: "queued", sent_at: null, email_error: null })
+      .update({ status: "ready_to_send", sent_at: null, email_error: null })
       .eq("id", fb.id)
-      .eq("status", "approved")
+      .eq("status", sourceStatus as never)
       .select("id")
       .maybeSingle();
     if (txErr) fail("Unable to update feedback status", 500, txErr);
     if (!transitioned) {
-      throw new Response("Feedback already sent by another reviewer", { status: 409 });
+      throw new Response("Feedback was updated by someone else — refresh and retry", { status: 409 });
     }
 
     const { data: job, error: qErr } = await supabaseAdmin
@@ -207,11 +205,12 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       // Rollback the status transition so the user can retry.
       await supabaseAdmin
         .from("feedback")
-        .update({ status: "approved", sent_at: null })
+        .update({ status: sourceStatus as never, sent_at: null })
         .eq("id", fb.id)
-        .eq("status", "queued");
+        .eq("status", "ready_to_send");
       fail("Unable to enqueue email", 500, qErr);
     }
+
 
     await supabaseAdmin.from("feedback_email_events").insert({
       feedback_id: fb.id,

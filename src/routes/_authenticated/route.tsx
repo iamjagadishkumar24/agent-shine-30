@@ -21,7 +21,7 @@ import {
   Monitor,
   UserCog,
   Plus,
-  ShieldCheck,
+  
 } from "lucide-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -57,7 +57,7 @@ const STAFF_NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/feedback", label: "Feedback", icon: MessageSquareText },
-  { to: "/approvals", label: "Approvals", icon: ShieldCheck },
+  
   { to: "/coaching", label: "Coaching", icon: GraduationCap },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/reports", label: "Reports", icon: FileBarChart },
