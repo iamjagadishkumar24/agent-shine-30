@@ -1,26 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BrandLockup } from "@/components/brand/brand-lockup";
 import { lovable } from "@/integrations/lovable";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   Loader2,
@@ -33,18 +19,9 @@ import {
   ArrowRight,
   CheckCircle2,
   AlertCircle,
-  Sun,
-  Moon,
-  Monitor,
-  ShieldCheck,
-  Sparkles,
-  BarChart3,
-  Mails,
-  Zap,
-  Lock as LockIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTheme, type ThemeMode } from "@/lib/theme";
+
 
 type AuthSearch = { next?: string };
 export const Route = createFileRoute("/auth")({
@@ -67,7 +44,7 @@ function safeNext(next: string | undefined): string {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REMEMBER_KEY = "signal.auth.remember-email";
-const APP_VERSION = "v1.0.0";
+
 
 type Mode = "signin" | "signup" | "forgot";
 
@@ -153,7 +130,7 @@ function AuthPage() {
         setResetSent(true);
         toast.success("Reset link sent — check your inbox");
       } else if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: trimmedEmail,
           password,
           options: {
@@ -163,8 +140,15 @@ function AuthPage() {
         });
         if (error) throw error;
         persistRemember();
-        toast.success("Account created — welcome aboard");
-        window.location.href = destination;
+        // If the project requires email confirmation, Supabase returns a user
+        // without an active session. Send them to the verify-email screen.
+        if (data.session) {
+          toast.success("Account created — welcome aboard");
+          window.location.href = destination;
+        } else {
+          toast.success("Check your inbox to verify your email");
+          window.location.href = `/verify-email?email=${encodeURIComponent(trimmedEmail)}`;
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: trimmedEmail,
@@ -204,25 +188,10 @@ function AuthPage() {
   const nameError = touched.name && mode === "signup" && name.length > 0 && !nameValid;
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-background text-foreground">
-      {/* Subtle mesh background */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full bg-primary/15 blur-[130px]" />
-        <div className="absolute top-1/2 -right-32 h-[520px] w-[520px] rounded-full bg-fuchsia-500/10 blur-[130px]" />
-        <div className="absolute bottom-[-160px] left-1/3 h-[420px] w-[420px] rounded-full bg-cyan-500/10 blur-[130px]" />
-      </div>
+    <AuthShell>
+      <>
+        <div className="text-center">
 
-      {/* Top bar */}
-      <header className="relative z-10 flex items-center justify-between px-5 py-4 sm:px-8">
-        <BrandLockup size="sm" tagline={false} />
-        <ThemeToggle />
-      </header>
-
-      {/* Main centered card */}
-      <main className="relative z-10 flex flex-1 items-center justify-center px-5 py-8 sm:px-8">
-        <div className="w-full max-w-[440px]">
-          <div className="rounded-2xl border border-border/70 bg-card/70 p-6 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-8">
-            <div className="text-center">
               {mode === "forgot" && (
                 <button
                   type="button"
@@ -441,135 +410,8 @@ function AuthPage() {
                 </button>
               </p>
             )}
-          </div>
-
-          {/* Learn more */}
-          <div className="mt-5 flex justify-center">
-            <LearnMoreDialog />
-          </div>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-border/50 bg-background/50 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-4 text-xs text-muted-foreground sm:flex-row sm:px-8">
-          <p>&copy; {new Date().getFullYear()} Zenwork · {APP_VERSION}</p>
-          <nav className="flex items-center gap-4">
-            <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-            <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-            <a href="#" className="hover:text-foreground transition-colors">Security</a>
-          </nav>
-        </div>
-      </footer>
-    </div>
+      </>
+    </AuthShell>
   );
 }
 
-function ThemeToggle() {
-  const { prefs, update } = useTheme();
-  const Icon = prefs.mode === "light" ? Sun : prefs.mode === "dark" ? Moon : Monitor;
-  const options: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
-    { value: "light", label: "Light", icon: Sun },
-    { value: "dark", label: "Dark", icon: Moon },
-    { value: "system", label: "System", icon: Monitor },
-  ];
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Change theme" className="rounded-lg">
-          <Icon className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-36">
-        {options.map(({ value, label, icon: I }) => (
-          <DropdownMenuItem
-            key={value}
-            onClick={() => update({ mode: value })}
-            className={cn("gap-2", prefs.mode === value && "font-medium")}
-          >
-            <I className="h-4 w-4" />
-            {label}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function LearnMoreDialog() {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          Learn more about the platform
-        </button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Zenwork Performance Manager</DialogTitle>
-          <DialogDescription>
-            The modern quality management platform for Customer Success teams.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <FeatureCard
-            icon={Sparkles}
-            title="AI-assisted feedback"
-            desc="Draft coaching, recognition, and PIP emails in seconds."
-          />
-          <FeatureCard
-            icon={BarChart3}
-            title="Analytics & reports"
-            desc="Trends, scorecards, and scheduled PDF/CSV delivery."
-          />
-          <FeatureCard
-            icon={Mails}
-            title="Email automation"
-            desc="Deliverability checks, provider webhooks, and SLA reminders."
-          />
-          <FeatureCard
-            icon={Zap}
-            title="Coaching workflows"
-            desc="Sessions, action items, and follow-through tracking."
-          />
-          <FeatureCard
-            icon={ShieldCheck}
-            title="Enterprise security"
-            desc="Row-level security, audit logs, and role-based access."
-          />
-          <FeatureCard
-            icon={LockIcon}
-            title="Approvals & portal"
-            desc="Review workflow with agent acknowledgement portal."
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function FeatureCard({
-  icon: Icon,
-  title,
-  desc,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <div className="rounded-lg border border-border/60 bg-muted/30 p-3">
-      <div className="flex items-center gap-2">
-        <div className="grid h-7 w-7 place-items-center rounded-md bg-primary/10 text-primary">
-          <Icon className="h-3.5 w-3.5" />
-        </div>
-        <p className="text-sm font-medium">{title}</p>
-      </div>
-      <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">{desc}</p>
-    </div>
-  );
-}
