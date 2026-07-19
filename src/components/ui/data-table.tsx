@@ -176,8 +176,7 @@ export function useTableSort<K extends string>(initial: K | null = null, initial
         return next;
       }
       setDir((d) => (d === "asc" ? "desc" : d === "desc" ? null : "asc"));
-      return d === null ? null : next;
-      // Note: when clearing, field is retained but dir becomes null; sortRows treats null as no-op.
+      return next;
     });
   }, []);
   return { field, dir, onSort } as const;
