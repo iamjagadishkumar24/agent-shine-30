@@ -75,13 +75,14 @@ export function BrandLockup({
       />
       <span
         className={cn(
-          "font-display font-bold leading-none tracking-tight",
+          "font-display font-bold leading-none tracking-tight whitespace-nowrap",
           "bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent",
           WORDMARK_SIZE[size],
         )}
       >
         Zenwork Performance Manager
       </span>
+
     </>
   );
 
