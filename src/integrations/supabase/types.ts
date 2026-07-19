@@ -310,6 +310,7 @@ export type Database = {
           subject: string
           text_body: string
           to_email: string
+          to_email_intended: string | null
           to_name: string | null
           updated_at: string
         }
@@ -334,6 +335,7 @@ export type Database = {
           subject: string
           text_body: string
           to_email: string
+          to_email_intended?: string | null
           to_name?: string | null
           updated_at?: string
         }
@@ -358,6 +360,7 @@ export type Database = {
           subject?: string
           text_body?: string
           to_email?: string
+          to_email_intended?: string | null
           to_name?: string | null
           updated_at?: string
         }
@@ -375,6 +378,8 @@ export type Database = {
         Row: {
           confidentiality_notice: string | null
           created_at: string
+          dev_override_enabled: boolean
+          dev_override_recipient: string | null
           enabled: boolean
           feedback_template_enabled: boolean
           feedback_template_html: string | null
@@ -394,6 +399,8 @@ export type Database = {
         Insert: {
           confidentiality_notice?: string | null
           created_at?: string
+          dev_override_enabled?: boolean
+          dev_override_recipient?: string | null
           enabled?: boolean
           feedback_template_enabled?: boolean
           feedback_template_html?: string | null
@@ -413,6 +420,8 @@ export type Database = {
         Update: {
           confidentiality_notice?: string | null
           created_at?: string
+          dev_override_enabled?: boolean
+          dev_override_recipient?: string | null
           enabled?: boolean
           feedback_template_enabled?: boolean
           feedback_template_html?: string | null
