@@ -129,7 +129,7 @@ function EmailConfig() {
     mutationFn: () => verifyFn(),
     onSuccess: (r: any) => {
       setVerifyResult(r);
-      else toast.error(r.error ?? "Verification failed");
+      if (!r.ok) toast.error(r.error ?? "Verification failed");
     },
     onError: (e: any) => toast.error(e?.message ?? "Verification failed"),
   });
@@ -138,7 +138,7 @@ function EmailConfig() {
     mutationFn: () => testFn({ data: { to: testTo } }),
     onSuccess: (r: any) => {
       setTestResult(r);
-      else toast.error(r.error ?? "Send failed");
+      if (!r.ok) toast.error(r.error ?? "Send failed");
     },
     onError: (e: any) => toast.error(e?.message ?? "Send failed"),
   });
@@ -147,7 +147,7 @@ function EmailConfig() {
     mutationFn: () => brandingTestFn({ data: { to: brandingTo } }),
     onSuccess: (r: any) => {
       setBrandingResult(r);
-      else toast.error(r.error ?? "Send failed");
+      if (!r.ok) toast.error(r.error ?? "Send failed");
     },
     onError: (e: any) => toast.error(e?.message ?? "Send failed"),
   });
@@ -366,7 +366,7 @@ function ProviderCard({
     mutationFn: () => testFn({ data: { to: diagTestTo.trim() } }),
     onSuccess: (r: any) => {
       setDiagTestResult(r);
-      else toast.error(r.error ?? "Send failed");
+      if (!r.ok) toast.error(r.error ?? "Send failed");
     },
     onError: (e: any) => {
       setDiagTestResult({ ok: false, error: e?.message ?? "Send failed" });

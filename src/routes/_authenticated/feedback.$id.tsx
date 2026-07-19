@@ -108,7 +108,7 @@ function FeedbackDetail() {
         messageId: "messageId" in r ? r.messageId : undefined,
         error: "error" in r ? r.error : undefined,
       });
-      else toast.error(`Test failed: ${"error" in r ? r.error : "unknown"}`);
+      if (!r.ok) toast.error(`Test failed: ${"error" in r ? r.error : "unknown"}`);
     },
     onError: (err: any) => {
       const msg = err?.message ?? "Test send failed";
