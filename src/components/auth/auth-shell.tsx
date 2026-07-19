@@ -60,17 +60,17 @@ export function AuthShell({
 }) {
 
   const brandBlock = showBrand ? (
-    <div className="mb-6 flex flex-col items-center gap-2.5 sm:mb-7">
+    <div className="mb-5 flex flex-col items-center gap-3 sm:mb-6">
       <img
         src={zenworkLogo.url}
         alt=""
         aria-hidden="true"
-        className="h-9 w-9 sm:h-10 sm:w-10 object-contain rounded-md dark:bg-white/5 dark:ring-1 dark:ring-white/10 dark:p-0.5"
+        className="h-14 w-14 sm:h-16 sm:w-16 object-contain rounded-xl dark:bg-white/5 dark:ring-1 dark:ring-white/10 dark:p-1"
       />
       <h1
         className={cn(
-          "font-display font-bold leading-tight tracking-tight text-center whitespace-nowrap",
-          "text-[22px] sm:text-[26px] md:text-[28px]",
+          "font-display font-bold leading-[1.05] tracking-tight text-center",
+          "text-[20px] sm:text-[22px] md:text-[24px]",
           "text-indigo-600 dark:text-indigo-300",
           "bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600",
           "dark:from-indigo-300 dark:via-violet-300 dark:to-fuchsia-300",
