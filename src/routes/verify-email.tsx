@@ -26,6 +26,11 @@ function VerifyEmailPage() {
   const [status, setStatus] = useState<"pending" | "verified">("pending");
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [feedback, setFeedback] = useState<
+    | { kind: "success"; message: string; at: Date }
+    | { kind: "error"; message: string }
+    | null
+  >(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -45,10 +50,13 @@ function VerifyEmailPage() {
 
   const handleResend = async () => {
     if (!email) {
-      toast.error("Missing email address — return to sign up to request a new link");
+      const msg = "Missing email address — return to sign up to request a new link.";
+      setFeedback({ kind: "error", message: msg });
+      toast.error(msg);
       return;
     }
     setResending(true);
+    setFeedback(null);
     try {
       const { error } = await supabase.auth.resend({
         type: "signup",
@@ -56,10 +64,14 @@ function VerifyEmailPage() {
         options: { emailRedirectTo: `${window.location.origin}/dashboard` },
       });
       if (error) throw error;
+      const msg = `Verification email sent to ${email}. Check your inbox and spam folder.`;
+      setFeedback({ kind: "success", message: msg, at: new Date() });
       toast.success("Verification email sent");
       setCooldown(30);
     } catch (err: any) {
-      toast.error(err?.message ?? "Could not resend verification email");
+      const msg = err?.message ?? "Could not resend verification email. Please try again.";
+      setFeedback({ kind: "error", message: msg });
+      toast.error(msg);
     } finally {
       setResending(false);
     }
@@ -130,6 +142,32 @@ function VerifyEmailPage() {
               </Link>
             </Button>
           </div>
+
+          {feedback && (
+            <div
+              role="status"
+              aria-live="polite"
+              className={
+                feedback.kind === "success"
+                  ? "mt-4 flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-300"
+                  : "mt-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+              }
+            >
+              {feedback.kind === "success" ? (
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+              ) : (
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              )}
+              <div className="flex-1">
+                <p>{feedback.message}</p>
+                {feedback.kind === "success" && (
+                  <p className="mt-1 text-xs opacity-80">
+                    Sent at {feedback.at.toLocaleTimeString()}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </>
       )}
     </AuthShell>
