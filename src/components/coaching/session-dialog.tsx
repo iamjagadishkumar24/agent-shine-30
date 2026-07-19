@@ -130,6 +130,30 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
     reminder_minutes: "",
   });
 
+  const [savedEvent, setSavedEvent] = useState<import("@/lib/calendar-links").CalendarEvent | null>(null);
+  const agentLookup = useMemo(() => new Map(agents.map((a: any) => [a.id, a])), [agents]);
+
+  const buildEventFromForm = (id: string): import("@/lib/calendar-links").CalendarEvent => {
+    const startISO = combine(form.date, form.start_time).toISOString();
+    const endISO = combine(form.date, form.end_time).toISOString();
+    const agent = agentLookup.get(form.agent_id) as any;
+    const parts: string[] = [];
+    if (form.agenda) parts.push(`Agenda:\n${form.agenda}`);
+    if (form.notes) parts.push(`Notes:\n${form.notes}`);
+    if (agent?.full_name) parts.push(`Agent: ${agent.full_name}`);
+    return {
+      uid: `${id}@zenwork.coaching`,
+      title: form.topic || "Coaching session",
+      description: parts.join("\n\n") || undefined,
+      location: form.meeting_location || undefined,
+      url: form.meeting_link || undefined,
+      startISO,
+      endISO,
+      attendees: agent?.email ? [{ email: agent.email, name: agent.full_name ?? undefined }] : [],
+      reminderMinutes: form.reminder_minutes ? Number(form.reminder_minutes) : null,
+    };
+  };
+
   useEffect(() => {
     if (!open) return;
     setForm({
