@@ -419,3 +419,69 @@ function AuthPage() {
   );
 }
 
+function SignInMarketingPanel() {
+  return (
+    <div className="relative">
+      <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
+        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+        AI-powered quality management
+      </div>
+      <h2 className="mt-5 text-4xl font-semibold leading-[1.05] tracking-tight xl:text-5xl">
+        Retire the spreadsheet.
+        <br />
+        <span className="text-muted-foreground">
+          Run Customer Success like a product team.
+        </span>
+      </h2>
+      <p className="mt-5 max-w-md text-sm text-muted-foreground">
+        Zenwork Performance Manager is the modern quality management platform for support,
+        sales, and success teams. Create feedback, track coaching, and see performance
+        trends — all in one place.
+      </p>
+
+      <div className="mt-8 overflow-hidden rounded-2xl border border-border/70 bg-card/60 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+        <div className="flex items-center gap-1.5 border-b border-border/60 px-4 py-2.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
+          <span className="h-2.5 w-2.5 rounded-full bg-amber-500/60" />
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/60" />
+          <span className="ml-3 text-[11px] text-muted-foreground">
+            zenwork · performance
+          </span>
+        </div>
+        <div className="grid gap-3 p-4 sm:grid-cols-2">
+          <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+              Quality score
+            </div>
+            <div className="mt-1 text-2xl font-semibold">92.4%</div>
+            <div className="mt-1 text-xs text-emerald-500">+4.1% vs last week</div>
+          </div>
+          <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+              Feedback sent
+            </div>
+            <div className="mt-1 text-2xl font-semibold">1,284</div>
+            <div className="mt-1 text-xs text-muted-foreground">Last 30 days</div>
+          </div>
+          <div className="rounded-lg border border-border/60 bg-background/40 p-3 sm:col-span-2">
+            <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-muted-foreground">
+              <span>Team performance</span>
+              <span>7d</span>
+            </div>
+            <div className="mt-3 flex h-14 items-end gap-1.5">
+              {[42, 55, 48, 62, 58, 71, 68].map((h, i) => (
+                <div
+                  key={i}
+                  className="flex-1 rounded-sm bg-gradient-to-t from-primary/40 to-primary"
+                  style={{ height: `${h}%` }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
