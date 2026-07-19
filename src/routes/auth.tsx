@@ -129,7 +129,9 @@ function AuthPage() {
       else if (!confirmValid) toast.error("Passwords do not match");
       return;
     }
+    setErrorMsg(null);
     setLoading(true);
+
     try {
       if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
