@@ -14,7 +14,7 @@ import { Sparkles, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { generateFeedbackDraft } from "@/lib/ai-feedback.functions";
+import { generateFeedbackDraft, EMAIL_TEMPLATES, type EmailTemplate } from "@/lib/ai-feedback.functions";
 
 export const Route = createFileRoute("/_authenticated/feedback/new")({
   validateSearch: (s: Record<string, unknown>): { agent?: string } =>
