@@ -15,7 +15,17 @@ const SettingsInput = z.object({
   logo_url: z.string().trim().url().max(2048).or(z.literal("")).optional().nullable(),
   confidentiality_notice: z.string().max(2000).optional().nullable(),
   enabled: z.boolean(),
+  dev_override_enabled: z.boolean().optional(),
+  dev_override_recipient: z
+    .string()
+    .trim()
+    .email()
+    .max(255)
+    .or(z.literal(""))
+    .optional()
+    .nullable(),
 });
+
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
   const [{ data: isQaAdmin, error: e1 }, { data: isSuperAdmin, error: e2 }] = await Promise.all([
