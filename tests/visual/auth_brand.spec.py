@@ -40,6 +40,18 @@ def parse_rgb(s):
     parts = [float(x.strip()) for x in m.group(1).split(",")[:3]]
     return tuple(int(round(p)) for p in parts)
 
+def parse_oklch_l(s):
+    """Return the L component (0..1) from an oklch(...) color string, if present."""
+    m = re.match(r"oklch\(\s*([0-9.]+)", s)
+    return float(m.group(1)) if m else None
+
+def color_luminance(color_str):
+    """Approximate 0..1 luminance from either rgb() or oklch(); higher = brighter."""
+    rgb = parse_rgb(color_str)
+    if rgb:
+        return luminance(rgb)
+    return parse_oklch_l(color_str)
+
 
 async def measure(page, route_path, theme):
     # Set theme in localStorage then navigate.
