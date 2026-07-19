@@ -45,9 +45,19 @@ function AgentsPage() {
     },
   });
 
-  const filtered = data.filter((a) =>
+  const filtered = useMemo(() => data.filter((a) =>
     !q || [a.full_name, a.employee_id, a.email, a.department, a.team].some((f) => f?.toLowerCase().includes(q.toLowerCase()))
-  );
+  ), [data, q]);
+
+  type SortField = "full_name" | "department" | "team" | "manager_name" | "qa_score" | "status";
+  const { field, dir, onSort } = useTableSort<SortField>("full_name", "asc");
+  const sorted = useMemo(() => sortRows(filtered, (a) => {
+    if (field === "qa_score") return a.qa_score == null ? null : Number(a.qa_score);
+    return (a as any)[field ?? "full_name"] ?? null;
+  }, dir), [filtered, field, dir]);
+
+  const { page, pageSize, setPage, setPageSize } = usePagination(sorted.length, 25);
+  const paged = paginate(sorted, page, pageSize);
 
   const downloadTemplate = () => {
     const csv = toCsv([{
