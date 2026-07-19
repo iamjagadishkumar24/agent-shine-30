@@ -76,20 +76,22 @@ function AuthPage() {
   const [mode, setMode] = useState<Mode>(initialMode === "signup" ? "signup" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
-  const [touched, setTouched] = useState<{ email?: boolean; password?: boolean; name?: boolean }>({});
+  const [touched, setTouched] = useState<{ email?: boolean; password?: boolean; name?: boolean; confirm?: boolean }>({});
 
   const destination = safeNext(next);
   const trimmedEmail = email.trim();
   const emailValid = EMAIL_RE.test(trimmedEmail);
   const passwordValid = mode === "signup" ? password.length >= 8 : password.length > 0;
   const nameValid = mode === "signup" ? name.trim().length >= 2 : true;
+  const confirmValid = mode === "signup" ? confirmPassword === password && confirmPassword.length > 0 : true;
   const strength = useMemo(() => passwordStrength(password), [password]);
-  const canSubmit = !loading && emailValid && (mode === "forgot" ? true : passwordValid) && nameValid;
+  const canSubmit = !loading && emailValid && (mode === "forgot" ? true : passwordValid) && nameValid && confirmValid;
 
   useEffect(() => {
     try {
@@ -116,12 +118,13 @@ function AuthPage() {
 
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTouched({ email: true, password: true, name: true });
+    setTouched({ email: true, password: true, name: true, confirm: true });
     if (!canSubmit) {
       if (!emailValid) toast.error("Enter a valid email address");
       else if (mode !== "forgot" && !passwordValid)
         toast.error(mode === "signup" ? "Password must be at least 8 characters" : "Enter your password");
       else if (!nameValid) toast.error("Enter your full name");
+      else if (!confirmValid) toast.error("Passwords do not match");
       return;
     }
     setLoading(true);
@@ -190,6 +193,7 @@ function AuthPage() {
   const emailError = touched.email && email.length > 0 && !emailValid;
   const pwError = touched.password && mode === "signup" && password.length > 0 && !passwordValid;
   const nameError = touched.name && mode === "signup" && name.length > 0 && !nameValid;
+  const confirmError = touched.confirm && mode === "signup" && confirmPassword.length > 0 && !confirmValid;
 
   return (
     <AuthShell sidePanel={mode === "signin" ? <SignInMarketingPanel /> : undefined}>
@@ -211,9 +215,9 @@ function AuthPage() {
                 {mode === "forgot" && "Reset your password"}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                {mode === "signin" && "Sign in to Zenwork Performance Manager"}
-                {mode === "signup" && "Get started in less than a minute"}
-                {mode === "forgot" && "We'll email you a secure link to set a new password"}
+                {mode === "signin" && "Sign in to access your quality management workspace."}
+                {mode === "signup" && "Start improving customer support quality with AI-powered feedback and coaching."}
+                {mode === "forgot" && "Enter your email and we'll send you a secure reset link."}
               </p>
             </div>
 
@@ -342,6 +346,36 @@ function AuthPage() {
                   </div>
                 )}
 
+                {mode === "signup" && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="confirm-password" className="text-[13px] font-medium">Confirm password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="confirm-password"
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
+                        required
+                        placeholder="Re-enter your password"
+                        aria-invalid={confirmError || undefined}
+                        className={cn(
+                          "h-11 rounded-lg pl-10",
+                          confirmError && "border-destructive focus-visible:ring-destructive/40",
+                        )}
+                      />
+                    </div>
+                    {confirmError && (
+                      <p className="flex items-center gap-1 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" /> Passwords do not match
+                      </p>
+                    )}
+                  </div>
+                )}
+
+
                 {mode === "signin" && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -408,7 +442,7 @@ function AuthPage() {
                 <button
                   type="button"
                   className="font-semibold text-primary hover:underline"
-                  onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setTouched({}); }}
+                  onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setTouched({}); setConfirmPassword(""); }}
                 >
                   {mode === "signin" ? "Sign up" : "Sign in"}
                 </button>
