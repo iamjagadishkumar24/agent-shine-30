@@ -70,7 +70,7 @@ function VerifyEmailPage() {
       setCooldown(30);
     } catch (err: any) {
       const msg = err?.message ?? "Could not resend verification email. Please try again.";
-      setFeedback({ kind: "error", message: msg });
+      setFeedback({ kind: "error", message: msg, nonce: Date.now() });
       toast.error(msg);
     } finally {
       setResending(false);
