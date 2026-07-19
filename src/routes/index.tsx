@@ -1,141 +1,73 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Sparkles, BarChart3, Zap, ShieldCheck, LayoutDashboard } from "lucide-react";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
+import { BrandLockup } from "@/components/brand/brand-lockup";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Zenwork Performance Manager — Driving Customer Success" },
-      {
-        name: "description",
-        content:
-          "Zenwork Performance Manager is the modern quality management platform for support, sales, and success teams. Create feedback, track coaching, and see performance trends in one place.",
-      },
+      { title: "Zenwork Performance Manager" },
+      { name: "description", content: "Sign in to Zenwork Performance Manager." },
+      { name: "robots", content: "noindex" },
     ],
   }),
   component: Landing,
 });
 
-function useIsAuthed() {
+function Landing() {
   const [authed, setAuthed] = useState<boolean | null>(null);
+
   useEffect(() => {
     let alive = true;
     supabase.auth.getSession().then(({ data }) => {
-      if (alive) setAuthed(!!data.session);
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setAuthed(!!session);
+      if (!alive) return;
+      if (data.session) {
+        window.location.href = "/dashboard";
+      } else {
+        setAuthed(false);
+      }
     });
     return () => {
       alive = false;
-      sub.subscription.unsubscribe();
     };
   }, []);
-  return authed;
-}
 
-function Landing() {
-  const authed = useIsAuthed();
-
-  const primaryCta = authed
-    ? { to: "/dashboard" as const, label: "Go to dashboard", Icon: LayoutDashboard }
-    : { to: "/auth" as const, label: "Start free", Icon: ArrowRight };
+  if (authed === null) {
+    return <div className="min-h-dvh bg-background" aria-hidden />;
+  }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border/60">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-          <Link to="/" className="flex items-center gap-2.5">
-            <img src={zenworkLogo.url} alt="Zenwork" className="h-8 w-8 object-contain" />
-            <span className="text-sm font-semibold tracking-tight sm:text-base">Zenwork <span className="text-muted-foreground font-medium">Performance Manager</span></span>
-          </Link>
-          <div className="flex items-center gap-2">
-            {authed ? (
-              <Link
-                to="/dashboard"
-                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
-              >
-                Open app <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            ) : (
-              <>
-                <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground">
-                  Sign in
-                </Link>
-                <Link
-                  to="/auth"
-                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
-                >
-                  Get started <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+    <div className="relative flex min-h-dvh flex-col bg-background text-foreground">
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full bg-primary/15 blur-[130px]" />
+        <div className="absolute top-1/2 -right-32 h-[520px] w-[520px] rounded-full bg-fuchsia-500/10 blur-[130px]" />
+        <div className="absolute bottom-[-160px] left-1/3 h-[420px] w-[420px] rounded-full bg-cyan-500/10 blur-[130px]" />
+      </div>
 
-      <main className="mx-auto max-w-6xl px-6 py-24">
-        <div className="max-w-2xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" /> AI-powered quality management
-          </div>
-          <h1 className="mt-6 text-5xl font-semibold tracking-tight leading-[1.05]">
-            Retire the spreadsheet.
-            <br />
-            <span className="text-muted-foreground">Run Customer Success like a product team.</span>
-          </h1>
-          <p className="mt-5 max-w-xl text-base text-muted-foreground">
-            Signal is the modern quality management platform for support, sales, and success teams.
-            Create feedback, track coaching, and see performance trends — all in one place.
-          </p>
-          <div className="mt-8 flex items-center gap-3">
-            <Link
-              to={primaryCta.to}
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90"
-            >
-              {primaryCta.label} <primaryCta.Icon className="h-4 w-4" />
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-12">
+        <BrandLockup size="lg" tagline={false} />
+        <p className="mt-6 text-center text-base text-muted-foreground">
+          Welcome to Zenwork Performance Manager
+        </p>
+        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
+          <Button asChild size="lg" className="min-w-[160px] rounded-lg">
+            <Link to="/auth">
+              Sign in <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
-            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground">
-              See features →
-            </a>
-          </div>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="min-w-[160px] rounded-lg">
+            <Link to="/auth" search={{ next: "/dashboard" } as never}>
+              Create account
+            </Link>
+          </Button>
         </div>
-
-        <section
-          id="features"
-          className="mt-28 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3"
-        >
-          {[
-            {
-              icon: Zap,
-              title: "Feedback in seconds",
-              body: "Structured feedback with categories, severity, and workflow — draft, review, send, acknowledge.",
-            },
-            {
-              icon: BarChart3,
-              title: "Trends you can act on",
-              body: "Live quality scores by team, category, and time. Spot regressions before they escalate.",
-            },
-            {
-              icon: ShieldCheck,
-              title: "Enterprise-grade",
-              body: "Row-level security, granular roles, and audit logs. Ready for 100K+ employees.",
-            },
-          ].map((f) => (
-            <div key={f.title} className="bg-card p-6">
-              <f.icon className="h-4 w-4 text-primary" aria-hidden />
-              <div className="mt-4 text-sm font-semibold">{f.title}</div>
-              <div className="mt-1 text-sm text-muted-foreground">{f.body}</div>
-            </div>
-          ))}
-        </section>
       </main>
 
-      <footer className="border-t border-border/60 py-8">
-        <div className="mx-auto max-w-6xl px-6 text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Zenwork Performance Manager · Driving Customer Success Through Quality, Performance & Continuous Improvement
+      <footer className="relative z-10 border-t border-border/50 bg-background/50 py-4 backdrop-blur">
+        <div className="mx-auto max-w-6xl px-6 text-center text-xs text-muted-foreground">
+          &copy; {new Date().getFullYear()} Zenwork Performance Manager
         </div>
       </footer>
     </div>
