@@ -20,8 +20,25 @@ from pathlib import Path
 from playwright.async_api import async_playwright, Page
 
 BASE_URL = os.environ.get("BASE_URL", "https://agent-shine-30.lovable.app").rstrip("/")
-TIMEOUT_SECONDS = int(os.environ.get("TIMEOUT_SECONDS", "300"))
-POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL", "15"))
+
+
+def _positive_int_env(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None or raw == "":
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        print(f"ERROR: {name} must be a positive integer (got {raw!r}).", file=sys.stderr)
+        sys.exit(2)
+    if value <= 0:
+        print(f"ERROR: {name} must be > 0 (got {value}).", file=sys.stderr)
+        sys.exit(2)
+    return value
+
+
+TIMEOUT_SECONDS = _positive_int_env("TIMEOUT_SECONDS", 300)
+POLL_INTERVAL = _positive_int_env("POLL_INTERVAL", 15)
 
 ROUTES = [
     "/",
