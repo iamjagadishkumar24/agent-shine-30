@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import {
-  Sparkles,
   Loader2,
   Eye,
   EyeOff,
@@ -17,9 +16,18 @@ import {
   Lock,
   User as UserIcon,
   ArrowLeft,
-  ShieldCheck,
+  ArrowRight,
   CheckCircle2,
   AlertCircle,
+  TrendingUp,
+  Sparkles,
+  MessageSquare,
+  Users,
+  Star,
+  Activity,
+  BarChart3,
+  Bell,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +38,6 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-// Only accept same-origin relative paths so OAuth returns cannot bounce off-site.
 function safeNext(next: string | undefined): string {
   if (!next || !next.startsWith("/") || next.startsWith("//")) return "/dashboard";
   return next;
@@ -61,7 +68,7 @@ function passwordStrength(pw: string): { score: number; label: string; tone: str
 }
 
 function AuthPage() {
-  const navigate = useNavigate();
+  useNavigate();
   const { next } = Route.useSearch();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
@@ -74,20 +81,13 @@ function AuthPage() {
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean; name?: boolean }>({});
 
   const destination = safeNext(next);
-
   const trimmedEmail = email.trim();
   const emailValid = EMAIL_RE.test(trimmedEmail);
   const passwordValid = mode === "signup" ? password.length >= 8 : password.length > 0;
   const nameValid = mode === "signup" ? name.trim().length >= 2 : true;
   const strength = useMemo(() => passwordStrength(password), [password]);
+  const canSubmit = !loading && emailValid && (mode === "forgot" ? true : passwordValid) && nameValid;
 
-  const canSubmit =
-    !loading &&
-    emailValid &&
-    (mode === "forgot" ? true : passwordValid) &&
-    nameValid;
-
-  // Restore remembered email
   useEffect(() => {
     try {
       const saved = localStorage.getItem(REMEMBER_KEY);
@@ -182,301 +182,472 @@ function AuthPage() {
   const nameError = touched.name && mode === "signup" && name.length > 0 && !nameValid;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
-      {/* Ambient background */}
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-40 -left-40 h-[520px] w-[520px] rounded-full bg-primary/25 blur-[120px]" />
-        <div className="absolute top-1/3 -right-32 h-[480px] w-[480px] rounded-full bg-fuchsia-500/20 blur-[130px]" />
-        <div className="absolute bottom-[-160px] left-1/3 h-[420px] w-[420px] rounded-full bg-cyan-400/15 blur-[120px]" />
-        <div
-          className="absolute inset-0 opacity-[0.035]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-        />
-      </div>
-
-      <div className="relative grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
-        {/* Left — brand / testimonial */}
-        <aside className="relative hidden lg:flex flex-col justify-between p-12 xl:p-16">
-          <Link to="/" className="flex items-center gap-3">
+    <div className="min-h-dvh bg-white text-slate-900 lg:grid lg:grid-cols-2">
+      {/* ============ LEFT — Auth panel ============ */}
+      <main className="flex min-h-dvh flex-col justify-center px-6 py-10 sm:px-10 lg:px-16 xl:px-24">
+        <div className="mx-auto w-full max-w-md">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2.5">
             <img src={zenworkLogo.url} alt="Zenwork" className="h-10 w-10 object-contain" />
-            <span className="text-lg font-semibold tracking-tight">Zenwork <span className="text-muted-foreground font-medium">Performance Manager</span></span>
+            <span className="text-[15px] font-semibold tracking-tight text-slate-900">
+              Zenwork <span className="font-medium text-slate-500">Performance Manager</span>
+            </span>
           </Link>
 
-          <div className="space-y-8 max-w-lg">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/40 px-3 py-1 text-xs backdrop-blur">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-muted-foreground">All systems operational</span>
-            </div>
-            <p className="text-3xl xl:text-4xl font-medium leading-[1.15] tracking-tight">
-              The quality operating system for modern support teams.
+          {/* Header */}
+          <div className="mt-10 text-center">
+            {mode === "forgot" && (
+              <button
+                type="button"
+                onClick={() => { setMode("signin"); setResetSent(false); }}
+                className="mb-4 inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Back to sign in
+              </button>
+            )}
+            <h1 className="text-[28px] font-semibold tracking-tight text-slate-900">
+              {mode === "signin" && "Welcome Back!"}
+              {mode === "signup" && "Create your account"}
+              {mode === "forgot" && "Reset your password"}
+            </h1>
+            <p className="mt-2 text-sm text-slate-500">
+              {mode === "signin" && "Sign in to continue to Zenwork Performance Manager"}
+              {mode === "signup" && "Get started with your workspace in seconds"}
+              {mode === "forgot" && "We'll email you a secure link to set a new password"}
             </p>
-            <p className="text-base text-muted-foreground leading-relaxed">
-              Automate Customer Success feedback, coaching, and reporting across every agent — with the polish of Linear and the depth of an enterprise platform.
-            </p>
-
-            <blockquote className="rounded-2xl border border-border/60 bg-background/40 p-5 backdrop-blur-xl">
-              <p className="text-sm leading-relaxed">
-                "We replaced four spreadsheets and a Trello board with Zenwork. Quality scores are up 18% in a quarter."
-              </p>
-              <footer className="mt-3 text-xs text-muted-foreground">
-                — Head of Support Operations, Fintech Co.
-              </footer>
-            </blockquote>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5" /> SOC 2
-            </span>
-            <span>·</span>
-            <span>GDPR ready</span>
-            <span>·</span>
-            <span>256-bit encryption</span>
-          </div>
-        </aside>
-
-        {/* Right — form */}
-        <main className="flex items-center justify-center p-6 sm:p-10">
-          <div className="w-full max-w-md">
-            <div className="rounded-2xl border border-border/60 bg-background/50 p-7 sm:p-8 shadow-2xl shadow-black/20 backdrop-blur-2xl">
-              {/* Mobile brand */}
-              <Link to="/" className="lg:hidden flex items-center gap-2.5 mb-6">
-                <img src={zenworkLogo.url} alt="Zenwork" className="h-9 w-9 object-contain" />
-                <span className="text-base font-semibold tracking-tight">Zenwork <span className="text-muted-foreground font-medium">Performance Manager</span></span>
-              </Link>
-
-              {mode === "forgot" ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode("signin");
-                    setResetSent(false);
-                  }}
-                  className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  Back to sign in
-                </button>
-              ) : null}
-
-              <h1 className="text-2xl font-semibold tracking-tight">
-                {mode === "signin" && "Welcome back"}
-                {mode === "signup" && "Create your workspace"}
-                {mode === "forgot" && "Reset your password"}
-              </h1>
-              <p className="mt-1.5 text-sm text-muted-foreground">
-                {mode === "signin" && "Sign in to continue to Signal."}
-                {mode === "signup" && "Free while in beta — no credit card required."}
-                {mode === "forgot" && "We'll email you a secure link to set a new password."}
-              </p>
-
-              {mode === "forgot" && resetSent ? (
-                <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-500 shrink-0" />
-                    <div className="text-sm">
-                      <p className="font-medium">Check your inbox</p>
-                      <p className="mt-1 text-muted-foreground">
-                        If an account exists for <span className="text-foreground">{trimmedEmail}</span>, a reset link is on its way. It may take a minute to arrive.
-                      </p>
-                    </div>
-                  </div>
+          {/* Forgot success */}
+          {mode === "forgot" && resetSent ? (
+            <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600 shrink-0" />
+                <div className="text-sm">
+                  <p className="font-medium text-emerald-900">Check your inbox</p>
+                  <p className="mt-1 text-emerald-800/80">
+                    If an account exists for <span className="font-medium">{trimmedEmail}</span>, a reset link is on its way.
+                  </p>
                 </div>
-              ) : (
-                <>
-                  {mode !== "forgot" && (
-                    <>
-                      <Button
-                        variant="outline"
-                        className="mt-6 w-full h-11 bg-background/60 backdrop-blur hover:bg-background/80"
-                        onClick={handleGoogle}
-                        disabled={loading}
-                      >
-                        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden>
-                          <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.6 3.4 14.5 2.4 12 2.4 6.7 2.4 2.4 6.7 2.4 12S6.7 21.6 12 21.6c6.9 0 9.5-4.8 9.5-7.3 0-.5 0-.9-.1-1.3H12z"/>
-                          <path fill="#34A853" d="M3.9 7.4l3.2 2.3C8 8 9.8 6.9 12 6.9c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.6 4.4 14.5 3.4 12 3.4 8.2 3.4 5 5.6 3.9 7.4z" opacity="0"/>
-                        </svg>
-                        Continue with Google
-                      </Button>
-
-                      <div className="my-5 flex items-center gap-3 text-[11px] uppercase tracking-wider text-muted-foreground">
-                        <div className="h-px flex-1 bg-border/60" />
-                        <span>or with email</span>
-                        <div className="h-px flex-1 bg-border/60" />
-                      </div>
-                    </>
-                  )}
-
-                  <form onSubmit={handleEmail} className="space-y-4">
-                    {mode === "signup" && (
-                      <div className="space-y-1.5">
-                        <Label htmlFor="name">Full name</Label>
-                        <div className="relative">
-                          <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            onBlur={() => setTouched((t) => ({ ...t, name: true }))}
-                            required
-                            placeholder="Jane Doe"
-                            className={cn("pl-9 h-11", nameError && "border-destructive focus-visible:ring-destructive")}
-                          />
-                        </div>
-                        {nameError && (
-                          <p className="flex items-center gap-1 text-xs text-destructive">
-                            <AlertCircle className="h-3 w-3" /> Enter your full name
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="email">Email</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="email"
-                          type="email"
-                          autoComplete="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-                          required
-                          placeholder="you@company.com"
-                          aria-invalid={emailError || undefined}
-                          className={cn("pl-9 h-11", emailError && "border-destructive focus-visible:ring-destructive")}
-                        />
-                      </div>
-                      {emailError && (
-                        <p className="flex items-center gap-1 text-xs text-destructive">
-                          <AlertCircle className="h-3 w-3" /> Enter a valid email address
-                        </p>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleEmail} className="mt-8 space-y-5">
+              {mode === "signup" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="name" className="text-[13px] font-semibold text-slate-800">Full Name</Label>
+                  <div className="relative">
+                    <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      onBlur={() => setTouched((t) => ({ ...t, name: true }))}
+                      required
+                      placeholder="Jane Doe"
+                      className={cn(
+                        "pl-10 h-12 rounded-xl border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:border-indigo-500",
+                        nameError && "border-red-400 focus-visible:ring-red-400/30",
                       )}
-                    </div>
-
-                    {mode !== "forgot" && (
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="password">Password</Label>
-                          {mode === "signin" && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setMode("forgot");
-                                setResetSent(false);
-                              }}
-                              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              Forgot password?
-                            </button>
-                          )}
-                        </div>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="password"
-                            type={showPassword ? "text" : "password"}
-                            autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-                            required
-                            minLength={mode === "signup" ? 8 : undefined}
-                            placeholder={mode === "signup" ? "At least 8 characters" : "Enter your password"}
-                            aria-invalid={pwError || undefined}
-                            className={cn("pl-9 pr-10 h-11", pwError && "border-destructive focus-visible:ring-destructive")}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword((s) => !s)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                            aria-label={showPassword ? "Hide password" : "Show password"}
-                            tabIndex={-1}
-                          >
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </button>
-                        </div>
-
-                        {mode === "signup" && password.length > 0 && (
-                          <div className="pt-1">
-                            <div className="flex gap-1">
-                              {[0, 1, 2, 3].map((i) => (
-                                <div
-                                  key={i}
-                                  className={cn(
-                                    "h-1 flex-1 rounded-full transition-colors",
-                                    i < strength.score ? strength.tone : "bg-muted",
-                                  )}
-                                />
-                              ))}
-                            </div>
-                            <p className="mt-1.5 text-xs text-muted-foreground">
-                              Strength: <span className="text-foreground">{strength.label}</span>
-                            </p>
-                          </div>
-                        )}
-                        {pwError && (
-                          <p className="flex items-center gap-1 text-xs text-destructive">
-                            <AlertCircle className="h-3 w-3" /> Must be at least 8 characters
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    {mode === "signin" && (
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="remember"
-                          checked={remember}
-                          onCheckedChange={(v) => setRemember(v === true)}
-                        />
-                        <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
-                          Remember me on this device
-                        </Label>
-                      </div>
-                    )}
-
-                    <Button
-                      type="submit"
-                      className="w-full h-11 bg-gradient-to-r from-primary to-fuchsia-500 hover:opacity-95 shadow-lg shadow-primary/20"
-                      disabled={!canSubmit}
-                    >
-                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {mode === "signin" && (loading ? "Signing in…" : "Sign in")}
-                      {mode === "signup" && (loading ? "Creating account…" : "Create account")}
-                      {mode === "forgot" && (loading ? "Sending link…" : "Send reset link")}
-                    </Button>
-                  </form>
-                </>
+                    />
+                  </div>
+                  {nameError && (
+                    <p className="flex items-center gap-1 text-xs text-red-600">
+                      <AlertCircle className="h-3 w-3" /> Enter your full name
+                    </p>
+                  )}
+                </div>
               )}
+
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-[13px] font-semibold text-slate-800">Work Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                    required
+                    placeholder="you@company.com"
+                    aria-invalid={emailError || undefined}
+                    className={cn(
+                      "pl-10 h-12 rounded-xl border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:border-indigo-500",
+                      emailError && "border-red-400 focus-visible:ring-red-400/30",
+                    )}
+                  />
+                </div>
+                {emailError && (
+                  <p className="flex items-center gap-1 text-xs text-red-600">
+                    <AlertCircle className="h-3 w-3" /> Enter a valid email address
+                  </p>
+                )}
+              </div>
 
               {mode !== "forgot" && (
-                <p className="mt-6 text-center text-sm text-muted-foreground">
-                  {mode === "signin" ? "New to Signal?" : "Have an account?"}{" "}
+                <div className="space-y-1.5">
+                  <Label htmlFor="password" className="text-[13px] font-semibold text-slate-800">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                      required
+                      minLength={mode === "signup" ? 8 : undefined}
+                      placeholder={mode === "signup" ? "At least 8 characters" : "Enter your password"}
+                      aria-invalid={pwError || undefined}
+                      className={cn(
+                        "pl-10 pr-11 h-12 rounded-xl border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:border-indigo-500",
+                        pwError && "border-red-400 focus-visible:ring-red-400/30",
+                      )}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((s) => !s)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {mode === "signup" && password.length > 0 && (
+                    <div className="pt-1">
+                      <div className="flex gap-1">
+                        {[0, 1, 2, 3].map((i) => (
+                          <div
+                            key={i}
+                            className={cn(
+                              "h-1 flex-1 rounded-full transition-colors",
+                              i < strength.score ? strength.tone : "bg-slate-200",
+                            )}
+                          />
+                        ))}
+                      </div>
+                      <p className="mt-1.5 text-xs text-slate-500">
+                        Strength: <span className="text-slate-900 font-medium">{strength.label}</span>
+                      </p>
+                    </div>
+                  )}
+                  {pwError && (
+                    <p className="flex items-center gap-1 text-xs text-red-600">
+                      <AlertCircle className="h-3 w-3" /> Must be at least 8 characters
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {mode === "signin" && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="remember"
+                      checked={remember}
+                      onCheckedChange={(v) => setRemember(v === true)}
+                      className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                    />
+                    <Label htmlFor="remember" className="text-sm font-normal text-slate-600 cursor-pointer">
+                      Remember me
+                    </Label>
+                  </div>
                   <button
                     type="button"
-                    className="font-medium text-foreground underline-offset-4 hover:underline"
-                    onClick={() => {
-                      setMode(mode === "signin" ? "signup" : "signin");
-                      setTouched({});
-                    }}
+                    onClick={() => { setMode("forgot"); setResetSent(false); }}
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
                   >
-                    {mode === "signin" ? "Create an account" : "Sign in"}
+                    Forgot Password?
                   </button>
-                </p>
+                </div>
               )}
+
+              <Button
+                type="submit"
+                disabled={!canSubmit}
+                className={cn(
+                  "group relative w-full h-12 rounded-xl overflow-hidden",
+                  "bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 hover:from-indigo-500 hover:via-violet-500 hover:to-purple-500",
+                  "text-white font-semibold shadow-[0_10px_30px_-10px_rgba(99,102,241,0.6)] transition-all",
+                  "hover:shadow-[0_16px_40px_-12px_rgba(139,92,246,0.7)] hover:-translate-y-0.5",
+                )}
+              >
+                <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent group-hover:translate-x-full transition-transform duration-700" />
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                <span className="relative inline-flex items-center gap-2">
+                  {mode === "signin" && (loading ? "Signing in…" : "Login")}
+                  {mode === "signup" && (loading ? "Creating account…" : "Create account")}
+                  {mode === "forgot" && (loading ? "Sending link…" : "Send reset link")}
+                  {!loading && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
+                </span>
+              </Button>
+
+              {mode !== "forgot" && (
+                <>
+                  <div className="relative flex items-center gap-3 text-[11px] uppercase tracking-wider text-slate-400">
+                    <div className="h-px flex-1 bg-slate-200" />
+                    <span>or continue with</span>
+                    <div className="h-px flex-1 bg-slate-200" />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGoogle}
+                    disabled={loading}
+                    className="w-full h-12 rounded-xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden>
+                      <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.6 3.4 14.5 2.4 12 2.4 6.7 2.4 2.4 6.7 2.4 12S6.7 21.6 12 21.6c6.9 0 9.5-4.8 9.5-7.3 0-.5 0-.9-.1-1.3H12z"/>
+                    </svg>
+                    Continue with Google
+                  </Button>
+                </>
+              )}
+            </form>
+          )}
+
+          {/* Bottom links */}
+          {mode !== "forgot" && (
+            <p className="mt-8 text-center text-xs text-slate-500">
+              By continuing you agree to our{" "}
+              <a href="#" className="font-medium text-indigo-600 hover:underline">Terms of Service</a>{" "}
+              and{" "}
+              <a href="#" className="font-medium text-indigo-600 hover:underline">Privacy Policy</a>.
+            </p>
+          )}
+
+          {mode !== "forgot" && (
+            <p className="mt-4 text-center text-sm text-slate-600">
+              {mode === "signin" ? "Don't have an account?" : "Have an account?"}{" "}
+              <button
+                type="button"
+                className="font-semibold text-indigo-600 hover:text-indigo-700"
+                onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setTouched({}); }}
+              >
+                {mode === "signin" ? "Sign Up" : "Sign In"}
+              </button>
+            </p>
+          )}
+        </div>
+      </main>
+
+      {/* ============ RIGHT — Hero panel ============ */}
+      <aside className="relative hidden lg:block p-6 xl:p-10">
+        <div className="relative h-full w-full overflow-hidden rounded-[32px] bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 shadow-[0_30px_80px_-20px_rgba(79,70,229,0.55)]">
+          {/* Animated blobs */}
+          <div aria-hidden className="pointer-events-none absolute inset-0 motion-reduce:hidden">
+            <div className="absolute -top-24 -left-16 h-80 w-80 rounded-full bg-cyan-300/25 blur-3xl animate-blob-slow" />
+            <div className="absolute top-1/3 -right-20 h-96 w-96 rounded-full bg-fuchsia-400/25 blur-3xl animate-blob-slower" />
+            <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-sky-300/20 blur-3xl animate-blob-slow" />
+          </div>
+          {/* Grid lines */}
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-[0.12]"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
+              backgroundSize: "56px 56px",
+            }}
+          />
+
+          {/* Content */}
+          <div className="relative flex h-full flex-col justify-between p-8 xl:p-12">
+            {/* Top row: status pill */}
+            <div className="flex items-center justify-between">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs text-white/90 backdrop-blur-md">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75 animate-ping" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                </span>
+                Live · All systems operational
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs text-white/90 backdrop-blur-md">
+                <ShieldCheck className="h-3.5 w-3.5" /> SOC 2 · GDPR
+              </div>
             </div>
 
-            <p className="mt-6 text-center text-xs text-muted-foreground">
-              By continuing, you agree to Signal's Terms and Privacy Policy.
-            </p>
+            {/* Dashboard mock */}
+            <div className="relative my-8 flex-1">
+              {/* Main dashboard card */}
+              <div className="relative mx-auto max-w-[520px] rounded-2xl border border-white/25 bg-white/10 p-5 shadow-2xl backdrop-blur-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-white/70">Customer Success Dashboard</p>
+                    <p className="mt-1 text-sm font-semibold text-white">This week overview</p>
+                  </div>
+                  <div className="inline-flex items-center gap-1 rounded-lg bg-emerald-400/20 px-2 py-1 text-[11px] font-semibold text-emerald-100">
+                    <TrendingUp className="h-3 w-3" /> +18%
+                  </div>
+                </div>
+
+                {/* KPIs */}
+                <div className="mt-4 grid grid-cols-3 gap-3">
+                  <KPI icon={Star} label="Quality" value="94.2" suffix="%" tone="from-amber-300 to-orange-300" />
+                  <KPI icon={MessageSquare} label="Feedback" value="248" tone="from-cyan-300 to-sky-300" />
+                  <KPI icon={Users} label="Coaching" value="36" tone="from-emerald-300 to-teal-300" />
+                </div>
+
+                {/* Animated chart */}
+                <div className="mt-4 rounded-xl border border-white/15 bg-white/5 p-3">
+                  <div className="flex items-center justify-between text-[11px] text-white/70">
+                    <span className="inline-flex items-center gap-1.5"><BarChart3 className="h-3 w-3" /> Feedback trend</span>
+                    <span>7d</span>
+                  </div>
+                  <svg viewBox="0 0 300 80" className="mt-2 h-16 w-full">
+                    <defs>
+                      <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="rgb(165 243 252)" stopOpacity="0.6" />
+                        <stop offset="100%" stopColor="rgb(165 243 252)" stopOpacity="0" />
+                      </linearGradient>
+                      <linearGradient id="chartStroke" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#a5f3fc" />
+                        <stop offset="100%" stopColor="#f0abfc" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M0,60 L30,48 L60,52 L90,36 L120,42 L150,28 L180,32 L210,20 L240,24 L270,14 L300,10 L300,80 L0,80 Z"
+                      fill="url(#chartFill)"
+                    />
+                    <path
+                      d="M0,60 L30,48 L60,52 L90,36 L120,42 L150,28 L180,32 L210,20 L240,24 L270,14 L300,10"
+                      fill="none"
+                      stroke="url(#chartStroke)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="animate-dash motion-reduce:animate-none"
+                      style={{ strokeDasharray: 800, strokeDashoffset: 0 }}
+                    />
+                  </svg>
+                </div>
+
+                {/* Progress rows */}
+                <div className="mt-4 space-y-3">
+                  <ProgressRow label="CSAT" value={92} tone="bg-emerald-400" />
+                  <ProgressRow label="First Response" value={78} tone="bg-cyan-300" />
+                  <ProgressRow label="Resolution Rate" value={85} tone="bg-fuchsia-300" />
+                </div>
+              </div>
+
+              {/* Floating cards */}
+              <FloatingCard
+                className="absolute -top-4 -left-2 xl:-left-6 hidden sm:block animate-float-slow"
+                icon={Sparkles}
+                title="AI Insight"
+                subtitle="Escalation risk down"
+                accent="from-fuchsia-400 to-pink-400"
+              />
+              <FloatingCard
+                className="absolute -bottom-2 -right-2 xl:-right-6 animate-float-slower"
+                icon={Bell}
+                title="Approval queued"
+                subtitle="3 pending reviews"
+                accent="from-cyan-300 to-sky-400"
+              />
+              <FloatingCard
+                className="absolute top-1/2 -right-4 xl:right-2 hidden xl:block animate-float-slow"
+                icon={Activity}
+                title="Live activity"
+                subtitle="12 sessions today"
+                accent="from-emerald-300 to-teal-400"
+              />
+            </div>
+
+            {/* Bottom copy */}
+            <div className="max-w-md text-white">
+              <h2 className="text-3xl xl:text-4xl font-semibold tracking-tight leading-[1.15]">
+                Seamless quality experience
+              </h2>
+              <p className="mt-3 text-sm text-white/80 leading-relaxed">
+                Feedback, coaching, and analytics for Customer Success — unified in a single, intelligent workspace.
+              </p>
+              <div className="mt-5 flex items-center gap-1.5">
+                <span className="h-1.5 w-8 rounded-full bg-white" />
+                <span className="h-1.5 w-2 rounded-full bg-white/50" />
+                <span className="h-1.5 w-2 rounded-full bg-white/50" />
+              </div>
+            </div>
           </div>
-        </main>
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+function KPI({
+  icon: Icon,
+  label,
+  value,
+  suffix,
+  tone,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  suffix?: string;
+  tone: string;
+}) {
+  return (
+    <div className="rounded-xl border border-white/15 bg-white/5 p-3 backdrop-blur">
+      <div className={cn("inline-flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br text-slate-900", tone)}>
+        <Icon className="h-3.5 w-3.5" />
+      </div>
+      <p className="mt-2 text-[10px] uppercase tracking-wider text-white/70">{label}</p>
+      <p className="mt-0.5 text-lg font-semibold text-white tabular-nums">
+        {value}
+        {suffix && <span className="text-xs text-white/70">{suffix}</span>}
+      </p>
+    </div>
+  );
+}
+
+function ProgressRow({ label, value, tone }: { label: string; value: number; tone: string }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between text-[11px] text-white/80">
+        <span>{label}</span>
+        <span className="tabular-nums">{value}%</span>
+      </div>
+      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+        <div
+          className={cn("h-full rounded-full animate-progress-in motion-reduce:animate-none", tone)}
+          style={{ width: `${value}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function FloatingCard({
+  className,
+  icon: Icon,
+  title,
+  subtitle,
+  accent,
+}: {
+  className?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  subtitle: string;
+  accent: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2.5 rounded-2xl border border-white/25 bg-white/15 px-3 py-2.5 backdrop-blur-xl shadow-xl",
+        className,
+      )}
+    >
+      <div className={cn("grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br text-slate-900", accent)}>
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] font-semibold text-white leading-tight">{title}</p>
+        <p className="text-[10px] text-white/70 leading-tight">{subtitle}</p>
       </div>
     </div>
   );

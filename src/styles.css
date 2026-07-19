@@ -170,6 +170,39 @@
   border: 1px solid var(--border);
 }
 
+/* Auth hero panel animations */
+@keyframes blob-slow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, -20px) scale(1.08); }
+}
+@keyframes blob-slower {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-40px, 20px) scale(1.12); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes float-slower {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+@keyframes dash {
+  from { stroke-dashoffset: 800; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes progress-in {
+  from { width: 0; }
+}
+@utility animate-blob-slow { animation: blob-slow 12s ease-in-out infinite; }
+@utility animate-blob-slower { animation: blob-slower 16s ease-in-out infinite; }
+@utility animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
+@utility animate-float-slower { animation: float-slower 8s ease-in-out infinite; }
+@utility animate-dash { animation: dash 2.2s ease-out both; }
+@utility animate-progress-in { animation: progress-in 1.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+
+
 
 /* Hide Lovable badge — target the wrapper so layout stays stable regardless of inner markup */
 #lovable-badge,
