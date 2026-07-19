@@ -51,7 +51,7 @@ function FeedbackDetail() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [ackNote, setAckNote] = useState("");
-  const [reviewNote, setReviewNote] = useState("");
+  
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
