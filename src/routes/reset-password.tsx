@@ -48,6 +48,8 @@ function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const [done, setDone] = useState(false);
   const strength = useMemo(() => strengthOf(password), [password]);
 
