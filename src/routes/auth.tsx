@@ -259,6 +259,7 @@ function AuthPage() {
       const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectUri });
       if (result.error) {
         setErrorMsg(result.error.message);
+        setErrorField(inferErrorField(result.error.message));
         toast.error(result.error.message);
         setLoading(false);
         return;
