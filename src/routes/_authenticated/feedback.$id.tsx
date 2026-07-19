@@ -535,7 +535,9 @@ function FeedbackDetail() {
                       </span>
                     )}
                   </div>
-                  {a.comment && <div className="mt-0.5 text-muted-foreground whitespace-pre-wrap">{a.comment}</div>}
+                  {a.comment && !/provider|message\s?id|smtp|queue\s?id|accepted|delivered to/i.test(String(a.comment)) && (
+                    <div className="mt-0.5 text-muted-foreground whitespace-pre-wrap">{a.comment}</div>
+                  )}
                   <div className="mt-0.5 text-[10px] text-muted-foreground/70">
                     {(safeTimeAgo(a.created_at) ?? "—")}
                   </div>
