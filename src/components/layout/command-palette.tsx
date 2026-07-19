@@ -22,7 +22,6 @@ import {
   Bell,
   Inbox,
   ShieldCheck,
-  Activity,
 } from "lucide-react";
 
 const NAV = [
