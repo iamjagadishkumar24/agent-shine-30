@@ -72,8 +72,8 @@ function passwordStrength(pw: string): { score: number; label: string; tone: str
 }
 
 function AuthPage() {
-  const { next } = Route.useSearch();
-  const [mode, setMode] = useState<Mode>("signin");
+  const { next, mode: initialMode } = Route.useSearch();
+  const [mode, setMode] = useState<Mode>(initialMode === "signup" ? "signup" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
