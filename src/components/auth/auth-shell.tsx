@@ -83,7 +83,7 @@ export function AuthShell({
         <ThemeToggle />
       </header>
 
-      <main className="relative z-10 flex flex-1 items-center justify-center px-5 py-8 sm:px-8">
+      <main className="relative z-10 flex flex-1 items-center justify-center px-5 py-6 sm:px-8 lg:min-h-0 lg:py-4">
         {sidePanel ? (
           <div className="grid w-full max-w-6xl items-center gap-10 lg:grid-cols-2">
             <div className="mx-auto w-full min-w-0 max-w-[460px] lg:mx-0 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
