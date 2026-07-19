@@ -73,17 +73,10 @@ export function AuthShell({
       />
       <h1
         className={cn(
-          "font-display font-bold leading-[1.05] tracking-tight text-center",
-          "text-[18px] sm:text-[20px] md:text-[22px] lg:text-[18px] xl:text-[20px]",
-          // Solid, WCAG-AA compliant color used as fallback and in high-contrast modes
-          "text-indigo-700 dark:text-indigo-200",
-          // Decorative gradient overlay — disabled when users prefer more contrast or
-          // when forced-colors is active so the accessible solid color is used instead.
-          "bg-gradient-to-r from-indigo-700 via-violet-700 to-purple-700",
-          "dark:from-indigo-200 dark:via-violet-200 dark:to-fuchsia-200",
-          "bg-clip-text text-transparent",
-          "contrast-more:bg-none contrast-more:text-transparent-none contrast-more:[-webkit-text-fill-color:currentColor]",
-          "forced-colors:bg-none forced-colors:text-[CanvasText] forced-colors:[-webkit-text-fill-color:CanvasText]",
+          "font-display font-extrabold leading-[1.05] tracking-tight text-center whitespace-nowrap",
+          "text-[16px] sm:text-[20px] md:text-[22px] lg:text-[20px] xl:text-[22px]",
+          // Solid theme token: black in light mode, white in dark mode, follows system automatically.
+          "text-foreground",
         )}
       >
         Zenwork Performance Manager
