@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
+
 import zenworkMark from "@/assets/zenwork-mark.png.asset.json";
 
 import {
@@ -210,37 +210,49 @@ function AuthedLayout() {
 
       <div className={cn("flex-1 transition-[margin] duration-200", collapsed ? "ml-16" : "ml-60")}>
         {/* Top header */}
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/60 bg-background/80 px-6 backdrop-blur-xl">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Zenwork Performance Manager</span>
-            {current && (
-              <>
-                <span className="text-muted-foreground/40">/</span>
-                <span className="font-medium text-foreground">{current.label}</span>
-              </>
-            )}
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border/60 bg-background/75 px-4 backdrop-blur-xl sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <img src={zenworkMark.url} alt="" aria-hidden="true" className="hidden h-8 w-8 shrink-0 object-contain sm:block" />
+            <div className="flex min-w-0 flex-col leading-tight">
+              <span className="brand-wordmark truncate text-[15px] sm:text-[17px] lg:text-lg">
+                Zenwork Performance Manager
+              </span>
+              <span className="hidden truncate text-[10.5px] font-medium uppercase tracking-[0.14em] text-muted-foreground md:block">
+                {current ? current.label : "Driving Customer Success"}
+              </span>
+            </div>
           </div>
 
-          <div className="ml-auto flex items-center gap-1.5">
+
+          <div className="ml-auto flex items-center gap-2">
             <button
               onClick={() => setCmdOpen(true)}
-              className="hidden md:flex items-center gap-2 rounded-md border border-border bg-secondary/40 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-secondary/70 transition-colors"
+              className="hidden md:flex items-center gap-2 rounded-lg border border-border/70 bg-secondary/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/70 hover:border-border transition-all lg:min-w-[220px]"
             >
               <Search className="h-3.5 w-3.5" />
-              <span>Search</span>
-              <kbd className="rounded border border-border px-1 text-[10px] font-mono">⌘K</kbd>
+              <span className="flex-1 text-left">Search…</span>
+              <kbd className="rounded border border-border/70 bg-background/60 px-1.5 py-0.5 text-[10px] font-mono">⌘K</kbd>
+            </button>
+
+            <button
+              onClick={() => setCmdOpen(true)}
+              aria-label="Search"
+              className="md:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-secondary/40 text-muted-foreground hover:bg-secondary/70"
+            >
+              <Search className="h-4 w-4" />
             </button>
 
             {isStaff && (
               <Button
                 size="sm"
-                className="h-8 gap-1.5"
+                className="h-9 gap-1.5 rounded-lg bg-[image:var(--gradient-brand)] text-primary-foreground shadow-sm hover:opacity-95 hover:shadow-md transition-all border-0"
                 onClick={() => navigate({ to: "/feedback/new" })}
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">New feedback</span>
               </Button>
             )}
+
 
 
 
