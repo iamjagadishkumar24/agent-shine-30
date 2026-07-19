@@ -128,7 +128,8 @@ function FeedbackPage() {
 
     return all.filter((f) => {
       if (search.status === "pending") {
-        if (!["draft", "review"].includes(f.status)) return false;
+        if (!["draft", "ready_to_send"].includes(f.status)) return false;
+
       } else if (search.status === "high_priority") {
         if (!["critical", "high"].includes(f.severity)) return false;
       } else if (search.status && f.status !== search.status) return false;
