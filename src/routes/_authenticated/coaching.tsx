@@ -97,6 +97,24 @@ function CoachingCalendar() {
     });
   }, [rows, status, sessionType, priority, agentId, search]);
 
+  type CoachSort = "topic" | "agent" | "scheduled_at" | "session_type" | "priority" | "status";
+  const { field: sortField, dir: sortDir, onSort } = useTableSort<CoachSort>("scheduled_at", "desc");
+  const PRIORITY_ORDER: Record<string, number> = { low: 0, medium: 1, high: 2, urgent: 3 };
+  const sorted = useMemo(() => sortRows(filtered, (s: any) => {
+    switch (sortField) {
+      case "topic": return s.topic ?? "";
+      case "agent": return s.agent?.full_name ?? "";
+      case "scheduled_at": return s.scheduled_at ? new Date(s.scheduled_at) : null;
+      case "session_type": return s.session_type ?? "coaching";
+      case "priority": return PRIORITY_ORDER[s.priority ?? "medium"] ?? 1;
+      case "status": return s.status ?? "scheduled";
+      default: return null;
+    }
+  }, sortDir), [filtered, sortField, sortDir]);
+
+  const { page, pageSize, setPage, setPageSize } = usePagination(sorted.length, 25);
+  const paged = paginate(sorted, page, pageSize);
+
   const events = useMemo(() => filtered
     .filter((s) => s.scheduled_at)
     .map((s) => {
