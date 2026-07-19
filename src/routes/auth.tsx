@@ -230,17 +230,17 @@ function AuthPage() {
               <button
                 type="button"
                 onClick={() => { setMode("signin"); setResetSent(false); }}
-                className="mb-4 inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-100 transition-colors"
+                className="mb-4 inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors"
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> Back to sign in
               </button>
             )}
-            <h2 className="text-[26px] font-semibold tracking-tight text-slate-50 sm:text-[28px]">
+            <h2 className="text-[26px] font-semibold tracking-tight text-slate-900 sm:text-[28px]">
               {mode === "signin" && "Welcome Back"}
               {mode === "signup" && "Create your account"}
               {mode === "forgot" && "Reset your password"}
             </h2>
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-slate-500">
               {mode === "signin" && "Sign in to continue to Zenwork Performance Manager"}
               {mode === "signup" && "Join Zenwork Performance Manager and start managing customer success, coaching, feedback, and performance from a single platform."}
               {mode === "forgot" && "We'll email you a secure link to set a new password"}
