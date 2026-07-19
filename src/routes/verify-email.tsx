@@ -142,6 +142,32 @@ function VerifyEmailPage() {
               </Link>
             </Button>
           </div>
+
+          {feedback && (
+            <div
+              role="status"
+              aria-live="polite"
+              className={
+                feedback.kind === "success"
+                  ? "mt-4 flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-300"
+                  : "mt-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+              }
+            >
+              {feedback.kind === "success" ? (
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+              ) : (
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              )}
+              <div className="flex-1">
+                <p>{feedback.message}</p>
+                {feedback.kind === "success" && (
+                  <p className="mt-1 text-xs opacity-80">
+                    Sent at {feedback.at.toLocaleTimeString()}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </>
       )}
     </AuthShell>
