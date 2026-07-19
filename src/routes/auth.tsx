@@ -180,11 +180,13 @@ function AuthPage() {
   };
 
   const handleGoogle = async () => {
+    setErrorMsg(null);
     setLoading(true);
     try {
       const redirectUri = `${window.location.origin}/auth${next ? `?next=${encodeURIComponent(next)}` : ""}`;
       const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectUri });
       if (result.error) {
+        setErrorMsg(result.error.message);
         toast.error(result.error.message);
         setLoading(false);
         return;
@@ -192,7 +194,9 @@ function AuthPage() {
       if (result.redirected) return;
       window.location.href = destination;
     } catch (err: any) {
-      toast.error(err?.message ?? "Google sign-in failed");
+      const msg = err?.message ?? "Google sign-in failed";
+      setErrorMsg(msg);
+      toast.error(msg);
       setLoading(false);
     }
   };
@@ -202,8 +206,18 @@ function AuthPage() {
   const nameError = touched.name && mode === "signup" && name.length > 0 && !nameValid;
   const confirmError = touched.confirm && mode === "signup" && confirmPassword.length > 0 && !confirmValid;
 
+  const loadingLabel =
+    mode === "signup" ? "Creating your account…" : mode === "forgot" ? "Sending reset link…" : "Signing you in…";
+
   return (
-    <AuthShell sidePanel={mode === "signin" ? <SignInMarketingPanel /> : undefined}>
+    <AuthShell
+      sidePanel={mode === "signin" ? <SignInMarketingPanel /> : undefined}
+      loading={loading}
+      loadingLabel={loadingLabel}
+      error={errorMsg}
+      onDismissError={() => setErrorMsg(null)}
+    >
+
       <>
         <div className="text-center">
 
