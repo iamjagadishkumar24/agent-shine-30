@@ -181,25 +181,10 @@ function AuthPage() {
   const nameError = touched.name && mode === "signup" && name.length > 0 && !nameValid;
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-background text-foreground">
-      {/* Subtle mesh background */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full bg-primary/15 blur-[130px]" />
-        <div className="absolute top-1/2 -right-32 h-[520px] w-[520px] rounded-full bg-fuchsia-500/10 blur-[130px]" />
-        <div className="absolute bottom-[-160px] left-1/3 h-[420px] w-[420px] rounded-full bg-cyan-500/10 blur-[130px]" />
-      </div>
+    <AuthShell>
+      <>
+        <div className="text-center">
 
-      {/* Top bar */}
-      <header className="relative z-10 flex items-center justify-between px-5 py-4 sm:px-8">
-        <BrandLockup size="sm" tagline={false} />
-        <ThemeToggle />
-      </header>
-
-      {/* Main centered card */}
-      <main className="relative z-10 flex flex-1 items-center justify-center px-5 py-8 sm:px-8">
-        <div className="w-full max-w-[440px]">
-          <div className="rounded-2xl border border-border/70 bg-card/70 p-6 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-8">
-            <div className="text-center">
               {mode === "forgot" && (
                 <button
                   type="button"
