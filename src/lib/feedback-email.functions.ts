@@ -24,17 +24,13 @@ function getAppBaseUrl(): string {
   return "https://app.example.com";
 }
 
-async function assertStaff(supabase: any, userId: string) {
-  const { data, error } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId);
-  if (error) fail("Unable to verify permissions", 500, error);
-  const roles = new Set((data ?? []).map((r: any) => r.role));
-  if (!STAFF_ROLES.some((r) => roles.has(r))) {
-    throw new Response("Staff role required", { status: 403 });
-  }
+// Kept for reference — the review workflow has been retired, so we no longer
+// gate feedback sends behind qa_* roles. RLS still enforces who can read/write
+// the underlying feedback row.
+async function assertStaff(_supabase: unknown, _userId: string) {
+  return;
 }
+
 
 // Enqueue a feedback email. The background drainer sends it and updates
 // feedback.status = "sent" once the provider accepts it.
