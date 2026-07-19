@@ -101,7 +101,7 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
     }
 
     const appBaseUrl = getAppBaseUrl();
-    const { subject, html, text } = renderFeedbackEmail({
+    const defaults = renderFeedbackEmail({
       feedbackId: fb.id,
       title: fb.title,
       agentName: fb.agent.full_name,
@@ -122,6 +122,45 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       confidentialityNotice: settings.confidentiality_notice,
       attachmentLinks,
     });
+
+    let subject = defaults.subject;
+    let html = defaults.html;
+    let text = defaults.text;
+
+    if (
+      settings.feedback_template_enabled &&
+      settings.feedback_template_subject &&
+      settings.feedback_template_html
+    ) {
+      const vars = buildVariableMap({
+        feedbackId: fb.id,
+        title: fb.title,
+        agentName: fb.agent.full_name,
+        managerName: fb.agent.manager_name ?? undefined,
+        category: fb.category,
+        feedbackType: fb.feedback_type,
+        severity: fb.severity,
+        score: fb.score as number | null,
+        summary: fb.summary,
+        strengths: fb.strengths,
+        improvements: fb.improvements,
+        recommendedActions: fb.recommended_actions,
+        dueDate: fb.due_date,
+        appBaseUrl,
+        senderName: settings.sender_name,
+      });
+      const rendered = renderCustomTemplate(
+        {
+          subject: settings.feedback_template_subject,
+          html: settings.feedback_template_html,
+          text: settings.feedback_template_text,
+        },
+        vars,
+      );
+      subject = rendered.subject || subject;
+      html = rendered.html || html;
+      text = rendered.text || text;
+    }
 
     // Optimistic status transition: approved → sent. If another sender won the
     // race, the update matches 0 rows and we bail out instead of double-queueing.
