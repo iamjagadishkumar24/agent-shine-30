@@ -87,12 +87,12 @@ export function AuthShell({
         {sidePanel ? (
           <div className="grid w-full max-w-6xl items-center gap-10 lg:grid-cols-2">
             <div className="mx-auto w-full min-w-0 max-w-[460px] lg:mx-0 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
-              <div className="auth-card rounded-[20px] p-7 pt-8 sm:p-10 sm:pt-11">
+              <div className="auth-card rounded-[20px] p-7 pt-8 sm:p-9 sm:pt-10 lg:p-8 lg:pt-8">
                 {brandBlock}
                 {children}
               </div>
               {showLearnMore && (
-                <div className="mt-5 flex justify-center lg:justify-start">
+                <div className="mt-4 flex justify-center lg:justify-start">
                   <LearnMoreDialog />
                 </div>
               )}
@@ -101,7 +101,8 @@ export function AuthShell({
           </div>
         ) : (
           <div className="w-full max-w-[460px] motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
-            <div className="auth-card rounded-[20px] p-7 pt-8 sm:p-10 sm:pt-11">
+            <div className="auth-card rounded-[20px] p-7 pt-8 sm:p-9 sm:pt-10 lg:p-8 lg:pt-8">
+
               {brandBlock}
               {children}
             </div>
