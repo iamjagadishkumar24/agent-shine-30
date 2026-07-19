@@ -59,18 +59,18 @@ def test_ssot_matches_db():
 
 
 def test_insert_every_status_and_transition():
-    agent = psql("SELECT id FROM agents LIMIT 1")
-    assert agent, "No agent seeded"
+    # Use a distinct agent per row so the overlap trigger (per-agent) is
+    # never a concern. The sandbox role has no UPDATE/DELETE privilege so
+    # cleanup is done via a status that's excluded from overlap checks.
+    agent_rows = psql("SELECT id FROM agents ORDER BY full_name LIMIT 9").splitlines()
+    assert len(agent_rows) >= len(CANONICAL), "Need at least 9 seeded agents"
     created_ids: list[str] = []
 
-    # Insert one session for each canonical status; spread scheduled_at to
-    # avoid the overlap trigger.
-    # Randomize base far in future to avoid overlap with leftover rows from
-    # prior sandbox runs (this role cannot DELETE, so cleanup is best-effort).
     import random
     base = datetime.now(timezone.utc) + timedelta(days=400 + random.randint(0, 10000))
     for i, s in enumerate(CANONICAL):
         sid = str(uuid.uuid4())
+        agent = agent_rows[i].strip()
         when = (base + timedelta(hours=i * 3)).isoformat()
         psql(
             f"INSERT INTO coaching_sessions (id, agent_id, topic, scheduled_at, "
@@ -79,6 +79,7 @@ def test_insert_every_status_and_transition():
         )
         created_ids.append(sid)
     print(f"  ✓ Inserted {len(CANONICAL)} sessions (one per enum value)")
+
 
     # KPI aggregation: group by status and confirm every canonical value we
     # inserted is represented. This is what the dashboard cards read.
