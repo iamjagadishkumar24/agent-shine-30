@@ -196,10 +196,21 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    letter-spacing: var(--tracking-tight);
     -webkit-font-smoothing: antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
     transition: background-color 200ms ease, color 200ms ease;
   }
+  /* Balanced and pretty text wrapping where supported */
+  h1, h2, h3, h4 { text-wrap: balance; }
+  p, li, dd { text-wrap: pretty; }
+  /* Numeric UI — tabular by default in tables/lists */
+  table, tbody, thead, tfoot, [data-numeric] { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1, "cv11" 1; }
+
   ::selection { background: color-mix(in oklab, var(--primary) 40%, transparent); }
   :focus-visible {
     outline: 2px solid var(--color-ring);
