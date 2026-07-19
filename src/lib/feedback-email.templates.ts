@@ -213,9 +213,13 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
   const sevTone = severityTone(d.severity);
   const sTone = scoreTone(d.score ?? null);
 
-  const logoBlock = d.logoUrl
-    ? `<img src="${escape(d.logoUrl)}" alt="${escape(d.senderName ?? BRAND.name)}" height="40" style="display:block;height:40px;width:auto;border:0;outline:none;text-decoration:none;" />`
-    : `<div style="display:inline-block;padding:8px 14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:10px;font:700 14px/1 ${FONT};color:#ffffff;letter-spacing:.02em;">Zenwork</div>`;
+  const logoImg = d.logoUrl
+    ? `<img src="${escape(d.logoUrl)}" alt="${escape(d.senderName ?? BRAND.name)}" height="36" style="display:block;height:36px;width:auto;max-width:180px;border:0;outline:none;text-decoration:none;" />`
+    : `<div style="font:800 18px/1 ${FONT};color:${BRAND.accent};letter-spacing:.04em;">ZENWORK</div>`;
+  const logoHeader = `<a href="${escape(BRAND.website)}" target="_blank" style="display:inline-block;padding:10px 16px;background:#ffffff;border-radius:12px;text-decoration:none;box-shadow:0 4px 14px rgba(15,23,42,.12);">${logoImg}</a>`;
+  const logoSignature = d.logoUrl
+    ? `<a href="${escape(BRAND.website)}" target="_blank" style="display:inline-block;text-decoration:none;"><img src="${escape(d.logoUrl)}" alt="${escape(BRAND.name)}" height="40" style="display:block;height:40px;width:auto;max-width:200px;border:0;outline:none;text-decoration:none;" /></a>`
+    : `<div style="width:48px;height:48px;border-radius:12px;background:${BRAND.gradient};background-color:${BRAND.gradientFallback};text-align:center;line-height:48px;font:700 18px/48px ${FONT};color:#ffffff;">Z</div>`;
 
   const reminderBanner = isReminder
     ? `<tr><td style="padding:0 24px;">
