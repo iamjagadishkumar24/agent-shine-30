@@ -405,20 +405,24 @@ function Dashboard() {
     { key: "Acknowledged", value: statusCounts.acknowledged, color: "oklch(0.72 0.16 160)", filter: "acknowledged" },
   ];
 
-  // Email
+  // Email — providers without webhooks (Gmail SMTP) never stamp delivered_at,
+  // so treat a stamped sent_at with no error as "delivered" for widget purposes.
+  // opened_at / clicked_at are populated by tracking pixel + link redirect.
   const emailStats = {
-    delivered: feedback.filter((f) => f.delivered_at).length,
+    sent: feedback.filter((f) => f.sent_at).length,
+    delivered: feedback.filter((f) => (f.delivered_at || f.sent_at) && !f.email_error).length,
     opened: feedback.filter((f) => f.opened_at).length,
     clicked: feedback.filter((f) => f.clicked_at).length,
     failed: feedback.filter((f) => f.email_error).length,
   };
-  const totalEmails = emailStats.delivered || 1;
+  const totalEmails = Math.max(1, emailStats.sent + emailStats.failed);
   const emailSlices = [
     { name: "Delivered", value: emailStats.delivered, color: "oklch(0.72 0.16 160)" },
     { name: "Opened", value: emailStats.opened, color: "oklch(0.65 0.20 285)" },
     { name: "Clicked", value: emailStats.clicked, color: "oklch(0.70 0.14 235)" },
     { name: "Failed", value: emailStats.failed, color: "oklch(0.66 0.22 20)" },
   ];
+
 
   // Activity heatmap — 7 days × 24 hours based on created_at
   const heatmap = useMemo(() => {
