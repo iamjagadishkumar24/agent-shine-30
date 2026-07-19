@@ -31,6 +31,17 @@ const SEVERITY_COLORS: Record<string, string> = {
   unset: "oklch(0.55 0.02 260)",
 };
 
+// Vivid, high-contrast palette for categorical charts (blue, purple, cyan, green, orange, pink).
+const CATEGORY_PALETTE = [
+  "oklch(0.68 0.18 255)", // blue
+  "oklch(0.65 0.22 300)", // purple
+  "oklch(0.75 0.14 210)", // cyan
+  "oklch(0.72 0.18 155)", // green
+  "oklch(0.75 0.17 55)",  // orange
+  "oklch(0.70 0.20 350)", // pink
+];
+
+
 function EmptyState({ label }: { label: string }) {
   return (
     <div className="grid h-full w-full place-items-center text-xs text-muted-foreground">
@@ -117,10 +128,15 @@ function AnalyticsCharts({
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} horizontal={false} />
                   <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
                   <YAxis type="category" dataKey="label" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} width={110} />
-                  <Tooltip contentStyle={TOOLTIP_STYLE} />
-                  <Bar dataKey="value" fill="oklch(0.65 0.20 285)" radius={[0, 6, 6, 0]} isAnimationActive={false} />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "var(--muted)", opacity: 0.25 }} />
+                  <Bar dataKey="value" radius={[0, 6, 6, 0]} isAnimationActive={false}>
+                    {safeByType.map((_, i) => (
+                      <Cell key={i} fill={CATEGORY_PALETTE[i % CATEGORY_PALETTE.length]} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
+
             ) : (
               <EmptyState label="No categorized feedback yet." />
             )}

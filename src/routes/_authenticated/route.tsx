@@ -142,18 +142,6 @@ function AuthedLayout() {
           )}
         </div>
 
-        {!collapsed && (
-          <div className="px-3 pt-3">
-            <button
-              onClick={() => setCmdOpen(true)}
-              className="flex w-full items-center gap-2 rounded-md border border-sidebar-border bg-sidebar-accent/40 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-sidebar-accent/70 transition-colors"
-            >
-              <Search className="h-3.5 w-3.5" />
-              <span>Search…</span>
-              <kbd className="ml-auto rounded border border-sidebar-border px-1 text-[10px] font-mono">⌘K</kbd>
-            </button>
-          </div>
-        )}
 
         <nav className="flex-1 space-y-0.5 p-3 overflow-y-auto">
           {!collapsed && (
@@ -241,6 +229,18 @@ function AuthedLayout() {
               <span>Search</span>
               <kbd className="rounded border border-border px-1 text-[10px] font-mono">⌘K</kbd>
             </button>
+
+            {isStaff && (
+              <Button
+                size="sm"
+                className="h-8 gap-1.5"
+                onClick={() => navigate({ to: "/feedback/new" })}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">New feedback</span>
+              </Button>
+            )}
+
 
 
             <DropdownMenu>
