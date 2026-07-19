@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { BrandLockup } from "@/components/brand/brand-lockup";
+import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,11 +41,36 @@ export function AuthShell({
   children,
   showLearnMore = true,
   sidePanel,
+  showBrand = true,
 }: {
   children: ReactNode;
   showLearnMore?: boolean;
   sidePanel?: ReactNode;
+  showBrand?: boolean;
 }) {
+  const brandBlock = showBrand ? (
+    <div className="mb-6 flex flex-col items-center gap-2.5 sm:mb-7">
+      <img
+        src={zenworkLogo.url}
+        alt=""
+        aria-hidden="true"
+        className="h-9 w-9 sm:h-10 sm:w-10 object-contain rounded-md dark:bg-white/5 dark:ring-1 dark:ring-white/10 dark:p-0.5"
+      />
+      <h1
+        className={cn(
+          "font-display font-bold leading-tight tracking-tight text-center whitespace-nowrap",
+          "text-[22px] sm:text-[26px] md:text-[28px]",
+          "text-indigo-600 dark:text-indigo-300",
+          "bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600",
+          "dark:from-indigo-300 dark:via-violet-300 dark:to-fuchsia-300",
+          "bg-clip-text text-transparent",
+        )}
+      >
+        Zenwork Performance Manager
+      </h1>
+    </div>
+  ) : null;
+
   return (
     <div className="relative flex min-h-dvh flex-col bg-background text-foreground">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -54,8 +79,7 @@ export function AuthShell({
         <div className="absolute bottom-[-160px] left-1/3 h-[420px] w-[420px] rounded-full bg-cyan-500/10 blur-[130px]" />
       </div>
 
-      <header className="relative z-10 flex items-center justify-between px-5 py-4 sm:px-8">
-        <BrandLockup size="sm" tagline={false} />
+      <header className="relative z-10 flex items-center justify-end px-5 py-4 sm:px-8">
         <ThemeToggle />
       </header>
 
@@ -63,7 +87,8 @@ export function AuthShell({
         {sidePanel ? (
           <div className="grid w-full max-w-6xl items-center gap-10 lg:grid-cols-2">
             <div className="mx-auto w-full min-w-0 max-w-[460px] lg:mx-0 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
-              <div className="rounded-2xl border border-border/70 bg-card/70 p-7 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-9">
+              <div className="rounded-2xl border border-border/70 bg-card/70 p-7 pt-8 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-9 sm:pt-10">
+                {brandBlock}
                 {children}
               </div>
               {showLearnMore && (
@@ -76,7 +101,8 @@ export function AuthShell({
           </div>
         ) : (
           <div className="w-full max-w-[460px] motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
-            <div className="rounded-2xl border border-border/70 bg-card/70 p-7 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-9">
+            <div className="rounded-2xl border border-border/70 bg-card/70 p-7 pt-8 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-9 sm:pt-10">
+              {brandBlock}
               {children}
             </div>
             {showLearnMore && (
@@ -87,6 +113,7 @@ export function AuthShell({
           </div>
         )}
       </main>
+
 
       <footer className="relative z-10 border-t border-border/50 bg-background/50 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-4 text-xs text-muted-foreground sm:flex-row sm:px-8">
