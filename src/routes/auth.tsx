@@ -204,7 +204,7 @@ function AuthPage() {
             <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-primary to-fuchsia-500 text-primary-foreground shadow-lg shadow-primary/30">
               <Sparkles className="h-4.5 w-4.5" />
             </div>
-            <span className="text-lg font-semibold tracking-tight">Signal QMS</span>
+            <span className="text-lg font-semibold tracking-tight">Zenwork Performance Manager</span>
           </Link>
 
           <div className="space-y-8 max-w-lg">
@@ -249,7 +249,7 @@ function AuthPage() {
                 <div className="grid h-8 w-8 place-items-center rounded-md bg-gradient-to-br from-primary to-fuchsia-500 text-primary-foreground">
                   <Sparkles className="h-4 w-4" />
                 </div>
-                <span className="font-semibold tracking-tight">Signal QMS</span>
+                <span className="font-semibold tracking-tight">Zenwork Performance Manager</span>
               </Link>
 
               {mode === "forgot" ? (

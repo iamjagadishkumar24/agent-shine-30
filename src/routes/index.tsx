@@ -6,11 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Signal QMS — Retire the spreadsheet. Run QA like a product team." },
+      { title: "Zenwork Performance Manager — Driving Customer Success" },
       {
         name: "description",
         content:
-          "Signal QMS is the modern quality management platform for support, sales, and success teams. Create feedback, track coaching, and see performance trends in one place.",
+          "Zenwork Performance Manager is the modern quality management platform for support, sales, and success teams. Create feedback, track coaching, and see performance trends in one place.",
       },
     ],
   }),
@@ -50,7 +50,7 @@ function Landing() {
             <div className="grid h-6 w-6 place-items-center rounded-md bg-primary text-primary-foreground">
               <Sparkles className="h-3.5 w-3.5" />
             </div>
-            <span className="text-sm font-semibold tracking-tight">Signal QMS</span>
+            <span className="text-sm font-semibold tracking-tight">Zenwork Performance Manager</span>
           </div>
           <div className="flex items-center gap-2">
             {authed ? (
@@ -136,7 +136,7 @@ function Landing() {
 
       <footer className="border-t border-border/60 py-8">
         <div className="mx-auto max-w-6xl px-6 text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Signal QMS
+          © {new Date().getFullYear()} Zenwork Performance Manager · Driving Customer Success Through Quality, Performance & Continuous Improvement
         </div>
       </footer>
     </div>

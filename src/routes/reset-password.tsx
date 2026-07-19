@@ -85,7 +85,7 @@ function ResetPasswordPage() {
             <div className="grid h-8 w-8 place-items-center rounded-md bg-gradient-to-br from-primary to-fuchsia-500 text-primary-foreground">
               <Sparkles className="h-4 w-4" />
             </div>
-            <span className="font-semibold tracking-tight">Signal QMS</span>
+            <span className="font-semibold tracking-tight">Zenwork Performance Manager</span>
           </Link>
 
           <div className="rounded-2xl border border-border/60 bg-background/50 p-7 sm:p-8 shadow-2xl shadow-black/20 backdrop-blur-2xl">

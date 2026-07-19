@@ -17,7 +17,7 @@ function safeDateTime(v: string | null | undefined) {
 
 
 export const Route = createFileRoute("/_authenticated/health")({
-  head: () => ({ meta: [{ title: "Health · Signal QMS" }] }),
+  head: () => ({ meta: [{ title: "Health · Zenwork Performance Manager" }] }),
   component: HealthPage,
   errorComponent: ({ error, reset }) => (
     <div className="p-8">
