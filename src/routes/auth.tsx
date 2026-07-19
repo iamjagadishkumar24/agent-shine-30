@@ -1,26 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BrandLockup } from "@/components/brand/brand-lockup";
 import { lovable } from "@/integrations/lovable";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   Loader2,
@@ -33,18 +19,9 @@ import {
   ArrowRight,
   CheckCircle2,
   AlertCircle,
-  Sun,
-  Moon,
-  Monitor,
-  ShieldCheck,
-  Sparkles,
-  BarChart3,
-  Mails,
-  Zap,
-  Lock as LockIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTheme, type ThemeMode } from "@/lib/theme";
+
 
 type AuthSearch = { next?: string };
 export const Route = createFileRoute("/auth")({
