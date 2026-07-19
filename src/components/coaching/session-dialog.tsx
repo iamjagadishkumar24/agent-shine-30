@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { AddToCalendarMenu } from "@/components/coaching/add-to-calendar-menu";
 
 export type SessionRow = {
   id?: string;
