@@ -17,6 +17,9 @@ import {
   saveEmailSettings,
   verifyEmailConnection,
   sendTestEmail,
+  saveFeedbackTemplate,
+  previewFeedbackTemplate,
+  sendFeedbackTemplateTest,
 } from "@/lib/email-settings.functions";
 import {
   listEmailQueue,
@@ -28,9 +31,11 @@ import {
   resumeQueue,
   drainNow,
 } from "@/lib/email-queue.functions";
+import { FEEDBACK_TEMPLATE_VARIABLES } from "@/lib/feedback-email.variables";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import { AlertCircle, CheckCircle2, RefreshCw, PauseCircle, PlayCircle, Send, Zap, Ban, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, RefreshCw, PauseCircle, PlayCircle, Send, Zap, Ban, Loader2, Clock, Eye, Code2 } from "lucide-react";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
@@ -44,10 +49,12 @@ function SettingsPage() {
         <Tabs defaultValue="email">
           <TabsList>
             <TabsTrigger value="email">Email configuration</TabsTrigger>
+            <TabsTrigger value="template">Feedback template</TabsTrigger>
             <TabsTrigger value="queue">Queue</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
           <TabsContent value="email" className="mt-4"><EmailConfig /></TabsContent>
+          <TabsContent value="template" className="mt-4"><FeedbackTemplateEditor /></TabsContent>
           <TabsContent value="queue" className="mt-4"><QueueMonitor /></TabsContent>
           <TabsContent value="history" className="mt-4"><EmailHistory /></TabsContent>
         </Tabs>
@@ -405,5 +412,344 @@ function EmailHistory() {
         </tbody>
       </table>
     </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Feedback email template editor
+// ---------------------------------------------------------------------------
+const DEFAULT_HTML = `<div style="font:14px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;color:#18181b;max-width:640px;margin:0 auto;padding:24px;">
+  <h2 style="margin:0 0 8px;font-size:20px;">{{title}}</h2>
+  <p style="color:#71717a;margin:0 0 20px;">Prepared for {{agentName}} · Category: {{category}} · Severity: {{severity}}</p>
+
+  <h3 style="margin:16px 0 6px;font-size:14px;">Summary</h3>
+  <p>{{summary}}</p>
+
+  <h3 style="margin:16px 0 6px;font-size:14px;">Strengths</h3>
+  <p>{{strengths}}</p>
+
+  <h3 style="margin:16px 0 6px;font-size:14px;">Areas to improve</h3>
+  <p>{{improvements}}</p>
+
+  <h3 style="margin:16px 0 6px;font-size:14px;">Coaching actions</h3>
+  <p>{{recommendedActions}}</p>
+
+  <p style="margin-top:24px;">Please acknowledge by <strong>{{dueDate}}</strong>.</p>
+  <p><a href="{{acknowledgeUrl}}" style="display:inline-block;padding:10px 16px;background:#18181b;color:#fff;text-decoration:none;border-radius:6px;">Acknowledge feedback</a></p>
+
+  <p style="color:#a1a1aa;font-size:12px;margin-top:24px;">— {{senderName}}</p>
+</div>`;
+
+const DEFAULT_SUBJECT = "New QA feedback: {{title}}";
+const DEFAULT_TEXT = `{{title}}
+
+Agent: {{agentName}}
+Category: {{category}} · Severity: {{severity}}
+
+Summary:
+{{summary}}
+
+Please acknowledge: {{acknowledgeUrl}}`;
+
+function FeedbackTemplateEditor() {
+  const qc = useQueryClient();
+  const getFn = useServerFn(getEmailSettings);
+  const saveFn = useServerFn(saveFeedbackTemplate);
+  const previewFn = useServerFn(previewFeedbackTemplate);
+  const testFn = useServerFn(sendFeedbackTemplateTest);
+
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ["email-settings"],
+    queryFn: () => getFn(),
+  });
+
+  const [subject, setSubject] = useState<string>("");
+  const [html, setHtml] = useState<string>("");
+  const [text, setText] = useState<string>("");
+  const [enabled, setEnabled] = useState<boolean>(false);
+  const [initialized, setInitialized] = useState(false);
+  const [testTo, setTestTo] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [preview, setPreview] = useState<{ subject: string; html: string; text: string } | null>(null);
+  const [previewMode, setPreviewMode] = useState<"rendered" | "source">("rendered");
+  const htmlRef = useRef<HTMLTextAreaElement>(null);
+  const subjectRef = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLTextAreaElement>(null);
+  const [focusField, setFocusField] = useState<"subject" | "html" | "text">("html");
+
+  // Prime local state once from server settings.
+  if (settings && !initialized) {
+    setSubject((settings as any).feedback_template_subject ?? DEFAULT_SUBJECT);
+    setHtml((settings as any).feedback_template_html ?? DEFAULT_HTML);
+    setText((settings as any).feedback_template_text ?? DEFAULT_TEXT);
+    setEnabled(!!(settings as any).feedback_template_enabled);
+    setInitialized(true);
+  }
+
+  const doPreview = async () => {
+    try {
+      const r = await previewFn({ data: { subject, html, text } });
+      setPreview(r);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Preview failed");
+    }
+  };
+
+  const save = useMutation({
+    mutationFn: () =>
+      saveFn({
+        data: {
+          feedback_template_subject: subject,
+          feedback_template_html: html,
+          feedback_template_text: text || null,
+          feedback_template_enabled: enabled,
+        },
+      }),
+    onSuccess: (row) => {
+      qc.setQueryData(["email-settings"], row);
+      toast.success("Template saved");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Save failed"),
+  });
+
+  const test = useMutation({
+    mutationFn: () =>
+      testFn({
+        data: {
+          to: testTo.trim(),
+          subject,
+          html,
+          text: text || null,
+          scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+        },
+      }),
+    onSuccess: (r: any) => {
+      qc.invalidateQueries({ queryKey: ["email-queue"] });
+      qc.invalidateQueries({ queryKey: ["email-queue-summary"] });
+      if (r?.scheduled) {
+        toast.success(`Test email scheduled for ${new Date(r.nextAttemptAt).toLocaleString()}`);
+      } else if (r?.ok) {
+        toast.success(`Test sent (${r.latencyMs}ms)`);
+      } else {
+        toast.error(r?.error ?? "Test send failed");
+      }
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Test send failed"),
+  });
+
+  const insertVariable = (key: string) => {
+    const token = `{{${key}}}`;
+    if (focusField === "subject") {
+      const el = subjectRef.current;
+      if (!el) { setSubject((v) => v + token); return; }
+      const start = el.selectionStart ?? subject.length;
+      const end = el.selectionEnd ?? subject.length;
+      const next = subject.slice(0, start) + token + subject.slice(end);
+      setSubject(next);
+      requestAnimationFrame(() => { el.focus(); el.setSelectionRange(start + token.length, start + token.length); });
+      return;
+    }
+    if (focusField === "text") {
+      const el = textRef.current;
+      if (!el) { setText((v) => v + token); return; }
+      const start = el.selectionStart ?? text.length;
+      const end = el.selectionEnd ?? text.length;
+      setText(text.slice(0, start) + token + text.slice(end));
+      requestAnimationFrame(() => { el.focus(); el.setSelectionRange(start + token.length, start + token.length); });
+      return;
+    }
+    const el = htmlRef.current;
+    if (!el) { setHtml((v) => v + token); return; }
+    const start = el.selectionStart ?? html.length;
+    const end = el.selectionEnd ?? html.length;
+    setHtml(html.slice(0, start) + token + html.slice(end));
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(start + token.length, start + token.length); });
+  };
+
+  if (isLoading || !initialized) {
+    return <Card className="p-6"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></Card>;
+  }
+
+  const scheduleValid = !scheduledAt || !isNaN(new Date(scheduledAt).getTime());
+  const canTest = EMAIL_RE.test(testTo.trim()) && subject.trim().length > 0 && html.trim().length > 0 && scheduleValid;
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="space-y-4">
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-semibold">Custom template</div>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                When enabled, feedback emails render from this template instead of the built-in one. Use <code className="rounded bg-muted px-1 py-0.5 text-[11px]">{`{{variable}}`}</code> tokens.
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className={cn("text-xs", enabled ? "text-primary" : "text-muted-foreground")}>{enabled ? "Active" : "Using default"}</span>
+              <Switch checked={enabled} onCheckedChange={setEnabled} />
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6 space-y-4">
+          <div>
+            <Label>Subject line</Label>
+            <Input
+              ref={subjectRef}
+              className="mt-1.5 font-mono text-xs"
+              value={subject}
+              onFocus={() => setFocusField("subject")}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder={DEFAULT_SUBJECT}
+              maxLength={300}
+            />
+          </div>
+          <div>
+            <div className="flex items-center justify-between">
+              <Label>HTML body</Label>
+              <span className="text-[11px] text-muted-foreground">{html.length.toLocaleString()} chars</span>
+            </div>
+            <Textarea
+              ref={htmlRef}
+              className="mt-1.5 font-mono text-xs"
+              rows={18}
+              value={html}
+              onFocus={() => setFocusField("html")}
+              onChange={(e) => setHtml(e.target.value)}
+              spellCheck={false}
+            />
+          </div>
+          <div>
+            <Label>Plain-text fallback (optional)</Label>
+            <Textarea
+              ref={textRef}
+              className="mt-1.5 font-mono text-xs"
+              rows={6}
+              value={text}
+              onFocus={() => setFocusField("text")}
+              onChange={(e) => setText(e.target.value)}
+              spellCheck={false}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => save.mutate()} disabled={save.isPending}>
+              {save.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+              Save template
+            </Button>
+            <Button variant="outline" onClick={doPreview}>
+              <Eye className="mr-2 h-3.5 w-3.5" /> Refresh preview
+            </Button>
+            <Button variant="ghost" onClick={() => { setSubject(DEFAULT_SUBJECT); setHtml(DEFAULT_HTML); setText(DEFAULT_TEXT); }}>
+              Reset to defaults
+            </Button>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="text-sm font-semibold">Send a test</div>
+          <div className="mt-0.5 text-xs text-muted-foreground">Renders the current template with sample data. Leave the schedule blank to send immediately.</div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+            <div>
+              <Label className="text-xs">Recipient</Label>
+              <Input className="mt-1" placeholder="destination@example.com" value={testTo} onChange={(e) => setTestTo(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs flex items-center gap-1"><Clock className="h-3 w-3" /> Schedule (optional)</Label>
+              <Input className="mt-1" type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
+            </div>
+            <div className="flex items-end">
+              <Button onClick={() => test.mutate()} disabled={test.isPending || !canTest} className="w-full">
+                {test.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : (scheduledAt ? <Clock className="mr-2 h-3.5 w-3.5" /> : <Send className="mr-2 h-3.5 w-3.5" />)}
+                {scheduledAt ? "Schedule" : "Send now"}
+              </Button>
+            </div>
+          </div>
+          {scheduledAt && !scheduleValid && (
+            <div className="mt-2 text-xs text-destructive">Invalid schedule time.</div>
+          )}
+        </Card>
+
+        <Card className="overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border/60 bg-muted/40 px-4 py-2">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Preview</div>
+            <div className="flex gap-1">
+              <Button size="sm" variant={previewMode === "rendered" ? "secondary" : "ghost"} onClick={() => setPreviewMode("rendered")}>
+                <Eye className="h-3.5 w-3.5" />
+              </Button>
+              <Button size="sm" variant={previewMode === "source" ? "secondary" : "ghost"} onClick={() => setPreviewMode("source")}>
+                <Code2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+          <TemplatePreview subject={subject} html={html} text={text} preview={preview} mode={previewMode} onRefresh={doPreview} />
+        </Card>
+      </div>
+
+      <Card className="p-4 h-fit lg:sticky lg:top-4">
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Insert variable</div>
+        <p className="mt-1 text-[11px] text-muted-foreground">Click a variable to insert it into the last-focused field ({focusField}).</p>
+        <div className="mt-3 space-y-1.5 max-h-[70vh] overflow-y-auto pr-1">
+          {FEEDBACK_TEMPLATE_VARIABLES.map((v) => (
+            <button
+              key={v.key}
+              type="button"
+              onClick={() => insertVariable(v.key)}
+              className="w-full rounded-md border border-border/60 bg-card px-2.5 py-1.5 text-left hover:border-primary hover:bg-primary/5 transition"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <code className="text-[11px] font-medium text-primary">{`{{${v.key}}}`}</code>
+                <span className="text-[10px] text-muted-foreground">{v.label}</span>
+              </div>
+              <div className="mt-0.5 text-[10px] leading-tight text-muted-foreground line-clamp-2">{v.description}</div>
+            </button>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function TemplatePreview({
+  subject, html, text, preview, mode, onRefresh,
+}: {
+  subject: string; html: string; text: string;
+  preview: { subject: string; html: string; text: string } | null;
+  mode: "rendered" | "source";
+  onRefresh: () => void;
+}) {
+  // Auto-refresh preview when inputs change (debounced).
+  const timer = useRef<any>(null);
+  if (timer.current) clearTimeout(timer.current);
+  timer.current = setTimeout(() => { if (!preview || preview.subject !== subject || preview.html !== html || preview.text !== text) onRefresh(); }, 400);
+
+  if (!preview) {
+    return <div className="p-8 text-center text-xs text-muted-foreground">Rendering preview…</div>;
+  }
+
+  if (mode === "source") {
+    return (
+      <div className="p-4">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Subject</div>
+        <pre className="mt-1 rounded-md bg-muted/40 p-3 font-mono text-xs whitespace-pre-wrap break-all">{preview.subject}</pre>
+        <div className="mt-3 text-[11px] uppercase tracking-wider text-muted-foreground">HTML</div>
+        <pre className="mt-1 rounded-md bg-muted/40 p-3 font-mono text-[11px] whitespace-pre-wrap break-all max-h-96 overflow-auto">{preview.html}</pre>
+        <div className="mt-3 text-[11px] uppercase tracking-wider text-muted-foreground">Text</div>
+        <pre className="mt-1 rounded-md bg-muted/40 p-3 font-mono text-[11px] whitespace-pre-wrap max-h-64 overflow-auto">{preview.text || "—"}</pre>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="border-b border-border/60 px-4 py-2 text-xs">
+        <span className="font-semibold text-muted-foreground">Subject:</span> <span>{preview.subject}</span>
+      </div>
+      <iframe
+        title="Email preview"
+        sandbox=""
+        srcDoc={`<!doctype html><html><body style="margin:0;background:#fafafa;">${preview.html}</body></html>`}
+        className="w-full min-h-[560px] bg-white"
+      />
+    </div>
   );
 }

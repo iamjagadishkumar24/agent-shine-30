@@ -376,6 +376,10 @@ export type Database = {
           confidentiality_notice: string | null
           created_at: string
           enabled: boolean
+          feedback_template_enabled: boolean
+          feedback_template_html: string | null
+          feedback_template_subject: string | null
+          feedback_template_text: string | null
           id: string
           logo_url: string | null
           provider: string
@@ -391,6 +395,10 @@ export type Database = {
           confidentiality_notice?: string | null
           created_at?: string
           enabled?: boolean
+          feedback_template_enabled?: boolean
+          feedback_template_html?: string | null
+          feedback_template_subject?: string | null
+          feedback_template_text?: string | null
           id?: string
           logo_url?: string | null
           provider?: string
@@ -406,6 +414,10 @@ export type Database = {
           confidentiality_notice?: string | null
           created_at?: string
           enabled?: boolean
+          feedback_template_enabled?: boolean
+          feedback_template_html?: string | null
+          feedback_template_subject?: string | null
+          feedback_template_text?: string | null
           id?: string
           logo_url?: string | null
           provider?: string
