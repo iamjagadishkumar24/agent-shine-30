@@ -106,26 +106,42 @@ function NewFeedback() {
   }
   const canSubmit = parsed.success;
 
+  const sendEmailFn = useServerFn(sendFeedbackEmail);
+
   const create = useMutation({
-    mutationFn: async (status: "draft" | "sent") => {
+    mutationFn: async (mode: "draft" | "send") => {
       if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Please fix the highlighted fields");
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not signed in");
+      // Insert first; for "send" we insert as approved so the email pipeline
+      // can transition approved → queued → sent based on the real provider response.
       const payload = {
         ...parsed.data,
-        status,
-        sent_at: status === "sent" ? new Date().toISOString() : null,
+        status: mode === "send" ? "approved" : "draft",
+        sent_at: null,
         created_by: userData.user.id,
       };
-      const { data, error } = await supabase.from("feedback").insert(payload).select("id").single();
+      const { data: row, error } = await supabase.from("feedback").insert(payload).select("id").single();
       if (error) throw error;
-      return data;
+      if (mode === "draft") return { id: row.id, mode, sendResult: null as any };
+      // Kick off the real send. Response reflects provider acceptance.
+      const sendResult = await sendEmailFn({ data: { feedbackId: row.id } });
+      return { id: row.id, mode, sendResult };
     },
-    onSuccess: (row, status) => {
-      toast.success(status === "sent" ? "Feedback sent" : "Draft saved");
+    onSuccess: ({ id, mode, sendResult }) => {
       qc.invalidateQueries({ queryKey: ["feedback-list"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      navigate({ to: "/feedback/$id", params: { id: row.id } });
+      if (mode === "draft") {
+        toast.success("Draft saved");
+      } else if (sendResult?.ok) {
+        const dest = sendResult.devOverride
+          ? `Dev override active — delivered to ${sendResult.actualRecipient}`
+          : `Delivered to ${sendResult.actualRecipient ?? sendResult.recipient}`;
+        toast.success(`Email accepted by provider · ${dest}`);
+      } else {
+        toast.warning(sendResult?.error ? `Queued (provider not accepted): ${sendResult.error}` : "Queued for background retry");
+      }
+      navigate({ to: "/feedback/$id", params: { id } });
     },
     onError: (e: any) => toast.error(e.message ?? "Failed to save"),
   });
@@ -142,7 +158,9 @@ function NewFeedback() {
               <Sparkles className="mr-1.5 h-3.5 w-3.5" /> AI draft
             </Button>
             <Button variant="outline" size="sm" onClick={() => create.mutate("draft")} disabled={create.isPending || !form.title.trim() || !form.agent_id}>Save draft</Button>
-            <Button size="sm" onClick={() => create.mutate("sent")} disabled={create.isPending || !canSubmit} title={!canSubmit ? "Complete the required fields to send" : undefined}>Send now</Button>
+            <Button size="sm" onClick={() => create.mutate("send")} disabled={create.isPending || !canSubmit} title={!canSubmit ? "Complete the required fields to send" : undefined}>
+              {create.isPending ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Sending…</> : "Send now"}
+            </Button>
           </div>
         }
       />
