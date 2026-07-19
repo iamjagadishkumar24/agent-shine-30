@@ -77,6 +77,15 @@ function FeedbackDetail() {
     staleTime: 0,
   });
 
+  const spamRisk = useMemo(() => {
+    if (!preview.data?.html) return null;
+    return analyzeEmailForSpamRisk({
+      html: preview.data.html,
+      subject: preview.data.subject,
+      text: preview.data.text,
+    });
+  }, [preview.data?.html, preview.data?.subject, preview.data?.text]);
+
   const testSend = useMutation({
     mutationFn: async (to: string) => testSendFn({ data: { feedbackId: id, to } }),
     onSuccess: (r) => {
