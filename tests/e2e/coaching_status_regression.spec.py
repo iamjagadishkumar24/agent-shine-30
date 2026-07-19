@@ -65,7 +65,10 @@ def test_insert_every_status_and_transition():
 
     # Insert one session for each canonical status; spread scheduled_at to
     # avoid the overlap trigger.
-    base = datetime.now(timezone.utc) + timedelta(days=400)  # far in future
+    # Randomize base far in future to avoid overlap with leftover rows from
+    # prior sandbox runs (this role cannot DELETE, so cleanup is best-effort).
+    import random
+    base = datetime.now(timezone.utc) + timedelta(days=400 + random.randint(0, 10000))
     for i, s in enumerate(CANONICAL):
         sid = str(uuid.uuid4())
         when = (base + timedelta(hours=i * 3)).isoformat()
