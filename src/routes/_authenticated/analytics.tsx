@@ -232,7 +232,15 @@ function AnalyticsPage() {
 
   return (
     <div>
-      <PageHeader title="Analytics" subtitle="Deep trends across feedback, delivery, and agent performance." />
+      <PageHeader
+        title="Analytics"
+        subtitle="Deep trends across feedback, delivery, and agent performance."
+        actions={
+          <Button asChild size="sm" variant="outline" className="h-8 gap-1.5">
+            <Link to="/analytics/email"><Mail className="h-3.5 w-3.5" /> Email analytics <ArrowRight className="h-3.5 w-3.5" /></Link>
+          </Button>
+        }
+      />
       <div className="mx-auto max-w-7xl space-y-4 px-8 pb-12 pt-6">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <KpiCard
