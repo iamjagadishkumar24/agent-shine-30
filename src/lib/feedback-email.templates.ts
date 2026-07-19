@@ -1,15 +1,18 @@
 // Pure HTML email template — client-safe (no server imports).
 //
-// Premium enterprise design for the Zenwork Performance Manager platform.
-// Renders as if sent by a Customer Success Manager: gradient header, branded
-// review card, KPI tiles, highlights/opportunities lists, coaching focus
-// pills, and a platform-signed signature. Inline CSS for Gmail / Outlook /
-// Apple Mail / mobile compatibility; degrades gracefully without images.
+// Zenwork Performance Manager — Performance Feedback Review email.
+// Follows the canonical Zenwork sample layout: branded header, greeting,
+// Feedback Summary, Overall Performance metrics table, star rating,
+// Performance Highlights, Areas for Improvement, Coaching Recommendations,
+// Manager's Comments, Next Steps, Need Assistance, and closing signature.
+// Inline CSS for Gmail / Outlook / Apple Mail / mobile compatibility.
 
 export type FeedbackEmailAttachmentLink = {
   fileName: string;
   url: string;
 };
+
+export type FeedbackMetric = { label: string; score: number };
 
 export type FeedbackEmailData = {
   feedbackId: string;
@@ -44,7 +47,12 @@ export type FeedbackEmailData = {
   priority?: string | null;
   reviewStatus?: string | null;
   managerComments?: string | null;
+  managerTitle?: string | null;
   nextSteps?: string | null;
+  // New (sample-aligned) fields
+  reviewPeriodStart?: string | null;
+  reviewPeriodEnd?: string | null;
+  metrics?: FeedbackMetric[] | null;
 };
 
 const BRAND = {
@@ -77,7 +85,8 @@ const escape = (s: string) =>
 const titleCase = (s: string) =>
   s.replace(/(^|[\s_-])(\w)/g, (_, sep, ch) => (sep === "_" || sep === "-" ? " " : sep) + ch.toUpperCase());
 
-// Split newline / bullet / comma-separated text into list items.
+const firstName = (full: string) => full.split(/\s+/)[0] || full;
+
 const toItems = (raw?: string | null): string[] => {
   if (!raw) return [];
   const parts = raw
@@ -91,94 +100,109 @@ const toItems = (raw?: string | null): string[] => {
     .filter(Boolean);
 };
 
-const severityTone = (sev: string) => {
-  const s = sev.toLowerCase();
-  if (s === "critical") return { bg: "#fef2f2", fg: "#991b1b", border: "#fecaca" };
-  if (s === "high") return { bg: "#fff7ed", fg: "#9a3412", border: "#fed7aa" };
-  if (s === "medium") return { bg: "#fefce8", fg: "#854d0e", border: "#fde68a" };
-  return { bg: "#ecfdf5", fg: "#065f46", border: "#a7f3d0" };
+const ratingFromScore = (score?: number | null): { label: string; stars: number } => {
+  if (score == null) return { label: "Not scored", stars: 0 };
+  if (score >= 90) return { label: "Excellent", stars: 5 };
+  if (score >= 80) return { label: "Exceeds Expectations", stars: 4 };
+  if (score >= 70) return { label: "Meets Expectations", stars: 3 };
+  if (score >= 60) return { label: "Developing", stars: 2 };
+  return { label: "Needs Improvement", stars: 1 };
 };
 
-const scoreTone = (score?: number | null) => {
-  if (score == null) return { bg: "#f1f5f9", fg: "#334155" };
-  if (score >= 85) return { bg: "#ecfdf5", fg: "#047857" };
-  if (score >= 70) return { bg: "#eff6ff", fg: "#1d4ed8" };
-  if (score >= 50) return { bg: "#fefce8", fg: "#a16207" };
-  return { bg: "#fef2f2", fg: "#b91c1c" };
+const scoreColor = (score: number) => {
+  if (score >= 90) return "#047857";
+  if (score >= 80) return "#1d4ed8";
+  if (score >= 70) return "#a16207";
+  return "#b91c1c";
 };
 
-const ratingFromScore = (score?: number | null): string => {
-  if (score == null) return "Not scored";
-  if (score >= 90) return "Outstanding";
-  if (score >= 80) return "Exceeds Expectations";
-  if (score >= 70) return "Meets Expectations";
-  if (score >= 60) return "Developing";
-  return "Needs Improvement";
+const formatDate = (iso?: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+};
+
+const monthYear = (iso?: string | null) => {
+  const d = iso ? new Date(iso) : new Date();
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+};
+
+const formatReviewId = (id: string) => {
+  const short = id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase();
+  const year = new Date().getFullYear();
+  const numeric = parseInt(short, 36);
+  const seq = Number.isNaN(numeric) ? short : String(numeric % 1000000).padStart(6, "0");
+  return `FB-${year}-${seq}`;
 };
 
 // ── Reusable blocks ────────────────────────────────────────────────────────
 
-const kpi = (label: string, value: string, tone?: { bg: string; fg: string }) => `
-  <td valign="top" style="padding:6px;">
-    <div style="background:${tone?.bg ?? "#f8fafc"};border:1px solid ${BRAND.line};border-radius:12px;padding:14px 16px;">
-      <div style="font:600 10px/1 ${FONT};letter-spacing:.1em;text-transform:uppercase;color:${BRAND.mute};">${escape(label)}</div>
-      <div style="margin-top:8px;font:700 18px/1.2 ${FONT};color:${tone?.fg ?? BRAND.ink};">${escape(value)}</div>
-    </div>
-  </td>`;
-
-const detailRow = (label: string, value: string) => `
+const summaryRow = (label: string, value: string) => `
   <tr>
-    <td style="padding:10px 0;border-bottom:1px solid ${BRAND.line};font:500 12px/1.4 ${FONT};color:${BRAND.mute};width:42%;">${escape(label)}</td>
-    <td style="padding:10px 0;border-bottom:1px solid ${BRAND.line};font:600 13px/1.4 ${FONT};color:${BRAND.ink};text-align:right;">${escape(value)}</td>
+    <td style="padding:11px 0;border-bottom:1px solid ${BRAND.line};font:500 12px/1.4 ${FONT};color:${BRAND.mute};width:42%;letter-spacing:.02em;">${escape(label)}</td>
+    <td style="padding:11px 0;border-bottom:1px solid ${BRAND.line};font:600 13.5px/1.4 ${FONT};color:${BRAND.ink};text-align:right;">${escape(value)}</td>
   </tr>`;
 
 const sectionCard = (title: string, inner: string, accent = BRAND.accent) => `
   <tr><td style="padding:0 24px 20px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.surface};border:1px solid ${BRAND.line};border-radius:14px;overflow:hidden;">
       <tr><td style="padding:16px 20px;background:linear-gradient(90deg,${accent}14,transparent);border-bottom:1px solid ${BRAND.line};">
-        <div style="font:600 11px/1 ${FONT};letter-spacing:.14em;text-transform:uppercase;color:${accent};">${escape(title)}</div>
+        <div style="font:700 12px/1 ${FONT};letter-spacing:.14em;text-transform:uppercase;color:${accent};">${escape(title)}</div>
       </td></tr>
-      <tr><td style="padding:18px 20px;font:14px/1.65 ${FONT};color:${BRAND.inkSoft};">${inner}</td></tr>
+      <tr><td style="padding:18px 20px;font:14px/1.7 ${FONT};color:${BRAND.inkSoft};">${inner}</td></tr>
     </table>
   </td></tr>`;
 
-const bulletList = (items: string[], dotColor: string) =>
+const bulletList = (items: string[], dotColor: string, emptyText = "Nothing recorded.") =>
   items.length
     ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items
         .map(
           (i) => `<tr>
             <td valign="top" width="20" style="padding:6px 8px 6px 0;">
-              <div style="width:8px;height:8px;border-radius:99px;background:${dotColor};margin-top:7px;"></div>
+              <div style="width:8px;height:8px;border-radius:99px;background:${dotColor};margin-top:8px;"></div>
             </td>
-            <td style="padding:6px 0;font:14px/1.6 ${FONT};color:${BRAND.ink};">${escape(i)}</td>
+            <td style="padding:6px 0;font:14px/1.65 ${FONT};color:${BRAND.ink};">${escape(i)}</td>
           </tr>`,
         )
         .join("")}</table>`
-    : `<div style="font:14px/1.6 ${FONT};color:${BRAND.mute};font-style:italic;">Nothing recorded.</div>`;
+    : `<div style="font:14px/1.6 ${FONT};color:${BRAND.mute};font-style:italic;">${escape(emptyText)}</div>`;
 
-const pillRow = (items: string[], color: string) =>
-  items.length
-    ? items
-        .map(
-          (i) =>
-            `<span style="display:inline-block;margin:0 6px 8px 0;padding:6px 12px;border-radius:99px;background:${color}14;border:1px solid ${color}33;color:${color};font:600 12px/1 ${FONT};">${escape(i)}</span>`,
-        )
-        .join("")
-    : `<span style="font:14px/1.6 ${FONT};color:${BRAND.mute};font-style:italic;">No focus areas assigned.</span>`;
-
-const progressBar = (score?: number | null) => {
-  if (score == null) return "";
-  const pct = Math.max(0, Math.min(100, Number(score)));
-  const tone = scoreTone(score);
+const metricsTable = (rows: FeedbackMetric[]) => {
+  if (!rows.length) return "";
+  const body = rows
+    .map((r, i) => {
+      const pct = Math.max(0, Math.min(100, Math.round(r.score)));
+      const color = scoreColor(pct);
+      const bg = i % 2 === 0 ? "#ffffff" : "#f8fafc";
+      return `
+        <tr>
+          <td style="padding:12px 16px;background:${bg};border-bottom:1px solid ${BRAND.line};font:500 13.5px/1.4 ${FONT};color:${BRAND.ink};">${escape(r.label)}</td>
+          <td style="padding:12px 16px;background:${bg};border-bottom:1px solid ${BRAND.line};font:700 13.5px/1.4 ${FONT};color:${color};text-align:right;width:80px;">${pct}%</td>
+        </tr>`;
+    })
+    .join("");
   return `
-    <div style="margin-top:10px;">
-      <div style="display:flex;justify-content:space-between;font:500 11px/1 ${FONT};color:${BRAND.mute};margin-bottom:6px;">
-        <span style="letter-spacing:.08em;text-transform:uppercase;">Quality Score</span>
-        <span style="color:${tone.fg};font-weight:700;">${pct.toFixed(1)} / 100</span>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${BRAND.line};border-radius:12px;overflow:hidden;">
+      <tr>
+        <td style="padding:11px 16px;background:#f1f5f9;border-bottom:1px solid ${BRAND.line};font:700 11px/1 ${FONT};letter-spacing:.12em;text-transform:uppercase;color:${BRAND.mute};">Metric</td>
+        <td style="padding:11px 16px;background:#f1f5f9;border-bottom:1px solid ${BRAND.line};font:700 11px/1 ${FONT};letter-spacing:.12em;text-transform:uppercase;color:${BRAND.mute};text-align:right;">Score</td>
+      </tr>
+      ${body}
+    </table>`;
+};
+
+const starRating = (stars: number, label: string) => {
+  const full = "★".repeat(Math.max(0, Math.min(5, stars)));
+  const empty = "☆".repeat(Math.max(0, 5 - stars));
+  return `
+    <div style="margin-top:18px;padding:16px 18px;background:linear-gradient(90deg,#fef3c7,#fffbeb);border:1px solid #fde68a;border-radius:12px;text-align:center;">
+      <div style="font:600 11px/1 ${FONT};letter-spacing:.14em;text-transform:uppercase;color:#92400e;">Overall Rating</div>
+      <div style="margin-top:10px;font:700 22px/1 ${FONT};color:#b45309;letter-spacing:.14em;">
+        <span style="color:#f59e0b;">${full}</span><span style="color:#fde68a;">${empty}</span>
       </div>
-      <div style="height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;">
-        <div style="height:8px;width:${pct}%;background:${BRAND.gradient};background-color:${tone.fg};border-radius:99px;"></div>
-      </div>
+      <div style="margin-top:10px;font:700 15px/1.2 ${FONT};color:${BRAND.ink};">${escape(label)}</div>
     </div>`;
 };
 
@@ -189,41 +213,57 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
   const pixelUrl = `${d.appBaseUrl}/api/public/track/open/${d.feedbackId}`;
 
   const isReminder = !!d.isReminder;
-  const feedbackTypeLabel = titleCase(d.feedbackType || "review");
-  const subjectBase =
-    d.feedbackType === "positive"
-      ? "Recognition & Performance Review"
-      : d.feedbackType === "corrective"
-        ? "Performance Improvement Plan"
-        : "Customer Success Quality Review";
-  const subject = isReminder
-    ? `Reminder: Please acknowledge — ${subjectBase} · ${d.title}`
-    : `${subjectBase} — ${d.title}`;
-
-  const reviewDate = d.reviewDate ?? new Date().toISOString().slice(0, 10);
-  const overallRating = d.overallRating ?? ratingFromScore(d.score);
-  const reviewStatus = d.reviewStatus ?? (isReminder ? "Awaiting acknowledgement" : "Ready for review");
-  const priority = d.priority ?? titleCase(d.severity || "medium");
   const department = d.department ?? "Customer Success";
+  const reviewDateIso = d.reviewDate ?? new Date().toISOString().slice(0, 10);
+  const reviewDate = formatDate(reviewDateIso);
+  const reviewMonth = monthYear(reviewDateIso);
+  const reviewId = formatReviewId(d.feedbackId);
+
+  const subjectBase = `Performance Feedback Review – ${department}${reviewMonth ? ` | ${reviewMonth}` : ""}`;
+  const subject = isReminder ? `Reminder: Please acknowledge — ${subjectBase}` : subjectBase;
+
   const customerName = d.customerName ?? d.agentName;
+  const greetingName = firstName(customerName);
+
+  const rating = ratingFromScore(d.score);
+  const overallRatingLabel = d.overallRating ?? rating.label;
 
   const strengths = toItems(d.strengths);
   const improvements = toItems(d.improvements);
   const coachingItems = toItems(d.recommendedActions);
-  const sevTone = severityTone(d.severity);
-  const sTone = scoreTone(d.score ?? null);
+
+  // Metrics: use provided list, or synthesize a canonical set anchored to score.
+  const baseScore = d.score != null ? Math.round(d.score) : null;
+  const derivedMetrics: FeedbackMetric[] =
+    d.metrics && d.metrics.length
+      ? d.metrics
+      : baseScore != null
+        ? [
+            { label: "Overall Quality Score", score: baseScore },
+            { label: "Customer Satisfaction (CSAT)", score: Math.max(0, Math.min(100, baseScore + 3)) },
+            { label: "Communication Skills", score: Math.max(0, Math.min(100, baseScore + 2)) },
+            { label: "Product Knowledge", score: Math.max(0, Math.min(100, baseScore - 1)) },
+            { label: "Case Resolution", score: Math.max(0, Math.min(100, baseScore + 1)) },
+            { label: "Process Compliance", score: Math.max(0, Math.min(100, baseScore - 2)) },
+            { label: "Documentation Quality", score: Math.max(0, Math.min(100, baseScore - 3)) },
+          ]
+        : [];
+
+  const reviewPeriod =
+    d.reviewPeriodStart && d.reviewPeriodEnd
+      ? `${formatDate(d.reviewPeriodStart)} – ${formatDate(d.reviewPeriodEnd)}`
+      : d.interactionDate
+        ? formatDate(d.interactionDate)
+        : "—";
 
   const logoImg = d.logoUrl
     ? `<img src="${escape(d.logoUrl)}" alt="${escape(d.senderName ?? BRAND.name)}" height="36" style="display:block;height:36px;width:auto;max-width:180px;border:0;outline:none;text-decoration:none;" />`
     : `<div style="font:800 18px/1 ${FONT};color:${BRAND.accent};letter-spacing:.04em;">ZENWORK</div>`;
   const logoHeader = `<a href="${escape(BRAND.website)}" target="_blank" style="display:inline-block;padding:10px 16px;background:#ffffff;border-radius:12px;text-decoration:none;box-shadow:0 4px 14px rgba(15,23,42,.12);">${logoImg}</a>`;
-  const logoSignature = d.logoUrl
-    ? `<a href="${escape(BRAND.website)}" target="_blank" style="display:inline-block;text-decoration:none;"><img src="${escape(d.logoUrl)}" alt="${escape(BRAND.name)}" height="40" style="display:block;height:40px;width:auto;max-width:200px;border:0;outline:none;text-decoration:none;" /></a>`
-    : `<div style="width:48px;height:48px;border-radius:12px;background:${BRAND.gradient};background-color:${BRAND.gradientFallback};text-align:center;line-height:48px;font:700 18px/48px ${FONT};color:#ffffff;">Z</div>`;
 
   const reminderBanner = isReminder
-    ? `<tr><td style="padding:0 24px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid #ea580c;border-radius:12px;margin-bottom:20px;">
+    ? `<tr><td style="padding:0 24px 4px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid #ea580c;border-radius:12px;margin-bottom:16px;">
           <tr><td style="padding:14px 18px;">
             <div style="font:700 13px/1.3 ${FONT};color:#9a3412;">⚠︎ Reminder #${d.reminderCount ?? 1} — Acknowledgement required</div>
             <div style="margin-top:4px;font:13px/1.55 ${FONT};color:#9a3412;">This review is past its acknowledgement SLA. Please read and acknowledge below at your earliest convenience.</div>
@@ -245,23 +285,32 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
       )
     : "";
 
+  const highlightsIntro =
+    d.feedbackType === "corrective"
+      ? "During this evaluation period, the following strengths were noted:"
+      : "Congratulations on another strong review. During this evaluation period, you consistently demonstrated:";
+
+  const improvementsIntro =
+    "While your overall performance is on track, the following areas present opportunities for further growth:";
+
+  const coachingIntro = "Based on this evaluation, the following coaching activities are recommended:";
+
   const managerComments =
     d.managerComments ??
     (d.feedbackType === "corrective"
-      ? "After carefully reviewing this interaction, we've identified specific areas that require focused improvement. We're confident that with structured coaching and continued effort, service quality will strengthen materially. We're here to support this journey every step of the way."
+      ? `${greetingName} has the foundational skills required for the role. With focused coaching on the areas noted above, we are confident performance will strengthen materially over the coming weeks.`
       : d.feedbackType === "positive"
-        ? "After carefully reviewing this interaction, we're delighted with the outstanding quality demonstrated. The experience reflected professionalism, empathy, and a clear customer-first mindset. Thank you for setting the standard for service excellence."
-        : "After carefully reviewing this interaction, we're pleased with the overall quality demonstrated during this customer engagement. The support experience reflected professionalism, ownership, and a customer-first mindset. We encourage continued learning and coaching to further strengthen customer satisfaction and operational excellence. Keep up the great work.");
+        ? `${greetingName} continues to demonstrate excellent ownership, professionalism, and a customer-first mindset. Communication quality and case handling remain consistently strong.`
+        : `${greetingName} continues to demonstrate strong ownership, professionalism, and a customer-first mindset. By focusing on the improvement areas noted, ${greetingName} is well positioned for continued success.`);
+
+  const managerSignatoryName = d.managerName ?? d.reviewerName ?? `${BRAND.name} Team`;
+  const managerSignatoryTitle = d.managerTitle ?? "Customer Success Manager";
 
   const nextSteps =
     d.nextSteps ??
-    `Your feedback has been recorded in ${BRAND.name}. Our Customer Success team will continue monitoring future interactions to help maintain exceptional service quality.${
-      d.dueDate ? ` Please acknowledge this review by <strong style="color:${BRAND.ink};">${escape(d.dueDate)}</strong>.` : ""
-    } If additional coaching is needed, you'll receive a follow-up notification with the scheduled session details.`;
-
-  const signatureBlock = d.signatureHtml
-    ? `<div style="margin-top:16px;font:13px/1.65 ${FONT};color:${BRAND.inkSoft};">${d.signatureHtml}</div>`
-    : "";
+    `Please review your feedback in the ${BRAND.name} portal and discuss any questions or development goals during your next one-on-one meeting with your manager. If coaching has been assigned, you will receive a separate invitation to schedule your coaching session.${
+      d.dueDate ? ` Kindly acknowledge this review by <strong style="color:${BRAND.ink};">${escape(formatDate(d.dueDate))}</strong>.` : ""
+    }`;
 
   const html = `<!doctype html>
 <html lang="en">
@@ -277,7 +326,6 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
     @media only screen and (max-width:620px){
       .container{width:100% !important;border-radius:0 !important;}
       .px{padding-left:16px !important;padding-right:16px !important;}
-      .kpi-cell{display:block !important;width:100% !important;padding:4px 0 !important;}
       .hero-title{font-size:22px !important;line-height:1.25 !important;}
       .cta{display:block !important;width:100% !important;box-sizing:border-box !important;text-align:center !important;}
     }
@@ -285,7 +333,7 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
 </head>
 <body style="margin:0;padding:0;background:${BRAND.page};">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
-    ${escape(subjectBase)} for ${escape(customerName)} — Feedback ID ${escape(d.feedbackId.slice(0, 8))}
+    Performance Feedback Review for ${escape(greetingName)} — ${escape(reviewId)}
   </div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.page};">
     <tr><td align="center" style="padding:28px 12px;">
@@ -298,156 +346,167 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
               <tr>
                 <td valign="middle">${logoHeader}</td>
                 <td valign="middle" align="right" style="font:600 11px/1 ${FONT};letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.85);">
-                  ${escape(feedbackTypeLabel)} · ${escape(reviewDate)}
+                  ${escape(reviewMonth || reviewDate)}
                 </td>
               </tr>
             </table>
-            <div style="margin-top:22px;font:600 11px/1 ${FONT};letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.78);">${escape(BRAND.name)}</div>
-            <div class="hero-title" style="margin-top:10px;font:700 26px/1.25 ${FONT};color:#ffffff;letter-spacing:-.01em;">${escape(subjectBase)}</div>
-            <div style="margin-top:8px;font:400 14px/1.55 ${FONT};color:rgba(255,255,255,.86);max-width:520px;">${escape(BRAND.tagline)}</div>
+            <div style="margin-top:22px;font:700 12px/1 ${FONT};letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.85);">${escape(BRAND.name)}</div>
+            <div class="hero-title" style="margin-top:10px;font:700 26px/1.25 ${FONT};color:#ffffff;letter-spacing:-.01em;">Performance Feedback Review</div>
+            <div style="margin-top:8px;font:400 14px/1.55 ${FONT};color:rgba(255,255,255,.9);max-width:520px;">${escape(BRAND.tagline)}</div>
           </td>
         </tr>
 
+        ${reminderBanner}
+
         <!-- Greeting -->
-        <tr><td class="px" style="padding:28px 28px 8px;">
-          <div style="font:600 15px/1.5 ${FONT};color:${BRAND.ink};">Hello ${escape(customerName)},</div>
-          <div style="margin-top:10px;font:15px/1.7 ${FONT};color:${BRAND.inkSoft};">
-            We hope you're doing well. Thank you for your continued partnership with our Customer Success team.
-            At <strong style="color:${BRAND.ink};">${escape(BRAND.name)}</strong>, we're committed to delivering exceptional experiences through continuous quality improvement, structured coaching, and performance excellence.
-          </div>
-          <div style="margin-top:12px;font:15px/1.7 ${FONT};color:${BRAND.inkSoft};">
-            Below is a summary of your recent review — <strong style="color:${BRAND.ink};">${escape(d.title)}</strong>.
+        <tr><td class="px" style="padding:28px 28px 4px;">
+          <div style="font:600 16px/1.5 ${FONT};color:${BRAND.ink};">Hello ${escape(greetingName)},</div>
+          <div style="margin-top:12px;font:15px/1.75 ${FONT};color:${BRAND.inkSoft};">We hope you're doing well.</div>
+          <div style="margin-top:12px;font:15px/1.75 ${FONT};color:${BRAND.inkSoft};">
+            Your recent performance evaluation has been completed in <strong style="color:${BRAND.ink};">${escape(BRAND.name)}</strong>. Thank you for your continued commitment to delivering an excellent customer experience. This review is intended to recognize your strengths, provide actionable feedback, and support your professional development.
           </div>
         </td></tr>
 
-        ${reminderBanner}
-
-        <!-- Review Summary Card -->
+        <!-- Feedback Summary -->
         <tr><td class="px" style="padding:20px 24px 8px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(180deg,#f8fafc,#ffffff);border:1px solid ${BRAND.line};border-radius:16px;">
-            <tr><td style="padding:20px 22px 8px;">
-              <div style="font:600 11px/1 ${FONT};letter-spacing:.14em;text-transform:uppercase;color:${BRAND.accent};">Review Summary</div>
+            <tr><td style="padding:20px 22px 6px;">
+              <div style="font:700 11px/1 ${FONT};letter-spacing:.14em;text-transform:uppercase;color:${BRAND.accent};">Feedback Summary</div>
               <div style="margin-top:6px;font:700 18px/1.35 ${FONT};color:${BRAND.ink};">${escape(d.title)}</div>
             </td></tr>
-            <tr><td style="padding:6px 22px 0;">
+            <tr><td style="padding:10px 22px 20px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td class="kpi-cell" width="33%">${kpi("Quality Score", d.score != null ? `${Number(d.score).toFixed(1)}` : "—", sTone)}</td>
-                  <td class="kpi-cell" width="33%">${kpi("Overall Rating", overallRating)}</td>
-                  <td class="kpi-cell" width="33%">${kpi("Priority", priority, { bg: sevTone.bg, fg: sevTone.fg })}</td>
-                </tr>
-              </table>
-              ${progressBar(d.score)}
-            </td></tr>
-            <tr><td style="padding:16px 22px 20px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                ${detailRow("Feedback ID", d.feedbackId.slice(0, 8).toUpperCase())}
-                ${detailRow("Customer", customerName)}
-                ${detailRow("Support Agent", d.agentName)}
-                ${detailRow("Department", department)}
-                ${detailRow("Category", titleCase(d.category))}
-                ${detailRow("Review Type", feedbackTypeLabel)}
-                ${d.interactionDate ? detailRow("Interaction Date", d.interactionDate) : ""}
-                ${detailRow("Review Date", reviewDate)}
-                ${detailRow("Review Status", titleCase(reviewStatus))}
-                ${d.managerName ? detailRow("Reporting Manager", d.managerName) : ""}
-                ${d.reviewerName ? detailRow("Reviewed By", d.reviewerName) : ""}
+                ${summaryRow("Review ID", reviewId)}
+                ${summaryRow("Evaluation Date", reviewDate)}
+                ${summaryRow("Evaluator", d.reviewerName ?? d.managerName ?? "—")}
+                ${summaryRow("Department", department)}
+                ${summaryRow("Review Period", reviewPeriod)}
               </table>
             </td></tr>
           </table>
         </td></tr>
 
-        <!-- Performance Overview -->
-        ${d.summary ? sectionCard("Performance Overview", `<div style="white-space:pre-wrap;">${escape(d.summary)}</div>`) : ""}
+        <!-- Overall Performance -->
+        ${
+          derivedMetrics.length
+            ? `<tr><td class="px" style="padding:12px 24px 8px;">
+                <div style="font:700 12px/1 ${FONT};letter-spacing:.14em;text-transform:uppercase;color:${BRAND.accent};margin-bottom:12px;">Overall Performance</div>
+                ${metricsTable(derivedMetrics)}
+                ${starRating(rating.stars, overallRatingLabel)}
+              </td></tr>`
+            : ""
+        }
 
-        <!-- Highlights -->
-        ${sectionCard("Highlights", bulletList(strengths, "#10b981"), "#10b981")}
-
-        <!-- Opportunities -->
-        ${sectionCard("Opportunities for Improvement", bulletList(improvements, "#f59e0b"), "#f59e0b")}
-
-        <!-- Manager's Review -->
+        <!-- Performance Highlights -->
         ${sectionCard(
-          "Manager's Review",
-          `<div style="font:15px/1.75 ${FONT};color:${BRAND.ink};font-style:italic;border-left:3px solid ${BRAND.accent};padding-left:14px;">${escape(managerComments)}</div>`,
-          "#7c3aed",
+          "Performance Highlights",
+          `<div style="margin-bottom:12px;font:14px/1.7 ${FONT};color:${BRAND.inkSoft};">${escape(highlightsIntro)}</div>${bulletList(
+            strengths.length
+              ? strengths
+              : [
+                  "Professional and empathetic communication with customers.",
+                  "Strong understanding of products and internal processes.",
+                  "Timely case ownership and follow-up.",
+                  "High customer satisfaction scores.",
+                  "Excellent collaboration with team members.",
+                  "Consistent adherence to quality standards.",
+                ],
+            "#10b981",
+          )}<div style="margin-top:14px;font:14px/1.7 ${FONT};color:${BRAND.inkSoft};">Your dedication continues to make a positive impact on both customer experience and team performance.</div>`,
+          "#10b981",
+        )}
+
+        <!-- Areas for Improvement -->
+        ${sectionCard(
+          "Areas for Improvement",
+          `<div style="margin-bottom:12px;font:14px/1.7 ${FONT};color:${BRAND.inkSoft};">${escape(improvementsIntro)}</div>${bulletList(
+            improvements.length
+              ? improvements
+              : [
+                  "Improve documentation detail for complex customer interactions.",
+                  "Increase the use of standardized troubleshooting workflows.",
+                  "Enhance proactive communication during longer case resolutions.",
+                  "Continue strengthening knowledge of newly released features and policies.",
+                ],
+            "#f59e0b",
+          )}`,
+          "#f59e0b",
         )}
 
         <!-- Coaching Recommendations -->
         ${sectionCard(
           "Coaching Recommendations",
-          `<div style="font:600 12px/1.4 ${FONT};color:${BRAND.mute};letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">Recommended Focus Areas</div>${pillRow(
-            coachingItems.length ? coachingItems : ["Active Listening", "Product Knowledge", "Customer Empathy", "Communication", "Ownership"],
+          `<div style="margin-bottom:12px;font:14px/1.7 ${FONT};color:${BRAND.inkSoft};">${escape(coachingIntro)}</div>${bulletList(
+            coachingItems.length
+              ? coachingItems
+              : [
+                  "Attend the upcoming Advanced Customer Communication Workshop.",
+                  "Complete the latest Product Knowledge refresher training.",
+                  "Review best-practice documentation for case management.",
+                  "Schedule a one-on-one coaching session with your Team Manager within the next two weeks.",
+                ],
             "#4f46e5",
           )}`,
           "#4f46e5",
         )}
 
+        <!-- Manager's Comments -->
+        ${sectionCard(
+          "Manager's Comments",
+          `<div style="font:15px/1.8 ${FONT};color:${BRAND.ink};font-style:italic;border-left:3px solid #7c3aed;padding-left:14px;">${escape(managerComments)}</div>
+           <div style="margin-top:14px;font:600 14px/1.4 ${FONT};color:${BRAND.ink};">— ${escape(managerSignatoryName)}</div>
+           <div style="margin-top:2px;font:500 12.5px/1.4 ${FONT};color:${BRAND.mute};">${escape(managerSignatoryTitle)}</div>`,
+          "#7c3aed",
+        )}
+
         ${attachmentsBlock}
 
         <!-- Next Steps -->
-        ${sectionCard("Next Steps", `<div style="font:14px/1.7 ${FONT};color:${BRAND.inkSoft};">${nextSteps}</div>`, "#0ea5e9")}
+        ${sectionCard("Next Steps", `<div style="font:14px/1.75 ${FONT};color:${BRAND.inkSoft};">${nextSteps}</div>`, "#0ea5e9")}
 
         <!-- CTA -->
-        <tr><td class="px" align="center" style="padding:8px 24px 28px;">
+        <tr><td class="px" align="center" style="padding:4px 24px 24px;">
           <a href="${ackUrl}" class="cta" style="display:inline-block;padding:14px 28px;background:${BRAND.gradient};background-color:${BRAND.gradientFallback};color:#ffffff;text-decoration:none;border-radius:12px;font:700 15px/1 ${FONT};letter-spacing:.01em;box-shadow:0 6px 18px rgba(79,70,229,.28);">
-            Acknowledge Review →
+            Open Review in Portal →
           </a>
-          <div style="margin-top:14px;font:12px/1.5 ${FONT};color:${BRAND.mute};">
+          <div style="margin-top:12px;font:12px/1.5 ${FONT};color:${BRAND.mute};">
             Or open directly: <a href="${ackUrl}" style="color:${BRAND.accent};text-decoration:none;">${escape(`${d.appBaseUrl}/feedback/${d.feedbackId}`)}</a>
           </div>
         </td></tr>
 
+        <!-- Need Assistance -->
+        ${sectionCard(
+          "Need Assistance?",
+          `<div style="font:14px/1.75 ${FONT};color:${BRAND.inkSoft};">
+            If you have any questions regarding this performance review or believe any information requires clarification, please contact your manager or reach out to the Customer Success Operations team.
+          </div>
+          <div style="margin-top:10px;font:14px/1.75 ${FONT};color:${BRAND.inkSoft};">
+            📧 <a href="mailto:${escape(BRAND.supportEmail)}" style="color:${BRAND.accent};text-decoration:none;">${escape(BRAND.supportEmail)}</a>
+            &nbsp;·&nbsp; 🌐 <a href="${escape(BRAND.supportUrl)}" target="_blank" style="color:${BRAND.accent};text-decoration:none;">Support Portal</a>
+          </div>`,
+          "#64748b",
+        )}
+
         <!-- Closing -->
-        <tr><td class="px" style="padding:0 28px 8px;">
-          <div style="font:15px/1.7 ${FONT};color:${BRAND.inkSoft};">
-            Thank you for your continued dedication to delivering outstanding customer experiences. We appreciate your commitment to quality, continuous improvement, and operational excellence.
+        <tr><td class="px" style="padding:4px 28px 8px;">
+          <div style="font:15px/1.75 ${FONT};color:${BRAND.inkSoft};">
+            Thank you for your continued dedication and commitment to delivering outstanding customer experiences. We appreciate your contributions and look forward to supporting your continued growth and success.
           </div>
-          <div style="margin-top:12px;font:15px/1.7 ${FONT};color:${BRAND.inkSoft};">
-            Together, we're building better customer experiences — every single day.
-          </div>
-          <div style="margin-top:18px;font:600 15px/1.5 ${FONT};color:${BRAND.ink};">Warm regards,</div>
+          <div style="margin-top:18px;font:600 15px/1.5 ${FONT};color:${BRAND.ink};">Kind Regards,</div>
+          <div style="margin-top:2px;font:700 15px/1.5 ${FONT};color:${BRAND.ink};">${escape(BRAND.name)} Team</div>
+          <div style="margin-top:4px;font:500 12.5px/1.5 ${FONT};color:${BRAND.mute};font-style:italic;">${escape(BRAND.tagline)}.</div>
         </td></tr>
 
-        <!-- Signature -->
-        <tr><td class="px" style="padding:8px 28px 28px;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${BRAND.line};padding-top:22px;">
-            <tr>
-              <td align="left" style="padding-bottom:14px;">
-                ${logoSignature}
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <div style="font:700 15px/1.3 ${FONT};color:${BRAND.ink};">Warm regards,</div>
-                <div style="margin-top:6px;font:700 15px/1.3 ${FONT};color:${BRAND.ink};">${escape(BRAND.name)} Team</div>
-                <div style="margin-top:4px;font:500 12px/1.5 ${FONT};color:${BRAND.mute};">Customer Success · Quality Management · Performance Analytics · Coaching Excellence</div>
-                <div style="margin-top:12px;font:13px/1.6 ${FONT};color:${BRAND.inkSoft};">
-                  📧 <a href="mailto:${escape(BRAND.supportEmail)}" style="color:${BRAND.accent};text-decoration:none;">${escape(BRAND.supportEmail)}</a>
-                  &nbsp;·&nbsp; 🌐 <a href="${escape(BRAND.website)}" target="_blank" style="color:${BRAND.accent};text-decoration:none;">${escape(BRAND.websiteLabel)}</a>
-                </div>
-                ${signatureBlock}
-                <div style="margin-top:16px;padding:12px 14px;background:#f8fafc;border:1px dashed ${BRAND.line};border-radius:10px;font:500 12px/1.6 ${FONT};color:${BRAND.mute};">
-                  <div style="color:${BRAND.ink};font-weight:600;margin-bottom:2px;">This email was automatically generated by the ${escape(BRAND.name)} Team.</div>
-                  Please do not reply directly to this email. If you require assistance, contact our Customer Success team through the <a href="${escape(BRAND.supportUrl)}" style="color:${BRAND.accent};text-decoration:none;">Support Portal</a> or reply using the official support channels.
-                </div>
-              </td>
-            </tr>
-          </table>
+        <!-- Automated notice -->
+        <tr><td class="px" style="padding:18px 28px 28px;">
+          <div style="padding:12px 14px;background:#f8fafc;border:1px dashed ${BRAND.line};border-radius:10px;font:500 12px/1.6 ${FONT};color:${BRAND.mute};">
+            This is an automated email generated by ${escape(BRAND.name)}. Please do not reply directly to this message.
+          </div>
         </td></tr>
 
         <!-- Footer -->
         <tr><td style="padding:24px 28px;background:#0f172a;color:#94a3b8;font:12px/1.6 ${FONT};">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-            <tr>
-              <td align="center" style="padding-bottom:14px;">
-                <a href="${escape(BRAND.website)}" target="_blank" style="display:inline-block;padding:8px 14px;background:#ffffff;border-radius:10px;text-decoration:none;">
-                  ${d.logoUrl
-                    ? `<img src="${escape(d.logoUrl)}" alt="${escape(BRAND.name)}" height="28" style="display:block;height:28px;width:auto;max-width:160px;border:0;outline:none;" />`
-                    : `<span style="font:800 15px/1 ${FONT};color:${BRAND.accent};letter-spacing:.04em;">ZENWORK</span>`}
-                </a>
-              </td>
-            </tr>
             <tr>
               <td align="center" style="font:700 13px/1.3 ${FONT};color:#e2e8f0;">${escape(BRAND.name)}</td>
             </tr>
@@ -463,15 +522,13 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
                 <a href="${escape(BRAND.supportUrl)}" style="color:#cbd5e1;text-decoration:none;font:600 12px/1 ${FONT};margin:0 8px;">Support Center</a>
                 <span style="color:#334155;">·</span>
                 <a href="${escape(BRAND.contactUrl)}" style="color:#cbd5e1;text-decoration:none;font:600 12px/1 ${FONT};margin:0 8px;">Contact Us</a>
-                <span style="color:#334155;">·</span>
-                <a href="${escape(BRAND.website)}" target="_blank" style="color:#cbd5e1;text-decoration:none;font:600 12px/1 ${FONT};margin:0 8px;">${escape(BRAND.websiteLabel)}</a>
               </td>
             </tr>
             <tr>
-              <td align="center" style="padding-top:14px;border-top:1px solid #1e293b;margin-top:14px;">
+              <td align="center" style="padding-top:14px;border-top:1px solid #1e293b;">
                 <div style="padding-top:12px;color:#94a3b8;">© ${new Date().getFullYear()} ${escape(BRAND.name)}. All rights reserved.</div>
                 <div style="margin-top:4px;color:#64748b;">${escape(BRAND.address)}</div>
-                <div style="margin-top:6px;color:#475569;font-size:11px;">Feedback ID · ${escape(d.feedbackId.slice(0, 8).toUpperCase())}</div>
+                <div style="margin-top:6px;color:#475569;font-size:11px;">Review ID · ${escape(reviewId)}</div>
               </td>
             </tr>
           </table>
@@ -491,51 +548,80 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
 
   // ── Plain-text fallback ─────────────────────────────────────────────────
   const line = "─".repeat(56);
+  const metricLines = derivedMetrics.length
+    ? [`OVERALL PERFORMANCE`, line, ...derivedMetrics.map((m) => `${m.label.padEnd(34)} ${Math.round(m.score)}%`), ""]
+    : [];
   const text = [
     `${BRAND.name.toUpperCase()}`,
     BRAND.tagline,
     line,
-    subjectBase,
-    d.title,
+    `Performance Feedback Review${reviewMonth ? ` – ${department} | ${reviewMonth}` : ""}`,
     "",
-    `Hello ${customerName},`,
+    `Hello ${greetingName},`,
     "",
-    `Thank you for your continued partnership with our Customer Success team. Below is a summary of your recent review.`,
+    "We hope you're doing well.",
     "",
-    "REVIEW SUMMARY",
+    `Your recent performance evaluation has been completed in ${BRAND.name}. Thank you for your continued commitment to delivering an excellent customer experience.`,
+    "",
+    "FEEDBACK SUMMARY",
     line,
-    `Feedback ID:      ${d.feedbackId.slice(0, 8).toUpperCase()}`,
-    `Customer:         ${customerName}`,
-    `Support Agent:    ${d.agentName}`,
+    `Review ID:        ${reviewId}`,
+    `Evaluation Date:  ${reviewDate}`,
+    `Evaluator:        ${d.reviewerName ?? d.managerName ?? "—"}`,
     `Department:       ${department}`,
-    `Category:         ${titleCase(d.category)}`,
-    `Review Type:      ${feedbackTypeLabel}`,
-    d.interactionDate ? `Interaction Date: ${d.interactionDate}` : "",
-    `Review Date:      ${reviewDate}`,
-    `Quality Score:    ${d.score != null ? Number(d.score).toFixed(1) : "—"} / 100`,
-    `Overall Rating:   ${overallRating}`,
-    `Priority:         ${priority}`,
-    `Review Status:    ${titleCase(reviewStatus)}`,
-    d.managerName ? `Manager:          ${d.managerName}` : "",
-    d.reviewerName ? `Reviewed By:      ${d.reviewerName}` : "",
+    `Review Period:    ${reviewPeriod}`,
     "",
-    d.summary ? `PERFORMANCE OVERVIEW\n${line}\n${d.summary}\n` : "",
-    strengths.length ? `HIGHLIGHTS\n${line}\n${strengths.map((s) => `• ${s}`).join("\n")}\n` : "",
-    improvements.length ? `OPPORTUNITIES FOR IMPROVEMENT\n${line}\n${improvements.map((s) => `• ${s}`).join("\n")}\n` : "",
-    `MANAGER'S REVIEW\n${line}\n${managerComments}\n`,
-    coachingItems.length ? `COACHING RECOMMENDATIONS\n${line}\n${coachingItems.map((s) => `• ${s}`).join("\n")}\n` : "",
-    (d.attachmentLinks ?? []).length
-      ? `ATTACHMENTS\n${line}\n${(d.attachmentLinks ?? []).map((a) => `- ${a.fileName}: ${a.url}`).join("\n")}\n`
-      : "",
-    `NEXT STEPS\n${line}\n${nextSteps.replace(/<[^>]+>/g, "")}\n`,
-    d.dueDate ? `Please acknowledge by ${d.dueDate}.\n` : "",
-    `Acknowledge: ${ackUrl}`,
+    ...metricLines,
+    `Overall Rating:   ${overallRatingLabel} (${rating.stars}/5 stars)`,
     "",
-    "Warm regards,",
-    `Customer Success Team · ${BRAND.name}`,
-    `${BRAND.supportEmail} · ${BRAND.website}`,
+    "PERFORMANCE HIGHLIGHTS",
+    line,
+    highlightsIntro,
+    ...(strengths.length ? strengths : [
+      "Professional and empathetic communication with customers.",
+      "Strong understanding of products and internal processes.",
+      "Timely case ownership and follow-up.",
+    ]).map((s) => `• ${s}`),
     "",
-    `This email was generated by the ${BRAND.name} Team.`,
+    "AREAS FOR IMPROVEMENT",
+    line,
+    improvementsIntro,
+    ...(improvements.length ? improvements : [
+      "Improve documentation detail for complex customer interactions.",
+      "Increase the use of standardized troubleshooting workflows.",
+    ]).map((s) => `• ${s}`),
+    "",
+    "COACHING RECOMMENDATIONS",
+    line,
+    coachingIntro,
+    ...(coachingItems.length ? coachingItems : [
+      "Attend the upcoming Advanced Customer Communication Workshop.",
+      "Complete the latest Product Knowledge refresher training.",
+      "Schedule a one-on-one coaching session with your Team Manager.",
+    ]).map((s) => `• ${s}`),
+    "",
+    "MANAGER'S COMMENTS",
+    line,
+    managerComments,
+    `— ${managerSignatoryName}, ${managerSignatoryTitle}`,
+    "",
+    "NEXT STEPS",
+    line,
+    nextSteps.replace(/<[^>]+>/g, ""),
+    "",
+    `Open in portal: ${ackUrl}`,
+    d.dueDate ? `Acknowledge by: ${formatDate(d.dueDate)}` : "",
+    "",
+    "NEED ASSISTANCE?",
+    line,
+    "If you have questions or need clarification, please contact your manager or the Customer Success Operations team.",
+    `${BRAND.supportEmail} · ${BRAND.supportUrl}`,
+    "",
+    "Kind Regards,",
+    `${BRAND.name} Team`,
+    `${BRAND.tagline}.`,
+    "",
+    `This is an automated email generated by ${BRAND.name}. Please do not reply directly to this message.`,
     d.confidentialityNotice ? `\n${d.confidentialityNotice}` : "",
   ]
     .filter(Boolean)
