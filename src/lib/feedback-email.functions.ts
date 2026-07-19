@@ -223,6 +223,8 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
     let providerAccepted = false;
     let providerError: string | null = null;
     let providerMessageId: string | null = null;
+    let actualRecipient: string = recipient;
+    let devOverride = false;
     try {
       const { drainQueue } = await import("@/lib/email-queue.server");
       const drain = await drainQueue();
@@ -230,6 +232,8 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       if (result?.ok) {
         providerAccepted = true;
         providerMessageId = result.messageId ?? null;
+        actualRecipient = result.actualTo ?? recipient;
+        devOverride = !!result.devOverride;
       } else if (result) {
         providerError = String(result.error ?? "Send failed");
       }
@@ -240,7 +244,14 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
 
     if (providerAccepted) {
       // Drainer already set feedback.status = "sent" and stamped sent_at.
-      return { ok: true as const, queueId: job.id, providerMessageId, recipient };
+      return {
+        ok: true as const,
+        queueId: job.id,
+        providerMessageId,
+        recipient,
+        actualRecipient,
+        devOverride,
+      };
     }
 
     // Not accepted synchronously — leave in queue for background retries but
