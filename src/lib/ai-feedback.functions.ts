@@ -79,7 +79,7 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Response("AI service is not configured", { status: 503 });
 
-    const gateway = createLovableAiGatewayProvider(key, undefined, {
+    const gateway = createLovableAiGatewayProvider(key, {
       structuredOutputs: true,
     });
     const model = gateway("google/gemini-3-flash-preview");
