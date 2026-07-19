@@ -257,19 +257,8 @@ function FeedbackDetail() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const transitionMutation = useMutation({
-    mutationFn: (payload: Parameters<typeof transitionFn>[0]["data"]) =>
-      transitionFn({ data: payload }),
-    onSuccess: (_, vars) => {
-      toast.success(vars.type === "retry" ? "Requeued for send" : "Ready to send");
-      setReviewNote("");
-      qc.invalidateQueries({ queryKey: ["feedback", id] });
-      qc.invalidateQueries({ queryKey: ["feedback-audit", id] });
-      qc.invalidateQueries({ queryKey: ["feedback-list"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
+  // review workflow removed — no transition mutation needed here.
+
 
 
   const { data: auditLog = [] } = useQuery({
