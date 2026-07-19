@@ -8,6 +8,33 @@
 
 export type SpamIssueSeverity = "info" | "warn" | "high";
 
+export type EmailProviderId =
+  | "gmail"
+  | "sendgrid"
+  | "resend"
+  | "postmark"
+  | "mailgun"
+  | "ses"
+  | (string & {});
+
+export interface ProviderContext {
+  /** Selected outbound provider (from email_settings.provider). */
+  provider?: EmailProviderId | null;
+  /** From: address the message will use. */
+  senderEmail?: string | null;
+  /** Reply-To header value (or null when unset). */
+  replyTo?: string | null;
+  /** Whether the outgoing MIME sets a List-Unsubscribe header. */
+  hasListUnsubscribe?: boolean;
+  /** Whether List-Unsubscribe-Post: List-Unsubscribe=One-Click is set. */
+  hasOneClickUnsubscribe?: boolean;
+  /**
+   * Bulk / marketing send (>5k/day per Gmail & Yahoo guidelines). Defaults to
+   * false — this app sends 1:1 transactional feedback.
+   */
+  isBulk?: boolean;
+}
+
 export interface SpamIssue {
   id: string;
   severity: SpamIssueSeverity;
@@ -20,6 +47,7 @@ export interface SpamCheckResult {
   score: number; // 0-100 (higher = riskier)
   level: "low" | "medium" | "high";
   issues: SpamIssue[];
+  providerId: EmailProviderId | null;
   stats: {
     htmlBytes: number;
     imageCount: number;
@@ -30,7 +58,22 @@ export interface SpamCheckResult {
     imageToTextRatio: number;
     capsRatio: number;
     exclamations: number;
+    scriptCount: number;
+    formCount: number;
+    iframeCount: number;
   };
+}
+
+const FREEMAIL_DOMAINS = new Set([
+  "gmail.com", "googlemail.com", "yahoo.com", "yahoo.co.uk", "ymail.com",
+  "hotmail.com", "outlook.com", "live.com", "aol.com", "icloud.com", "me.com",
+  "proton.me", "protonmail.com", "gmx.com", "mail.com",
+]);
+
+function domainOf(email: string | null | undefined): string | null {
+  if (!email) return null;
+  const at = email.lastIndexOf("@");
+  return at < 0 ? null : email.slice(at + 1).trim().toLowerCase();
 }
 
 const SPAM_PHRASES = [
