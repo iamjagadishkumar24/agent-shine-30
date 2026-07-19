@@ -92,8 +92,10 @@ function EmailConfig() {
 
   const [form, setForm] = useState<any>(null);
   const [testTo, setTestTo] = useState("");
+  const [brandingTo, setBrandingTo] = useState("");
   const [verifyResult, setVerifyResult] = useState<any>(null);
   const [testResult, setTestResult] = useState<any>(null);
+  const [brandingResult, setBrandingResult] = useState<any>(null);
 
   const s = form ?? settings;
 
