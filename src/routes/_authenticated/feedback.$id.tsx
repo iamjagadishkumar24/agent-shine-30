@@ -48,11 +48,20 @@ function FeedbackDetail() {
   const [reviewNote, setReviewNote] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const sendEmailFn = useServerFn(sendFeedbackEmail);
+  const previewFn = useServerFn(previewFeedbackEmail);
   const uploadUrlFn = useServerFn(createUploadUrl);
   const deleteAttFn = useServerFn(deleteAttachment);
   const transitionFn = useServerFn(transitionFeedback);
+
+  const preview = useQuery({
+    queryKey: ["feedback-preview", id],
+    queryFn: () => previewFn({ data: { feedbackId: id } }),
+    enabled: previewOpen,
+    staleTime: 0,
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["feedback", id],
