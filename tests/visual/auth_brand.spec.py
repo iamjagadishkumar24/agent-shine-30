@@ -104,7 +104,7 @@ async def run():
                     continue
 
                 rgb = parse_rgb(m["color"])
-                lum = luminance(rgb) if rgb else None
+                lum = color_luminance(m["color"])
                 weight = int(m["fontWeight"])
 
                 expected_dark_text = theme == "dark"
