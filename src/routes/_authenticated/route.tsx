@@ -214,11 +214,11 @@ function AuthedLayout() {
           <div className="flex min-w-0 items-center gap-3">
             <img src={zenworkMark.url} alt="" aria-hidden="true" className="hidden h-8 w-8 shrink-0 object-contain sm:block" />
             <div className="flex min-w-0 flex-col leading-tight">
-              <span className="brand-wordmark truncate text-[15px] sm:text-[17px] lg:text-lg">
-                Zenwork Performance Manager
+              <span className="truncate text-[15px] font-semibold text-foreground sm:text-base">
+                {current ? current.label : "Dashboard"}
               </span>
               <span className="hidden truncate text-[10.5px] font-medium uppercase tracking-[0.14em] text-muted-foreground md:block">
-                {current ? current.label : "Driving Customer Success"}
+                Driving Customer Success
               </span>
             </div>
           </div>
