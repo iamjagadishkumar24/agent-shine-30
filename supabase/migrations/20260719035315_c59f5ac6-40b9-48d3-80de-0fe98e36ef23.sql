@@ -1,0 +1,1 @@
+ALTER TYPE public.feedback_status ADD VALUE IF NOT EXISTS 'queued' BEFORE 'sent';

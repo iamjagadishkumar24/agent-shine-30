@@ -986,6 +986,7 @@ export type Database = {
         | "draft"
         | "review"
         | "approved"
+        | "queued"
         | "sent"
         | "acknowledged"
         | "completed"
@@ -1155,6 +1156,7 @@ export const Constants = {
         "draft",
         "review",
         "approved",
+        "queued",
         "sent",
         "acknowledged",
         "completed",
