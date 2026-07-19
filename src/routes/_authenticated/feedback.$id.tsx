@@ -539,6 +539,12 @@ function FeedbackDetail() {
             </dl>
           </Card>
 
+          <DeliveryPipeline
+            feedbackStatus={data.status}
+            queue={latestQueue ?? null}
+            sending={sendMutation.isPending}
+          />
+
           <Card className="rounded-xl border-border/60 bg-card/60 p-5">
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email delivery</div>
             <ul className="mt-3 space-y-2.5 text-xs">
