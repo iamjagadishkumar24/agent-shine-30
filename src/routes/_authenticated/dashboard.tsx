@@ -393,17 +393,20 @@ function Dashboard() {
   // Status rows
   const statusCounts = {
     draft: feedback.filter((f) => f.status === "draft").length,
-    review: feedback.filter((f) => f.status === "review").length,
+    ready: feedback.filter((f) => f.status === "ready_to_send").length,
     sent: feedback.filter((f) => f.status === "sent").length,
     acknowledged: feedback.filter((f) => f.status === "acknowledged" || f.status === "completed").length,
+    failed: feedback.filter((f) => f.status === "failed").length,
   };
   const statusTotal = Math.max(1, Object.values(statusCounts).reduce((a, b) => a + b, 0));
   const statusRows: Array<{ key: string; value: number; color: string; filter: string }> = [
     { key: "Draft", value: statusCounts.draft, color: "oklch(0.65 0.20 285)", filter: "draft" },
-    { key: "Pending", value: statusCounts.review, color: "oklch(0.80 0.16 75)", filter: "review" },
+    { key: "Ready to send", value: statusCounts.ready, color: "oklch(0.80 0.16 75)", filter: "ready_to_send" },
     { key: "Sent", value: statusCounts.sent, color: "oklch(0.70 0.14 235)", filter: "sent" },
     { key: "Acknowledged", value: statusCounts.acknowledged, color: "oklch(0.72 0.16 160)", filter: "acknowledged" },
+    { key: "Failed", value: statusCounts.failed, color: "oklch(0.62 0.22 25)", filter: "failed" },
   ];
+
 
   // Email — providers without webhooks (Gmail SMTP) never stamp delivered_at,
   // so treat a stamped sent_at with no error as "delivered" for widget purposes.
