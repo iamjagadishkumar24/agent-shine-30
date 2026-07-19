@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { MEANINGFUL_NOTIFICATION_TYPES } from "@/lib/notification-types";
 
 const NOTIF_LIST_MAX = 100;
+const MEANINGFUL_TYPES = Array.from(MEANINGFUL_NOTIFICATION_TYPES);
 
 function fail(message: string, status: number, err?: unknown): never {
   if (err) console.error(`[notifications] ${message}`, err);
