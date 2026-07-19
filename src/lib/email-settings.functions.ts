@@ -1,10 +1,23 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHost } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import {
   renderCustomTemplate,
   sampleVariableMap,
 } from "./feedback-email.variables";
+import { renderFeedbackEmail } from "./feedback-email.templates";
+import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
+
+function getAppBaseUrl(): string {
+  const envUrl = process.env.APP_BASE_URL;
+  if (envUrl) return envUrl.replace(/\/$/, "");
+  try {
+    const host = getRequestHost();
+    if (host) return `https://${host}`;
+  } catch {}
+  return "https://app.example.com";
+}
 
 const SettingsInput = z.object({
   provider: z.string().trim().min(1).max(50),
@@ -336,3 +349,76 @@ export const sendFeedbackTemplateTest = createServerFn({ method: "POST" })
 
 // Expose the current variable-map derivation for demo use (unused server-side; kept
 // as an intentional touch so `buildVariableMap` stays imported alongside the sample map).
+
+// ---------------------------------------------------------------------------
+// Branding test: sends the Zenwork feedback template with sample data and
+// the currently configured logo so admins can visually verify branding.
+// ---------------------------------------------------------------------------
+
+export const sendBrandingTestEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { to: string }) =>
+    z.object({ to: z.string().trim().email().max(255) }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: s, error } = await context.supabase
+      .from("email_settings")
+      .select("*")
+      .eq("singleton", true)
+      .maybeSingle();
+    if (error) {
+      console.error("[email-settings] settings lookup failed", error);
+      throw new Response("Unable to load settings", { status: 500 });
+    }
+    if (!s || !s.sender_email) throw new Response("Configure sender email first", { status: 400 });
+    if (!s.enabled) throw new Response("Email service is disabled", { status: 400 });
+
+    const appBaseUrl = getAppBaseUrl();
+    const rendered = renderFeedbackEmail({
+      feedbackId: "SAMPLE-0001",
+      title: "Sample feedback — branding preview",
+      agentName: "Jordan Rivers",
+      managerName: s.sender_name ?? "Customer Success Team",
+      category: "Communication",
+      feedbackType: "coaching",
+      severity: "medium",
+      score: 92,
+      summary:
+        "This is a branding preview generated from your current template and logo. Real feedback emails will use the same layout with live data.",
+      strengths:
+        "Clear, empathetic tone across the interaction\nAccurate resolution on the first contact",
+      improvements:
+        "Slow initial response — aim to acknowledge within 30 seconds",
+      recommendedActions:
+        "Review greeting script in the QA library\nShadow a top-performing peer this week",
+      dueDate: new Date(Date.now() + 7 * 86400_000).toISOString(),
+      appBaseUrl,
+      senderName: s.sender_name,
+      logoUrl: s.logo_url ?? `${appBaseUrl}${zenworkLogo.url}`,
+      signatureHtml: s.signature_html,
+      confidentialityNotice: s.confidentiality_notice,
+      attachmentLinks: [],
+    });
+
+    const { getProvider } = await import("@/lib/email/providers.server");
+    const provider = getProvider(s.provider);
+    const started = Date.now();
+    try {
+      const res = await provider.send({
+        from: { name: sanitizeHeader(s.sender_name ?? ""), email: s.sender_email },
+        to: data.to,
+        replyTo: s.reply_to,
+        subject: sanitizeHeader(`[TEST] ${rendered.subject}`),
+        html: rendered.html,
+        text: rendered.text,
+      });
+      return { ...res, latencyMs: Date.now() - started };
+    } catch (err) {
+      console.error("[email-settings] branding test failed", err);
+      throw new Response(
+        err instanceof Error ? err.message.slice(0, 300) : "Branding test failed",
+        { status: 502 },
+      );
+    }
+  });
