@@ -22,6 +22,8 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 function CoachingList() {
+  useRealtimeInvalidate("coaching_sessions", [["coaching-sessions"]]);
+  useRealtimeInvalidate("coaching_action_items", [["coaching-sessions"]]);
   const { data = [], isLoading } = useQuery({
     queryKey: ["coaching-sessions"],
     queryFn: async () => {
