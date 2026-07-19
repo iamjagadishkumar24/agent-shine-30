@@ -238,6 +238,13 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
           event_type: done ? "send_failed" : "send_retry",
           detail: { attempt, error: res.error, queue_id: job.id },
         });
+        await supabaseAdmin.from("feedback_audit_log").insert({
+          feedback_id: job.feedback_id,
+          actor_id: null,
+          action: done ? "email_failed" : "email_retry",
+          comment: res.error,
+          metadata: { source: "email_queue", attempt, queue_id: job.id, provider: res.provider },
+        });
       }
       results.push({ id: job.id, ok: false, error: res.error, willRetry: !done });
     }
