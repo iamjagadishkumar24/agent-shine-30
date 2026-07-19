@@ -130,23 +130,24 @@ function AuthedLayout() {
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-30 flex flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200",
-          collapsed ? "w-16" : "w-60",
+          collapsed ? "w-[68px]" : "w-64",
         )}
       >
-        <div className={cn("flex h-14 items-center border-b border-sidebar-border", collapsed ? "justify-center px-2" : "gap-2.5 px-4")}>
-          <img src={zenworkMark.url} alt="Zenwork" className="h-7 w-7 shrink-0 object-contain" />
+        <div className={cn("flex h-16 items-center border-b border-sidebar-border", collapsed ? "justify-center px-2" : "gap-3 px-5")}>
+          <img src={zenworkMark.url} alt="Zenwork" className="h-8 w-8 shrink-0 object-contain" />
           {!collapsed && (
             <div className="flex min-w-0 flex-col leading-tight">
-              <span className="truncate text-[13px] font-semibold tracking-tight text-sidebar-foreground">Zenwork</span>
-              <span className="truncate text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Performance Manager</span>
+              <span className="truncate text-[15px] font-semibold tracking-tight text-sidebar-foreground">Zenwork</span>
+              <span className="truncate text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Performance Manager</span>
             </div>
           )}
         </div>
 
 
-        <nav className="flex-1 space-y-0.5 p-3 overflow-y-auto">
+        <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
           {!collapsed && (
-            <div className="px-2 pb-2 pt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="flex items-center gap-2 px-3 pb-2 pt-3 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <span className="h-1 w-1 rounded-full bg-primary/60" />
               Workspace
             </div>
           )}
@@ -158,24 +159,30 @@ function AuthedLayout() {
                 to={item.to}
                 title={collapsed ? item.label : undefined}
                 className={cn(
-                  "group relative flex items-center gap-2.5 rounded-md text-sm transition-all",
-                  collapsed ? "justify-center px-2 py-2" : "px-2.5 py-1.5",
+                  "group relative flex items-center gap-3 rounded-lg text-[14px] font-medium transition-all duration-150",
+                  collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2.5",
                   active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+                    ? "bg-primary/12 text-sidebar-foreground shadow-[0_1px_0_0_color-mix(in_oklab,var(--primary)_20%,transparent)]"
+                    : "text-sidebar-foreground/75 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground hover:translate-x-[1px]",
                 )}
               >
                 {active && (
-                  <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r bg-primary" />
+                  <span className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-primary" />
                 )}
-                <item.icon className="h-4 w-4 shrink-0" />
+                <item.icon
+                  className={cn(
+                    "h-[18px] w-[18px] shrink-0 transition-colors",
+                    active ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground",
+                  )}
+                  strokeWidth={active ? 2.25 : 2}
+                />
                 {!collapsed && <span className="truncate">{item.label}</span>}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-3 space-y-0.5">
+        <div className="p-3 space-y-1 border-t border-sidebar-border/60">
           {BOTTOM_NAV.map((item) => {
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
@@ -184,14 +191,20 @@ function AuthedLayout() {
                 to={item.to}
                 title={collapsed ? item.label : undefined}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-md text-sm transition-colors",
-                  collapsed ? "justify-center px-2 py-2" : "px-2.5 py-1.5",
+                  "group flex items-center gap-3 rounded-lg text-[14px] font-medium transition-all duration-150",
+                  collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2.5",
                   active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+                    ? "bg-primary/12 text-sidebar-foreground"
+                    : "text-sidebar-foreground/75 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
                 )}
               >
-                <item.icon className="h-4 w-4 shrink-0" />
+                <item.icon
+                  className={cn(
+                    "h-[18px] w-[18px] shrink-0 transition-colors",
+                    active ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground",
+                  )}
+                  strokeWidth={active ? 2.25 : 2}
+                />
                 {!collapsed && <span>{item.label}</span>}
               </Link>
             );
@@ -200,10 +213,10 @@ function AuthedLayout() {
 
         <button
           onClick={() => update({ sidebarCollapsed: !collapsed })}
-          className="mx-3 mb-3 flex items-center justify-center gap-1.5 rounded-md border border-sidebar-border bg-sidebar-accent/30 px-2 py-1 text-[10px] text-muted-foreground hover:bg-sidebar-accent/60 transition-colors"
+          className="mx-3 mb-3 flex items-center justify-center gap-1.5 rounded-md border border-sidebar-border bg-sidebar-accent/30 px-2 py-1.5 text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground transition-colors"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          <ChevronLeft className={cn("h-3 w-3 transition-transform", collapsed && "rotate-180")} />
+          <ChevronLeft className={cn("h-3.5 w-3.5 transition-transform duration-200", collapsed && "rotate-180")} />
           {!collapsed && <span>Collapse</span>}
         </button>
       </aside>
