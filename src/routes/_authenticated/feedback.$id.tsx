@@ -517,7 +517,7 @@ function FeedbackDetail() {
             </ul>
           </Card>
 
-          <Card className="rounded-xl border-border/60 bg-card/60 p-5">
+          <Card className="rounded-xl border-border/60 bg-card/60 p-5" data-testid="activity-feed">
             <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <History className="h-3 w-3" /> Audit log
             </div>
