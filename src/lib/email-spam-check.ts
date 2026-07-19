@@ -131,6 +131,9 @@ export function analyzeEmailForSpamRisk(input: {
 
   const imgs = Array.from(doc.querySelectorAll("img"));
   const anchors = Array.from(doc.querySelectorAll("a"));
+  const scripts = Array.from(doc.querySelectorAll("script"));
+  const forms = Array.from(doc.querySelectorAll("form"));
+  const iframes = Array.from(doc.querySelectorAll("iframe"));
   const text = textFromHtml(doc);
   const textLength = text.length;
 
