@@ -221,7 +221,7 @@ function AuthedLayout() {
         </button>
       </aside>
 
-      <div className={cn("flex-1 transition-[margin] duration-200", collapsed ? "ml-16" : "ml-60")}>
+      <div className={cn("flex-1 transition-[margin] duration-200", collapsed ? "ml-[68px]" : "ml-64")}>
         {/* Top header */}
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border/60 bg-background/75 px-4 backdrop-blur-xl sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
