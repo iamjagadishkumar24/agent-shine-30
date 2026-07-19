@@ -587,6 +587,53 @@ function FeedbackDetail() {
               />
             )}
           </div>
+
+          <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-semibold">Send test email</div>
+                <p className="text-xs text-muted-foreground">
+                  Sends this exact rendered email to any address (subject prefixed <code>[TEST]</code>). Does not change feedback state.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="test.recipient@example.com"
+                value={testTo}
+                onChange={(e) => setTestTo(e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                variant="secondary"
+                onClick={() => testSend.mutate(testTo.trim())}
+                disabled={testSend.isPending || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testTo.trim())}
+              >
+                {testSend.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Mail className="mr-1.5 h-3.5 w-3.5" />}
+                Send test
+              </Button>
+            </div>
+            {testResult && (
+              <div
+                className={`rounded-md border p-2 text-xs ${
+                  testResult.ok
+                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                    : "border-destructive/40 bg-destructive/10 text-destructive"
+                }`}
+              >
+                <div className="font-semibold">
+                  {testResult.ok ? "✓ Provider accepted" : "✗ Provider rejected"} · {testResult.provider} · {testResult.latencyMs}ms
+                </div>
+                <div className="mt-1 space-y-0.5 text-[11px] opacity-90">
+                  <div>Recipient: <span className="font-mono">{testResult.recipient}</span></div>
+                  {testResult.messageId && <div>Message id: <span className="font-mono break-all">{testResult.messageId}</span></div>}
+                  {testResult.error && <div>Error: <span className="font-mono break-all">{testResult.error}</span></div>}
+                </div>
+              </div>
+            )}
+          </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setPreviewOpen(false)}>Close</Button>
             {data?.status === "approved" && (
@@ -597,7 +644,7 @@ function FeedbackDetail() {
                 }}
                 disabled={sendMutation.isPending}
               >
-                <Send className="mr-1.5 h-3.5 w-3.5" /> Send now
+                <Send className="mr-1.5 h-3.5 w-3.5" /> Send to agent
               </Button>
             )}
           </DialogFooter>
