@@ -107,8 +107,11 @@ function EmailConfig() {
           logo_url: s?.logo_url ?? "",
           confidentiality_notice: s?.confidentiality_notice ?? "",
           enabled: !!s?.enabled,
+          dev_override_enabled: !!s?.dev_override_enabled,
+          dev_override_recipient: s?.dev_override_recipient ?? "",
         },
       }),
+
     onSuccess: (row) => {
       toast.success("Settings saved");
       setForm(null);
