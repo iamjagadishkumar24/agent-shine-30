@@ -368,14 +368,9 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
             <Select value={form.status} onValueChange={(v) => set({ status: v as any })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="scheduled">Scheduled</SelectItem>
-                <SelectItem value="pending_approval">Pending approval</SelectItem>
-                <SelectItem value="confirmed">Confirmed</SelectItem>
-                <SelectItem value="in_progress">In progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="canceled">Cancelled</SelectItem>
-                <SelectItem value="missed">Missed</SelectItem>
-                <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                {COACHING_STATUS_VALUES.map((v) => (
+                  <SelectItem key={v} value={v}>{COACHING_STATUS_LABELS[v]}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
