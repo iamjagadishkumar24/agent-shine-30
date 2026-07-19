@@ -70,6 +70,7 @@ const AGENT_NAV = [
 ] as const;
 
 const BOTTOM_NAV = [
+  { to: "/security", label: "Security", icon: ShieldCheck },
   { to: "/health", label: "Health", icon: Activity },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
