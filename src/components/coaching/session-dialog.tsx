@@ -25,6 +25,12 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { AddToCalendarMenu } from "@/components/coaching/add-to-calendar-menu";
+import {
+  COACHING_STATUS_VALUES,
+  COACHING_STATUS_LABELS,
+  coachingStatusSchema,
+  normalizeCoachingStatus,
+} from "@/lib/coaching-status";
 
 export type SessionRow = {
   id?: string;
@@ -54,10 +60,7 @@ const Schema = z.object({
   end_time: z.string().min(1, "Pick an end time"),
   session_type: z.enum(["coaching", "review", "one_on_one", "training", "follow_up"]),
   priority: z.enum(["low", "medium", "high", "urgent"]),
-  status: z.enum([
-    "scheduled", "pending_approval", "confirmed", "in_progress",
-    "completed", "canceled", "missed", "rescheduled",
-  ]),
+  status: coachingStatusSchema,
   meeting_link: z.string().trim().url("Invalid URL").max(500).optional().or(z.literal("")),
   meeting_location: z.string().trim().max(200).optional(),
   agenda: z.string().trim().max(2000).optional(),
@@ -120,9 +123,9 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
     date: "",
     start_time: "",
     end_time: "",
-    session_type: "coaching" as const,
-    priority: "medium" as const,
-    status: "scheduled" as const,
+    session_type: "coaching" as "coaching" | "review" | "one_on_one" | "training" | "follow_up",
+    priority: "medium" as "low" | "medium" | "high" | "urgent",
+    status: "scheduled" as import("@/lib/coaching-status").CoachingStatus,
     meeting_link: "",
     meeting_location: "",
     agenda: "",
@@ -165,7 +168,7 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
       end_time: endBits.time || startBits.time,
       session_type: (session?.session_type as any) ?? "coaching",
       priority: (session?.priority as any) ?? "medium",
-      status: (session?.status as any) ?? "scheduled",
+      status: normalizeCoachingStatus(session?.status) ?? "scheduled",
       meeting_link: session?.meeting_link ?? "",
       meeting_location: session?.meeting_location ?? "",
       agenda: session?.agenda ?? "",
@@ -205,7 +208,7 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
         duration_minutes: durationMin,
         session_type: data.session_type,
         priority: data.priority,
-        status: data.status,
+        status: normalizeCoachingStatus(data.status) ?? "scheduled",
         meeting_link: data.meeting_link || null,
         meeting_location: data.meeting_location || null,
         agenda: data.agenda || null,
@@ -365,14 +368,9 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
             <Select value={form.status} onValueChange={(v) => set({ status: v as any })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="scheduled">Scheduled</SelectItem>
-                <SelectItem value="pending_approval">Pending approval</SelectItem>
-                <SelectItem value="confirmed">Confirmed</SelectItem>
-                <SelectItem value="in_progress">In progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="canceled">Cancelled</SelectItem>
-                <SelectItem value="missed">Missed</SelectItem>
-                <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                {COACHING_STATUS_VALUES.map((v) => (
+                  <SelectItem key={v} value={v}>{COACHING_STATUS_LABELS[v]}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
