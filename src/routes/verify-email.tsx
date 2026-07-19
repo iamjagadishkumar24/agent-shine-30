@@ -27,8 +27,8 @@ function VerifyEmailPage() {
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [feedback, setFeedback] = useState<
-    | { kind: "success"; message: string; at: Date }
-    | { kind: "error"; message: string }
+    | { kind: "success"; message: string; at: Date; nonce: number }
+    | { kind: "error"; message: string; nonce: number }
     | null
   >(null);
 
@@ -51,7 +51,7 @@ function VerifyEmailPage() {
   const handleResend = async () => {
     if (!email) {
       const msg = "Missing email address — return to sign up to request a new link.";
-      setFeedback({ kind: "error", message: msg });
+      setFeedback({ kind: "error", message: msg, nonce: Date.now() });
       toast.error(msg);
       return;
     }
@@ -65,12 +65,12 @@ function VerifyEmailPage() {
       });
       if (error) throw error;
       const msg = `Verification email sent to ${email}. Check your inbox and spam folder.`;
-      setFeedback({ kind: "success", message: msg, at: new Date() });
+      setFeedback({ kind: "success", message: msg, at: new Date(), nonce: Date.now() });
       toast.success("Verification email sent");
       setCooldown(30);
     } catch (err: any) {
       const msg = err?.message ?? "Could not resend verification email. Please try again.";
-      setFeedback({ kind: "error", message: msg });
+      setFeedback({ kind: "error", message: msg, nonce: Date.now() });
       toast.error(msg);
     } finally {
       setResending(false);
@@ -143,31 +143,57 @@ function VerifyEmailPage() {
             </Button>
           </div>
 
-          {feedback && (
-            <div
-              role="status"
-              aria-live="polite"
-              className={
-                feedback.kind === "success"
-                  ? "mt-4 flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-300"
-                  : "mt-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
-              }
-            >
-              {feedback.kind === "success" ? (
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-              ) : (
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              )}
-              <div className="flex-1">
-                <p>{feedback.message}</p>
-                {feedback.kind === "success" && (
+          {/* Persistent live regions: keyed by nonce so identical repeated
+              messages are re-announced by screen readers. */}
+          <div
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className={
+              feedback?.kind === "success"
+                ? "mt-4 flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-300"
+                : "sr-only"
+            }
+            key={feedback?.kind === "success" ? `s-${feedback.nonce}` : "s-empty"}
+          >
+            {feedback?.kind === "success" && (
+              <>
+                <CheckCircle2 aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />
+                <div className="flex-1">
+                  <p>
+                    <span className="sr-only">Success: </span>
+                    {feedback.message}
+                  </p>
                   <p className="mt-1 text-xs opacity-80">
                     Sent at {feedback.at.toLocaleTimeString()}
                   </p>
-                )}
-              </div>
-            </div>
-          )}
+                </div>
+              </>
+            )}
+          </div>
+
+          <div
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+            className={
+              feedback?.kind === "error"
+                ? "mt-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+                : "sr-only"
+            }
+            key={feedback?.kind === "error" ? `e-${feedback.nonce}` : "e-empty"}
+          >
+            {feedback?.kind === "error" && (
+              <>
+                <AlertCircle aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />
+                <p className="flex-1">
+                  <span className="sr-only">Error: </span>
+                  {feedback.message}
+                </p>
+              </>
+            )}
+          </div>
+
         </>
       )}
     </AuthShell>
