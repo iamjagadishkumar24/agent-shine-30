@@ -122,28 +122,38 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
 
     const now2 = new Date().toISOString();
     if (res.ok) {
+      // Gmail (and other synchronous SMTP-style providers) accept = deliver.
+      // Async webhook providers update delivered_at via
+      // /webhooks/email/$provider; providers without delivery webhooks get an
+      // immediate delivered_at so dashboards reflect reality.
+      const providerHasWebhook = ["resend", "sendgrid", "postmark", "mailgun"].includes(
+        res.provider,
+      );
+      const deliveredAt = providerHasWebhook ? null : now2;
+
       await supabaseAdmin
         .from("email_queue")
         .update({
           status: "sent",
           attempts: attempt,
           sent_at: now2,
+          delivered_at: deliveredAt,
           provider: res.provider,
-          provider_status: "accepted",
+          provider_status: providerHasWebhook ? "accepted" : "delivered",
           provider_message_id: res.messageId ?? null,
           to_email: actualTo,
           to_email_intended: intendedTo,
           last_error: null,
+          last_event_at: now2,
         })
         .eq("id", job.id);
-      // Reflect on the feedback record too (sent = provider accepted; delivered
-      // is set later by the provider webhook).
       if (job.feedback_id) {
         await supabaseAdmin
           .from("feedback")
           .update({
             status: job.kind === "reminder" ? undefined : "sent",
             sent_at: now2,
+            ...(deliveredAt ? { delivered_at: deliveredAt } : {}),
             email_error: null,
             ...(job.kind === "reminder"
               ? {
@@ -153,10 +163,41 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
               : {}),
           })
           .eq("id", job.feedback_id);
-        await supabaseAdmin.from("feedback_email_events").insert({
+        const events: Array<{ feedback_id: string; event_type: string; detail: any }> = [
+          {
+            feedback_id: job.feedback_id,
+            event_type: job.kind === "reminder" ? "reminder_sent" : "sent",
+            detail: {
+              provider: res.provider,
+              message_id: res.messageId ?? null,
+              queue_id: job.id,
+              intended_to: intendedTo,
+              actual_to: actualTo,
+              dev_override: applyOverride,
+            },
+          },
+        ];
+        if (!providerHasWebhook) {
+          events.push({
+            feedback_id: job.feedback_id,
+            event_type: "delivered",
+            detail: {
+              provider: res.provider,
+              message_id: res.messageId ?? null,
+              queue_id: job.id,
+              inferred: true,
+              reason: "synchronous_smtp_accepted",
+            },
+          });
+        }
+        await supabaseAdmin.from("feedback_email_events").insert(events);
+        await supabaseAdmin.from("feedback_audit_log").insert({
           feedback_id: job.feedback_id,
-          event_type: job.kind === "reminder" ? "reminder_sent" : "sent",
-          detail: {
+          actor_id: null,
+          action: providerHasWebhook ? "email_accepted" : "email_delivered",
+          comment: `Provider ${res.provider} ${providerHasWebhook ? "accepted" : "delivered"} message ${res.messageId ?? ""}`.trim(),
+          metadata: {
+            source: "email_queue",
             provider: res.provider,
             message_id: res.messageId ?? null,
             queue_id: job.id,
