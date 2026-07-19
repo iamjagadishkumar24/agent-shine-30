@@ -386,17 +386,12 @@ export const sendBrandingTestEmail = createServerFn({ method: "POST" })
       score: 92,
       summary:
         "This is a branding preview generated from your current template and logo. Real feedback emails will use the same layout with live data.",
-      strengths: [
-        "Clear, empathetic tone across the interaction",
-        "Accurate resolution on the first contact",
-      ],
-      improvements: [
+      strengths:
+        "Clear, empathetic tone across the interaction\nAccurate resolution on the first contact",
+      improvements:
         "Slow initial response — aim to acknowledge within 30 seconds",
-      ],
-      recommendedActions: [
-        "Review greeting script in the QA library",
-        "Shadow a top-performing peer this week",
-      ],
+      recommendedActions:
+        "Review greeting script in the QA library\nShadow a top-performing peer this week",
       dueDate: new Date(Date.now() + 7 * 86400_000).toISOString(),
       appBaseUrl,
       senderName: s.sender_name,
