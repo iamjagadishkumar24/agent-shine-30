@@ -100,9 +100,8 @@ function FeedbackPage() {
   const qc = useQueryClient();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  const approve = useServerFn(bulkApproveFeedback);
-  const reject = useServerFn(bulkRejectFeedback);
   const del = useServerFn(bulkDeleteFeedback);
+
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["feedback-list"],
