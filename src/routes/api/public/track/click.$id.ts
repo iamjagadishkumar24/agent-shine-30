@@ -19,6 +19,7 @@ export const Route = createFileRoute("/api/public/track/click/$id")({
             .eq("id", params.id)
             .maybeSingle();
           if (fb) {
+            const isFirstClick = !fb.click_count || fb.click_count === 0;
             await supabaseAdmin
               .from("feedback")
               .update({
@@ -29,8 +30,17 @@ export const Route = createFileRoute("/api/public/track/click/$id")({
             await supabaseAdmin.from("feedback_email_events").insert({
               feedback_id: params.id,
               event_type: "clicked",
-              detail: { to: safeTo },
+              detail: { to: safeTo, click_count: (fb.click_count ?? 0) + 1 },
             });
+            if (isFirstClick) {
+              await supabaseAdmin.from("feedback_audit_log").insert({
+                feedback_id: params.id,
+                actor_id: null,
+                action: "email_clicked",
+                comment: `Recipient clicked link → ${safeTo}`,
+                metadata: { source: "click_tracker", to: safeTo },
+              });
+            }
           }
         } catch (e) {
           console.error("click tracker error", e);
