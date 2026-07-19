@@ -83,6 +83,7 @@ function EmailConfig() {
   const saveFn = useServerFn(saveEmailSettings);
   const verifyFn = useServerFn(verifyEmailConnection);
   const testFn = useServerFn(sendTestEmail);
+  const brandingTestFn = useServerFn(sendBrandingTestEmail);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["email-settings"],
