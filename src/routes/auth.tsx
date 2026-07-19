@@ -123,12 +123,7 @@ function AuthPage() {
     } catch {}
   }, []);
 
-  // Move focus to the error banner when it appears so screen-reader / keyboard
-  // users hear the failure without hunting for it.
-  const errorRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (errorMsg) errorRef.current?.focus();
-  }, [errorMsg]);
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
