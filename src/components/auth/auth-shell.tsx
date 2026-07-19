@@ -63,13 +63,13 @@ export function AuthShell({
     <div
       role="group"
       aria-label="Zenwork Performance Manager"
-      className="mb-4 flex flex-col items-center gap-2 sm:mb-5 sm:gap-3 lg:mb-3 lg:gap-2"
+      className="mx-auto mb-4 flex w-full max-w-full flex-col items-center gap-2 px-2 sm:mb-5 sm:gap-3 lg:mb-3 lg:gap-2"
     >
       <img
         src={zenworkLogo.url}
         alt=""
         aria-hidden="true"
-        className="h-16 w-16 sm:h-20 sm:w-20 lg:h-16 lg:w-16 xl:h-20 xl:w-20 object-contain bg-transparent"
+        className="block h-14 w-14 shrink-0 object-contain bg-transparent sm:h-16 sm:w-16 md:h-20 md:w-20 lg:h-16 lg:w-16 xl:h-20 xl:w-20"
       />
       <h1
         style={{ fontWeight: 800 }}
