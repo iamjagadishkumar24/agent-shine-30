@@ -166,6 +166,21 @@ function FeedbackDetail() {
     },
   });
 
+  const { data: latestQueue } = useQuery({
+    queryKey: ["feedback-queue", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("email_queue")
+        .select("id, status, attempts, max_attempts, provider, provider_message_id, provider_status, sent_at, delivered_at, bounced_at, bounce_reason, deferred_until, defer_reason, last_error, last_event_at, created_at, to_email, to_email_intended, next_attempt_at")
+        .eq("feedback_id", id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const update = useMutation({
     mutationFn: async (patch: import("@/integrations/supabase/types").TablesUpdate<"feedback">) => {
       const { error } = await supabase.from("feedback").update(patch).eq("id", id);
