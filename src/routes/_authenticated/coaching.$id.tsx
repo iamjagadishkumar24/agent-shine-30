@@ -166,10 +166,14 @@ function SessionDetail() {
         title={s.topic || "Coaching session"}
         subtitle={`with ${s.agent?.full_name ?? "—"} · ${safeDateTime(s.scheduled_at)}`}
         actions={
-          <Link to="/coaching">
-
-            <Button variant="ghost" size="sm" className="h-8 gap-1"><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
-          </Link>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" className="h-8 gap-1" onClick={() => setEditOpen(true)}>
+              <Pencil className="h-3.5 w-3.5" /> Edit
+            </Button>
+            <Link to="/coaching">
+              <Button variant="ghost" size="sm" className="h-8 gap-1"><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
+            </Link>
+          </div>
         }
       />
 
