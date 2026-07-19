@@ -28,6 +28,7 @@ export const listMyNotifications = createServerFn({ method: "GET" })
       .from("notifications")
       .select("*")
       .eq("user_id", context.userId)
+      .in("type", MEANINGFUL_TYPES)
       .order("created_at", { ascending: false })
       .limit(limit);
     if (data?.unreadOnly) query = query.is("read_at", null);
@@ -43,6 +44,7 @@ export const getUnreadCount = createServerFn({ method: "GET" })
       .from("notifications")
       .select("id", { count: "exact", head: true })
       .eq("user_id", context.userId)
+      .in("type", MEANINGFUL_TYPES)
       .is("read_at", null);
     if (error) fail("Unable to load unread count", 500, error);
     return count ?? 0;
