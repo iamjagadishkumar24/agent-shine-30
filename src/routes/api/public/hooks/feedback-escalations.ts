@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { renderFeedbackEmail } from "@/lib/feedback-email.templates";
+import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
 
 const SLA_HOURS = 48;
 const MAX_REMINDERS = 3;
