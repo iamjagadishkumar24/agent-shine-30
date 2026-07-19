@@ -872,7 +872,7 @@ function DeliveryPipeline({
           : "Not sent";
 
   return (
-    <Card className="rounded-xl border-border/60 bg-card/60 p-5">
+    <Card className="rounded-xl border-border/60 bg-card/60 p-5" data-testid="delivery-pipeline">
       <div className="flex items-center justify-between">
         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Delivery status</div>
         <span className={cn("rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide", summaryTone)}>
