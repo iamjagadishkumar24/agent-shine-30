@@ -201,8 +201,9 @@ function AuthPage() {
       <div className="relative grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
         {/* Left — brand / testimonial */}
         <aside className="relative hidden lg:flex flex-col justify-between p-12 xl:p-16">
-          <Link to="/" className="flex items-center">
-            <img src={zenworkLogo.url} alt="Zenwork Performance Manager" className="h-9 w-auto object-contain" />
+          <Link to="/" className="flex items-center gap-3">
+            <img src={zenworkLogo.url} alt="Zenwork" className="h-10 w-10 object-contain" />
+            <span className="text-lg font-semibold tracking-tight">Zenwork <span className="text-muted-foreground font-medium">Performance Manager</span></span>
           </Link>
 
           <div className="space-y-8 max-w-lg">
@@ -243,8 +244,9 @@ function AuthPage() {
           <div className="w-full max-w-md">
             <div className="rounded-2xl border border-border/60 bg-background/50 p-7 sm:p-8 shadow-2xl shadow-black/20 backdrop-blur-2xl">
               {/* Mobile brand */}
-              <Link to="/" className="lg:hidden flex items-center mb-6">
-                <img src={zenworkLogo.url} alt="Zenwork Performance Manager" className="h-8 w-auto object-contain" />
+              <Link to="/" className="lg:hidden flex items-center gap-2.5 mb-6">
+                <img src={zenworkLogo.url} alt="Zenwork" className="h-9 w-9 object-contain" />
+                <span className="text-base font-semibold tracking-tight">Zenwork <span className="text-muted-foreground font-medium">Performance Manager</span></span>
               </Link>
 
               {mode === "forgot" ? (
