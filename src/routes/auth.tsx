@@ -193,6 +193,7 @@ function AuthPage() {
   const emailError = touched.email && email.length > 0 && !emailValid;
   const pwError = touched.password && mode === "signup" && password.length > 0 && !passwordValid;
   const nameError = touched.name && mode === "signup" && name.length > 0 && !nameValid;
+  const confirmError = touched.confirm && mode === "signup" && confirmPassword.length > 0 && !confirmValid;
 
   return (
     <AuthShell sidePanel={mode === "signin" ? <SignInMarketingPanel /> : undefined}>
