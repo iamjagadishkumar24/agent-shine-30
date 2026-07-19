@@ -134,7 +134,6 @@ function CoachingCalendar() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["coaching-sessions"] });
-      toast.success("Session rescheduled");
     },
     onError: (e: any) => {
       const msg = String(e?.message ?? "Could not reschedule");

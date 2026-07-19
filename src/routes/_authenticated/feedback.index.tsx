@@ -182,7 +182,7 @@ function FeedbackPage() {
 
   const delMut = useMutation({
     mutationFn: () => del({ data: { ids: [...selected] } }),
-    onSuccess: (r) => { toast.success(`Deleted ${r.deleted} feedback item(s)`); invalidate(); },
+    onSuccess: (r) => { invalidate(); },
     onError: (e: any) => toast.error(e.message ?? "Failed to delete"),
   });
 
@@ -202,7 +202,6 @@ function FeedbackPage() {
       created_at: f.created_at,
     })));
     downloadCsv(`feedback-${format(new Date(), "yyyyMMdd-HHmm")}.csv`, csv);
-    toast.success(`Exported ${source.length} row(s)`);
   };
 
   return (

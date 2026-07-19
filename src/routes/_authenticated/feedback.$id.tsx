@@ -108,7 +108,6 @@ function FeedbackDetail() {
         messageId: "messageId" in r ? r.messageId : undefined,
         error: "error" in r ? r.error : undefined,
       });
-      if (r.ok) toast.success(`Test delivered to ${r.recipient} (${r.latencyMs}ms)`);
       else toast.error(`Test failed: ${"error" in r ? r.error : "unknown"}`);
     },
     onError: (err: any) => {
@@ -200,7 +199,6 @@ function FeedbackDetail() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Deleted");
       qc.invalidateQueries({ queryKey: ["feedback-list"] });
       navigate({ to: "/feedback" });
     },
@@ -213,7 +211,6 @@ function FeedbackDetail() {
   const completeMutation = useMutation({
     mutationFn: () => completeFn({ data: { feedbackId: id } }),
     onSuccess: () => {
-      toast.success("Marked complete");
       qc.invalidateQueries({ queryKey: ["feedback", id] });
       qc.invalidateQueries({ queryKey: ["feedback-list"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
@@ -227,7 +224,6 @@ function FeedbackDetail() {
     mutationFn: () => sendEmailFn({ data: { feedbackId: id } }),
     onSuccess: (res: any) => {
       if (res?.ok) {
-        toast.success("Feedback email sent successfully.");
       } else if (res?.queued) {
         toast.warning("Email has been queued successfully.");
       } else {
@@ -277,7 +273,6 @@ function FeedbackDetail() {
         .from("feedback-attachments")
         .uploadToSignedUrl(info.path, info.token, file, { contentType: file.type || "application/octet-stream" });
       if (error) throw error;
-      toast.success(`Uploaded ${file.name}`);
       qc.invalidateQueries({ queryKey: ["feedback-attachments", id] });
     } catch (e: any) {
       toast.error(e.message ?? "Upload failed");
@@ -315,7 +310,7 @@ function FeedbackDetail() {
 
 
   const send = () => sendMutation.mutate();
-  const acknowledge = () => update.mutate({ status: "acknowledged", acknowledged_at: new Date().toISOString(), acknowledgement_note: ackNote }, { onSuccess: () => toast.success("Acknowledged") });
+  const acknowledge = () => update.mutate({ status: "acknowledged", acknowledged_at: new Date().toISOString(), acknowledgement_note: ackNote }, { onSuccess: () => {} });
   const complete = () => completeMutation.mutate();
 
   return (

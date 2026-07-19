@@ -80,7 +80,6 @@ function ResetPasswordPage() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       setDone(true);
-      toast.success("Password updated");
       setTimeout(() => {
         window.location.href = "/auth";
       }, 1500);

@@ -101,7 +101,7 @@ function SessionDetail() {
       });
       if (error) throw error;
     },
-    onSuccess: () => { setNewItem(""); setNewDue(""); invalidate(); toast.success("Action item added"); },
+    onSuccess: () => { setNewItem(""); setNewDue(""); invalidate(); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -133,7 +133,7 @@ function SessionDetail() {
       const { error } = await supabase.from("coaching_sessions").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { invalidate(); toast.success("Session updated"); },
+    onSuccess: () => { invalidate(); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -142,7 +142,7 @@ function SessionDetail() {
       const { error } = await supabase.from("coaching_sessions").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Session deleted"); navigate({ to: "/coaching" }); },
+    onSuccess: () => { navigate({ to: "/coaching" }); },
   });
 
   if (isLoading || !session) {
@@ -250,7 +250,6 @@ function SessionDetail() {
                     const { error } = await supabase.from("coaching_sessions").update({ outcome: outcome || null }).eq("id", id);
                     if (error) { toast.error(error.message); return; }
                     qc.invalidateQueries({ queryKey: ["coaching-session", id] });
-                    toast.success("Outcome saved");
                   }}
                 >
                   <Save className="h-3.5 w-3.5" /> Save

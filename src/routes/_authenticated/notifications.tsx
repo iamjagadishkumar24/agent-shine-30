@@ -58,7 +58,6 @@ function NotificationsPage() {
     mutationFn: () => markAll(),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["notifications"] });
-      toast.success("All notifications marked as read");
     },
     onError: (e: any) => toast.error(e?.message ?? "Failed to update notifications"),
   });

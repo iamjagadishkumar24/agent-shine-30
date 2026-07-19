@@ -85,7 +85,6 @@ function ProfileTab() {
       return saveProfile({ data: trimmed });
     },
     onSuccess: () => {
-      toast.success("Profile updated");
       qc.invalidateQueries({ queryKey: ["my-profile"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -108,7 +107,6 @@ function ProfileTab() {
       const { data: signed, error: sErr } = await supabase.storage.from("avatars").createSignedUrl(path, 60 * 60 * 24 * 365);
       if (sErr) throw sErr;
       setForm((f) => ({ ...f, avatar_url: signed.signedUrl }));
-      toast.success("Avatar uploaded — save to apply");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Upload failed");
     } finally {
@@ -195,7 +193,6 @@ function SecurityTab() {
     const { error } = await supabase.auth.updateUser({ password: pw });
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("Password updated");
     setPw(""); setConfirm("");
   };
 
@@ -333,7 +330,6 @@ function CalendarTab() {
     mutationFn: () => rotate(),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-calendar-feed"] });
-      toast.success("New calendar link generated");
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not rotate link"),
   });
@@ -342,7 +338,6 @@ function CalendarTab() {
     mutationFn: () => revoke(),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-calendar-feed"] });
-      toast.success("Calendar link revoked");
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not revoke link"),
   });
@@ -352,7 +347,7 @@ function CalendarTab() {
   const webcalUrl = feedUrl ? feedUrl.replace(/^https?:/, "webcal:") : null;
 
   const copy = (v: string) => {
-    navigator.clipboard.writeText(v).then(() => toast.success("Copied to clipboard"));
+    navigator.clipboard.writeText(v).then(() => {});
   };
 
   return (

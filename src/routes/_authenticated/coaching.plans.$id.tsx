@@ -95,7 +95,7 @@ function PlanDetail() {
       const { error } = await supabase.from("coaching_plans").update({ status }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { invalidate(); toast.success("Plan updated"); },
+    onSuccess: () => { invalidate(); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -104,7 +104,7 @@ function PlanDetail() {
       const { error } = await supabase.from("coaching_plans").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Plan deleted"); navigate({ to: "/coaching/plans" }); },
+    onSuccess: () => { navigate({ to: "/coaching/plans" }); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -277,7 +277,6 @@ function AddGoalDialog({ planId, onDone }: { planId: string; onDone: () => void 
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Goal added");
       setOpen(false);
       setForm({ title: "", description: "", metric: "", target_value: "", target_date: "", weight: "1" });
       onDone();
@@ -400,7 +399,6 @@ function GoalRow({ goal, onUpdated }: { goal: any; onUpdated: () => void }) {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Progress recorded");
       setValue(""); setNote("");
       qc.invalidateQueries({ queryKey: ["goal-progress", goal.id] });
       onUpdated();

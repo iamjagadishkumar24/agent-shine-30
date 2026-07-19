@@ -78,12 +78,12 @@ function SchedulesPage() {
 
   const saveMut = useMutation({
     mutationFn: async (payload: any) => upsert({ data: payload }),
-    onSuccess: () => { toast.success("Schedule saved"); setEditing(null); invalidate(); },
+    onSuccess: () => { setEditing(null); invalidate(); },
     onError: (e: any) => toast.error(e.message ?? "Save failed"),
   });
   const delMut = useMutation({
     mutationFn: async (id: string) => del({ data: { id } }),
-    onSuccess: () => { toast.success("Schedule deleted"); invalidate(); },
+    onSuccess: () => { invalidate(); },
     onError: (e: any) => toast.error(e.message ?? "Delete failed"),
   });
   const runMut = useMutation({
