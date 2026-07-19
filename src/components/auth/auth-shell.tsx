@@ -157,7 +157,7 @@ function AuthCard({
 }) {
   return (
     <div
-      className="auth-card relative overflow-hidden rounded-[20px] p-7 pt-8 sm:p-9 sm:pt-10 lg:p-8 lg:pt-8"
+      className="auth-card relative overflow-hidden rounded-[20px] p-7 pt-8 sm:p-9 sm:pt-10 lg:p-6 lg:pt-6"
       aria-busy={loading || undefined}
     >
       {loading && (
