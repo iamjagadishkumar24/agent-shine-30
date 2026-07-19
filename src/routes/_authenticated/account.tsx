@@ -32,10 +32,12 @@ function AccountPage() {
           <TabsList>
             <TabsTrigger value="profile"><UserIcon className="mr-2 h-3.5 w-3.5" />Profile</TabsTrigger>
             <TabsTrigger value="security"><KeyRound className="mr-2 h-3.5 w-3.5" />Security</TabsTrigger>
+            <TabsTrigger value="calendar"><CalendarDays className="mr-2 h-3.5 w-3.5" />Calendar</TabsTrigger>
             <TabsTrigger value="appearance"><Palette className="mr-2 h-3.5 w-3.5" />Appearance</TabsTrigger>
           </TabsList>
           <TabsContent value="profile"><ProfileTab /></TabsContent>
           <TabsContent value="security"><SecurityTab /></TabsContent>
+          <TabsContent value="calendar"><CalendarTab /></TabsContent>
           <TabsContent value="appearance"><AppearanceTab /></TabsContent>
         </Tabs>
       </div>
