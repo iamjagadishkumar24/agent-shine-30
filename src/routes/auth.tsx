@@ -202,28 +202,31 @@ function AuthPage() {
       {/* ============ LEFT — Auth panel ============ */}
       <main className="relative flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10 lg:px-16 xl:px-24">
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
-          {/* Brand — professional product mark, top-center */}
-          <div className="flex flex-col items-center pt-2 text-center animate-fade-in">
+          {/* Brand — unified logo + wordmark lockup, top-center */}
+          <div className="flex flex-col items-center pt-6 sm:pt-10 lg:pt-12 animate-fade-in">
             <Link
               to="/"
               aria-label="Zenwork Performance Manager — go to home"
-              className="group inline-flex items-center gap-3 rounded-lg outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:ring-offset-4 focus-visible:ring-offset-[#F4F7FC]"
+              className="group inline-flex flex-col items-center gap-3 rounded-xl px-2 py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:ring-offset-4 focus-visible:ring-offset-[#F4F7FC] sm:flex-row sm:gap-4"
             >
               <img
                 src={zenworkLogo.url}
                 alt=""
                 aria-hidden="true"
-                className="h-10 w-10 object-contain sm:h-11 sm:w-11 lg:h-12 lg:w-12"
+                className="h-10 w-10 shrink-0 object-contain sm:h-12 sm:w-12 lg:h-14 lg:w-14"
               />
-              <span className="font-display font-bold tracking-tight text-[22px] sm:text-[26px] lg:text-[28px] xl:text-[30px] bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="font-display font-bold leading-none tracking-tight text-[22px] sm:text-[26px] md:text-[28px] lg:text-[30px] bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
                 Zenwork Performance Manager
               </span>
             </Link>
+            <p className="mt-3 max-w-xs text-center text-[12.5px] leading-relaxed text-slate-500 sm:max-w-sm sm:text-[13px]">
+              Driving Customer Success Through Quality, Performance &amp; Continuous Improvement
+            </p>
           </div>
 
-
           {/* Auth card */}
-          <div className="mt-10 flex flex-1 flex-col justify-center">
+          <div className="mt-8 sm:mt-10 flex flex-1 flex-col justify-center">
+
           <div className="rounded-[20px] border border-slate-200 bg-white p-6 sm:p-8 shadow-[0_20px_50px_-20px_rgba(79,70,229,0.22),0_2px_6px_-2px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_30px_70px_-24px_rgba(124,58,237,0.30)]">
           <div className="text-center">
             {mode === "forgot" && (
