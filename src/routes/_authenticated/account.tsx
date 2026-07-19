@@ -26,12 +26,12 @@ export const Route = createFileRoute("/_authenticated/account")({
 function AccountPage() {
   return (
     <div>
-      <PageHeader title="Account" subtitle="Manage your profile, security and appearance" />
+      <PageHeader title="Account" subtitle="Manage your profile, password and appearance" />
       <div className="mx-auto max-w-5xl p-8">
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList>
             <TabsTrigger value="profile"><UserIcon className="mr-2 h-3.5 w-3.5" />Profile</TabsTrigger>
-            <TabsTrigger value="security"><KeyRound className="mr-2 h-3.5 w-3.5" />Security</TabsTrigger>
+            <TabsTrigger value="security"><KeyRound className="mr-2 h-3.5 w-3.5" />Password</TabsTrigger>
             <TabsTrigger value="calendar"><CalendarDays className="mr-2 h-3.5 w-3.5" />Calendar</TabsTrigger>
             <TabsTrigger value="appearance"><Palette className="mr-2 h-3.5 w-3.5" />Appearance</TabsTrigger>
           </TabsList>
