@@ -751,7 +751,7 @@ export type Database = {
       feedback_audit_log: {
         Row: {
           action: string
-          actor_id: string
+          actor_id: string | null
           comment: string | null
           created_at: string
           feedback_id: string
@@ -762,7 +762,7 @@ export type Database = {
         }
         Insert: {
           action: string
-          actor_id: string
+          actor_id?: string | null
           comment?: string | null
           created_at?: string
           feedback_id: string
@@ -773,7 +773,7 @@ export type Database = {
         }
         Update: {
           action?: string
-          actor_id?: string
+          actor_id?: string | null
           comment?: string | null
           created_at?: string
           feedback_id?: string
