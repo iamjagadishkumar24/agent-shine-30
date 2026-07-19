@@ -149,18 +149,24 @@ function ApprovalsPage() {
         {isLoading && Array.from({ length: 4 }).map((_, i) => <SkeletonBox key={i} className="h-32 w-full" />)}
 
         {!isLoading && totalCount === 0 && (
-          <Card className="rounded-xl border-border/60 bg-card/60 p-12 text-center">
-            <Clock className="mx-auto h-8 w-8 text-muted-foreground/60" />
-            <div className="mt-3 text-sm font-medium">Queue is empty</div>
-            <div className="mt-1 text-xs text-muted-foreground">
-              Feedback drafts submitted for review will appear here.
-            </div>
+          <Card className="rounded-xl border-border/60 bg-card/60">
+            <EmptyState
+              icon={Clock}
+              title="Queue is empty"
+              description="Feedback drafts submitted for review will appear here."
+              size="lg"
+            />
           </Card>
         )}
 
         {!isLoading && totalCount > 0 && sortedFiltered.length === 0 && (
-          <Card className="rounded-xl border-border/60 bg-card/60 p-8 text-center text-xs text-muted-foreground">
-            No items match the {sevFilter} filter.
+          <Card className="rounded-xl border-border/60 bg-card/60">
+            <EmptyState
+              icon={AlertTriangle}
+              title="No matches"
+              description={`Nothing in the ${sevFilter} filter right now.`}
+              size="sm"
+            />
           </Card>
         )}
 
