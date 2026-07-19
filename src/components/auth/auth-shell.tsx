@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  AlertCircle,
   BarChart3,
   Lock as LockIcon,
   Mails,
@@ -26,6 +27,7 @@ import {
   Sun,
   Zap,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { useTheme, type ThemeMode } from "@/lib/theme";
 
@@ -42,12 +44,21 @@ export function AuthShell({
   showLearnMore = true,
   sidePanel,
   showBrand = true,
+  loading = false,
+  loadingLabel = "Working…",
+  error = null,
+  onDismissError,
 }: {
   children: ReactNode;
   showLearnMore?: boolean;
   sidePanel?: ReactNode;
   showBrand?: boolean;
+  loading?: boolean;
+  loadingLabel?: string;
+  error?: string | null;
+  onDismissError?: () => void;
 }) {
+
   const brandBlock = showBrand ? (
     <div className="mb-6 flex flex-col items-center gap-2.5 sm:mb-7">
       <img
@@ -79,19 +90,19 @@ export function AuthShell({
         <div className="absolute bottom-[-180px] left-1/3 h-[440px] w-[440px] rounded-full bg-slate-400/10 blur-[140px] dark:bg-slate-500/10" />
       </div>
 
-      <header className="relative z-10 flex items-center justify-end px-5 py-3 sm:px-8 lg:py-2">
+      <header className="relative z-10 flex items-center justify-end px-5 py-3 sm:px-8 lg:py-1.5">
         <ThemeToggle />
       </header>
 
       <main className="relative z-10 flex-1 lg:min-h-0 lg:overflow-y-auto">
-        <div className="flex min-h-full items-center justify-center px-5 py-6 sm:px-8 lg:py-4">
+        <div className="flex min-h-full items-center justify-center px-5 py-5 sm:px-8 lg:py-3">
         {sidePanel ? (
           <div className="grid w-full max-w-6xl items-center gap-10 lg:grid-cols-2">
             <div className="mx-auto w-full min-w-0 max-w-[460px] lg:mx-0 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
-              <div className="auth-card rounded-[20px] p-7 pt-8 sm:p-9 sm:pt-10 lg:p-8 lg:pt-8">
+              <AuthCard loading={loading} loadingLabel={loadingLabel} error={error} onDismissError={onDismissError}>
                 {brandBlock}
                 {children}
-              </div>
+              </AuthCard>
               {showLearnMore && (
                 <div className="mt-4 flex justify-center lg:justify-start">
                   <LearnMoreDialog />
@@ -102,11 +113,10 @@ export function AuthShell({
           </div>
         ) : (
           <div className="w-full max-w-[460px] motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
-            <div className="auth-card rounded-[20px] p-7 pt-8 sm:p-9 sm:pt-10 lg:p-8 lg:pt-8">
-
+            <AuthCard loading={loading} loadingLabel={loadingLabel} error={error} onDismissError={onDismissError}>
               {brandBlock}
               {children}
-            </div>
+            </AuthCard>
             {showLearnMore && (
               <div className="mt-4 flex justify-center">
                 <LearnMoreDialog />
@@ -117,11 +127,8 @@ export function AuthShell({
         </div>
       </main>
 
-
-
-
       <footer className="relative z-10 border-t border-border/50 bg-background/50 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:flex-row sm:px-8 lg:py-2">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:flex-row sm:px-8 lg:py-1.5">
           <p>&copy; {new Date().getFullYear()} Zenwork · {APP_VERSION}</p>
           <nav className="flex items-center gap-4">
             <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
@@ -130,9 +137,82 @@ export function AuthShell({
           </nav>
         </div>
       </footer>
+
     </div>
   );
 }
+
+function AuthCard({
+  children,
+  loading,
+  loadingLabel,
+  error,
+  onDismissError,
+}: {
+  children: ReactNode;
+  loading?: boolean;
+  loadingLabel?: string;
+  error?: string | null;
+  onDismissError?: () => void;
+}) {
+  return (
+    <div
+      className="auth-card relative overflow-hidden rounded-[20px] p-7 pt-8 sm:p-9 sm:pt-10 lg:p-8 lg:pt-8"
+      aria-busy={loading || undefined}
+    >
+      {loading && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-0.5 overflow-hidden"
+        >
+          <div className="h-full w-1/3 animate-[authshimmer_1.2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-primary to-transparent" />
+        </div>
+      )}
+
+      {error && (
+        <div
+          role="alert"
+          aria-live="polite"
+          className="mb-4 flex items-start gap-2.5 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-[13px] text-destructive motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1 motion-safe:duration-300"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          <span className="min-w-0 flex-1 leading-snug">{error}</span>
+          {onDismissError && (
+            <button
+              type="button"
+              onClick={onDismissError}
+              className="ml-1 shrink-0 rounded p-0.5 text-destructive/70 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40"
+              aria-label="Dismiss error"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className={cn("relative transition-opacity duration-200", loading && "opacity-70")}>
+        {children}
+      </div>
+
+      {loading && (
+        <div
+          aria-live="polite"
+          className="pointer-events-none absolute inset-0 flex items-end justify-center pb-3"
+        >
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/85 px-3 py-1.5 text-xs font-medium text-foreground shadow-sm backdrop-blur">
+            <span
+              className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"
+              aria-hidden
+            />
+            {loadingLabel}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 
 function ThemeToggle() {
   const { prefs, update } = useTheme();
