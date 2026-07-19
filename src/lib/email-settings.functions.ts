@@ -2,7 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import {
-  buildVariableMap,
   renderCustomTemplate,
   sampleVariableMap,
 } from "./feedback-email.variables";
