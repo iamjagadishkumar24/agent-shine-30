@@ -83,6 +83,7 @@ function AuthPage() {
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorField, setErrorField] = useState<"name" | "email" | "password" | "confirm" | null>(null);
   const [resetSent, setResetSent] = useState(false);
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean; name?: boolean; confirm?: boolean }>({});
 
@@ -145,6 +146,35 @@ function AuthPage() {
     if (mode === "signup" && !confirmValid) return confirmRef.current?.focus();
   };
 
+  const fieldRefFor = (field: typeof errorField) => {
+    switch (field) {
+      case "name": return nameRef;
+      case "email": return emailRef;
+      case "password": return passwordRef;
+      case "confirm": return confirmRef;
+      default: return null;
+    }
+  };
+
+  // Best-effort mapping from a provider error message to the input that triggered it.
+  const inferErrorField = (msg: string): typeof errorField => {
+    const m = msg.toLowerCase();
+    if (m.includes("confirm")) return "confirm";
+    if (m.includes("password") || m.includes("credentials")) return mode === "forgot" ? "email" : "password";
+    if (m.includes("email") || m.includes("user") || m.includes("account")) return "email";
+    if (m.includes("name")) return "name";
+    return mode === "forgot" ? "email" : "password";
+  };
+
+  const dismissError = () => {
+    const target = fieldRefFor(errorField)?.current;
+    setErrorMsg(null);
+    setErrorField(null);
+    // Wait for the banner to unmount so focus lands on the field, not the button.
+    requestAnimationFrame(() => target?.focus());
+  };
+
+
 
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,6 +190,7 @@ function AuthPage() {
       return;
     }
     setErrorMsg(null);
+    setErrorField(null);
     setLoading(true);
 
     try {
@@ -202,7 +233,10 @@ function AuthPage() {
     } catch (err: any) {
       const msg = err?.message ?? "Something went wrong";
       setErrorMsg(msg);
+      setErrorField(inferErrorField(msg));
       toast.error(msg);
+
+
 
     } finally {
       setLoading(false);
@@ -211,6 +245,7 @@ function AuthPage() {
 
   const handleGoogle = async () => {
     setErrorMsg(null);
+    setErrorField(null);
     setLoading(true);
     try {
       // Preserve typed input across the OAuth round-trip (password intentionally excluded).
@@ -224,6 +259,7 @@ function AuthPage() {
       const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectUri });
       if (result.error) {
         setErrorMsg(result.error.message);
+        setErrorField(inferErrorField(result.error.message));
         toast.error(result.error.message);
         setLoading(false);
         return;
@@ -233,6 +269,7 @@ function AuthPage() {
     } catch (err: any) {
       const msg = err?.message ?? "Google sign-in failed";
       setErrorMsg(msg);
+      setErrorField(inferErrorField(msg));
       toast.error(msg);
       setLoading(false);
     }
@@ -252,7 +289,7 @@ function AuthPage() {
       loading={loading}
       loadingLabel={loadingLabel}
       error={errorMsg}
-      onDismissError={() => setErrorMsg(null)}
+      onDismissError={dismissError}
     >
 
       <>
