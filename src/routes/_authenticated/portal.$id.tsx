@@ -76,7 +76,6 @@ function PortalFeedbackDetail() {
   const ackMutation = useMutation({
     mutationFn: async () => ackFn({ data: { feedbackId: id, note: ackNote } }),
     onSuccess: () => {
-      toast.success("Feedback acknowledged");
       setAckNote("");
       qc.invalidateQueries({ queryKey: ["portal-feedback", id] });
       qc.invalidateQueries({ queryKey: ["portal-feedback-audit", id] });
@@ -88,7 +87,6 @@ function PortalFeedbackDetail() {
   const clarifyMutation = useMutation({
     mutationFn: async () => clarifyFn({ data: { feedbackId: id, note: clarifyNote } }),
     onSuccess: () => {
-      toast.success("Clarification request sent");
       setClarifyNote("");
       qc.invalidateQueries({ queryKey: ["portal-feedback-audit", id] });
     },

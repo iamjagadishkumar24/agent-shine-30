@@ -119,7 +119,6 @@ function EmailConfig() {
       }),
 
     onSuccess: (row) => {
-      toast.success("Settings saved");
       setForm(null);
       qc.setQueryData(["email-settings"], row);
     },
@@ -130,8 +129,7 @@ function EmailConfig() {
     mutationFn: () => verifyFn(),
     onSuccess: (r: any) => {
       setVerifyResult(r);
-      if (r.ok) toast.success(`Connected as ${r.account ?? "provider"}`);
-      else toast.error(r.error ?? "Verification failed");
+      if (!r.ok) toast.error(r.error ?? "Verification failed");
     },
     onError: (e: any) => toast.error(e?.message ?? "Verification failed"),
   });
@@ -140,8 +138,7 @@ function EmailConfig() {
     mutationFn: () => testFn({ data: { to: testTo } }),
     onSuccess: (r: any) => {
       setTestResult(r);
-      if (r.ok) toast.success(`Test email sent (${r.latencyMs}ms)`);
-      else toast.error(r.error ?? "Send failed");
+      if (!r.ok) toast.error(r.error ?? "Send failed");
     },
     onError: (e: any) => toast.error(e?.message ?? "Send failed"),
   });
@@ -150,8 +147,7 @@ function EmailConfig() {
     mutationFn: () => brandingTestFn({ data: { to: brandingTo } }),
     onSuccess: (r: any) => {
       setBrandingResult(r);
-      if (r.ok) toast.success(`Branding preview sent (${r.latencyMs}ms)`);
-      else toast.error(r.error ?? "Send failed");
+      if (!r.ok) toast.error(r.error ?? "Send failed");
     },
     onError: (e: any) => toast.error(e?.message ?? "Send failed"),
   });
@@ -370,8 +366,7 @@ function ProviderCard({
     mutationFn: () => testFn({ data: { to: diagTestTo.trim() } }),
     onSuccess: (r: any) => {
       setDiagTestResult(r);
-      if (r.ok) toast.success(`Test email sent (${r.latencyMs}ms)`);
-      else toast.error(r.error ?? "Send failed");
+      if (!r.ok) toast.error(r.error ?? "Send failed");
     },
     onError: (e: any) => {
       setDiagTestResult({ ok: false, error: e?.message ?? "Send failed" });
@@ -609,16 +604,16 @@ function QueueMonitor() {
 
       <Card className="p-4">
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={async () => { await drainFn(); invalidate(); toast.success("Drain triggered"); }}>
+          <Button size="sm" variant="outline" onClick={async () => { await drainFn(); invalidate(); }}>
             <Zap className="mr-1.5 h-3.5 w-3.5" /> Drain now
           </Button>
-          <Button size="sm" variant="outline" onClick={async () => { await retryAllFn(); invalidate(); toast.success("Failed emails requeued"); }}>
+          <Button size="sm" variant="outline" onClick={async () => { await retryAllFn(); invalidate(); }}>
             <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Retry all failed
           </Button>
-          <Button size="sm" variant="outline" onClick={async () => { const r: any = await pauseFn(); invalidate(); toast.success(`Paused ${r.paused ?? 0}`); }}>
+          <Button size="sm" variant="outline" onClick={async () => { const r: any = await pauseFn(); invalidate(); }}>
             <PauseCircle className="mr-1.5 h-3.5 w-3.5" /> Pause queue
           </Button>
-          <Button size="sm" variant="outline" onClick={async () => { const r: any = await resumeFn(); invalidate(); toast.success(`Resumed ${r.resumed ?? 0}`); }}>
+          <Button size="sm" variant="outline" onClick={async () => { const r: any = await resumeFn(); invalidate(); }}>
             <PlayCircle className="mr-1.5 h-3.5 w-3.5" /> Resume queue
           </Button>
         </div>
@@ -815,7 +810,6 @@ function FeedbackTemplateEditor() {
       }),
     onSuccess: (row) => {
       qc.setQueryData(["email-settings"], row);
-      toast.success("Template saved");
     },
     onError: (e: any) => toast.error(e?.message ?? "Save failed"),
   });
@@ -835,9 +829,7 @@ function FeedbackTemplateEditor() {
       qc.invalidateQueries({ queryKey: ["email-queue"] });
       qc.invalidateQueries({ queryKey: ["email-queue-summary"] });
       if (r?.scheduled) {
-        toast.success(`Test email scheduled for ${new Date(r.nextAttemptAt).toLocaleString()}`);
       } else if (r?.ok) {
-        toast.success(`Test sent (${r.latencyMs}ms)`);
       } else {
         toast.error(r?.error ?? "Test send failed");
       }

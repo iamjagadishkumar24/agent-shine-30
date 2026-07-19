@@ -76,7 +76,6 @@ function NewPlan() {
     },
     onSuccess: (row) => {
       qc.invalidateQueries({ queryKey: ["coaching-plans"] });
-      toast.success("Plan created");
       navigate({ to: "/coaching/plans/$id", params: { id: row.id } });
     },
     onError: (e: any) => toast.error(e.message ?? "Could not create plan"),

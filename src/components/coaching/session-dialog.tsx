@@ -241,7 +241,6 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
     onSuccess: (row: any) => {
       qc.invalidateQueries({ queryKey: ["coaching-sessions"] });
       qc.invalidateQueries({ queryKey: ["coaching-session", row.id] });
-      toast.success(isEdit ? "Session updated" : "Session scheduled");
       setSavedEvent(buildEventFromForm(row.id));
       onSaved?.(row.id);
       // Keep dialog open so user can add to calendar; they close it themselves.

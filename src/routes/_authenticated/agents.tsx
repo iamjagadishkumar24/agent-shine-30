@@ -76,7 +76,6 @@ function AgentsPage() {
       joining_date: a.joining_date ?? "", qa_score: a.qa_score, status: a.status,
     })), TEMPLATE_HEADERS);
     downloadCsv(`agents-${format(new Date(), "yyyyMMdd-HHmm")}.csv`, csv);
-    toast.success(`Exported ${data.length} agent(s)`);
   };
 
   return (
@@ -233,7 +232,6 @@ function ImportDialog({ open, onOpenChange, onDone, onDownloadTemplate }: {
     onSuccess: (r) => {
       setResult({ inserted: r.inserted, errors: r.errors });
       if (r.errors.length === 0) {
-        toast.success(`Imported ${r.inserted} agent(s)`);
         onDone();
       } else {
         toast.warning(`Imported ${r.inserted}, ${r.errors.length} row(s) failed`);

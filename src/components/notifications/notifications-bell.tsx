@@ -70,7 +70,6 @@ export function NotificationsBell({ userId }: { userId: string }) {
     mutationFn: () => markAll(),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["notifications"] });
-      toast.success("All notifications marked as read");
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not mark all as read"),
   });

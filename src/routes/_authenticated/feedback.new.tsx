@@ -133,9 +133,7 @@ function NewFeedback() {
       qc.invalidateQueries({ queryKey: ["feedback-list"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       if (mode === "draft") {
-        toast.success("Draft saved");
       } else if (sendResult?.ok) {
-        toast.success("Feedback email sent successfully.");
       } else {
         toast.warning("Email has been queued successfully.");
       }

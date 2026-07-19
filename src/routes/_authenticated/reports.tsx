@@ -117,7 +117,7 @@ function ReportsPage() {
   const run = async (name: string, rows: any[], fn: () => void) => {
     if (!rows.length) { toast.error("No data to export yet"); return; }
     setBusy(name);
-    try { fn(); toast.success("Export ready"); } catch (e: any) { toast.error(e.message ?? "Export failed"); }
+    try { fn(); } catch (e: any) { toast.error(e.message ?? "Export failed"); }
     finally { setBusy(null); }
   };
 
