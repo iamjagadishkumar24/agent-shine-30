@@ -65,7 +65,7 @@ function VerifyEmailPage() {
       });
       if (error) throw error;
       const msg = `Verification email sent to ${email}. Check your inbox and spam folder.`;
-      setFeedback({ kind: "success", message: msg, at: new Date() });
+      setFeedback({ kind: "success", message: msg, at: new Date(), nonce: Date.now() });
       toast.success("Verification email sent");
       setCooldown(30);
     } catch (err: any) {
