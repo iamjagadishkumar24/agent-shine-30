@@ -355,6 +355,8 @@ function SessionDetail() {
           </AlertDialog>
         </div>
       </div>
+
+      <SessionDialog open={editOpen} onOpenChange={setEditOpen} session={s} />
     </div>
   );
 }
