@@ -10,16 +10,13 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, X, Filter, Download, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { Plus, X, Filter, Download, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow, subDays, format } from "date-fns";
 import { SkeletonBox } from "@/components/ui/skeleton-blocks";
 import { toCsv, downloadCsv } from "@/lib/csv";
-import {
-  bulkApproveFeedback,
-  bulkRejectFeedback,
-  bulkDeleteFeedback,
-} from "@/lib/bulk-operations.functions";
+import { bulkDeleteFeedback } from "@/lib/bulk-operations.functions";
+
 import {
   AlertDialog,
   AlertDialogAction,
