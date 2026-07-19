@@ -126,8 +126,19 @@ function FeedbackDetail() {
   const sendMutation = useMutation({
     mutationFn: () => sendEmailFn({ data: { feedbackId: id } }),
     onSuccess: (res: any) => {
-      if (res?.ok) toast.success("Feedback email queued");
-      else toast.warning(`Queued with error: ${res?.error ?? "unknown"}`);
+      if (res?.ok) {
+        toast.success(
+          res.providerMessageId
+            ? `Delivered to ${res.recipient} · id ${String(res.providerMessageId).slice(0, 12)}…`
+            : `Delivered to ${res.recipient}`,
+        );
+      } else if (res?.queued) {
+        toast.warning(
+          `Not delivered yet — queued for retry${res.error ? `: ${res.error}` : ""}`,
+        );
+      } else {
+        toast.error(`Send failed: ${res?.error ?? "unknown"}`);
+      }
       qc.invalidateQueries({ queryKey: ["feedback", id] });
       qc.invalidateQueries({ queryKey: ["feedback-list"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
