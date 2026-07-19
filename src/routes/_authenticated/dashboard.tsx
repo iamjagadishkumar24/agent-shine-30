@@ -482,11 +482,6 @@ function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/feedback/new">
-              <Button size="sm" className="h-8 gap-1.5">
-                <Plus className="h-3.5 w-3.5" /> New feedback
-              </Button>
-            </Link>
             <Button
               size="sm"
               variant="outline"
