@@ -182,38 +182,13 @@ function EmailConfig() {
         </div>
       </Card>
 
-      <Card className="p-6">
-        <div className="text-sm font-semibold">Provider</div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div>
-            <Label>Provider</Label>
-            <Select value={s.provider} onValueChange={(v) => set({ provider: v })}>
-              <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="gmail">Gmail (OAuth) — Development</SelectItem>
-                <SelectItem value="ms_graph" disabled>Microsoft 365 (Graph) — Production (coming soon)</SelectItem>
-                <SelectItem value="sendgrid" disabled>SendGrid — Production (coming soon)</SelectItem>
-                <SelectItem value="ses" disabled>Amazon SES — Production (coming soon)</SelectItem>
-                <SelectItem value="mailgun" disabled>Mailgun — Production (coming soon)</SelectItem>
-                <SelectItem value="resend" disabled>Resend — Production (coming soon)</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="mt-1.5 text-xs text-muted-foreground">Gmail is linked via secure OAuth — no SMTP passwords stored.</p>
-          </div>
-          <div className="flex items-end gap-2">
-            <Button variant="outline" onClick={() => verify.mutate()} disabled={verify.isPending}>
-              {verify.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Zap className="mr-2 h-3.5 w-3.5" />}
-              Verify connection
-            </Button>
-            {verifyResult && (
-              <div className={cn("flex items-center gap-1.5 text-xs", verifyResult.ok ? "text-primary" : "text-destructive")}>
-                {verifyResult.ok ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
-                <span>{verifyResult.ok ? `Connected · ${verifyResult.account} · ${verifyResult.latencyMs}ms` : verifyResult.error}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </Card>
+      <ProviderCard
+        s={s}
+        set={set}
+        verify={verify}
+        verifyResult={verifyResult}
+      />
+
 
       <Card className="p-6">
         <div className="text-sm font-semibold">Sender identity</div>
