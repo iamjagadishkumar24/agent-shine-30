@@ -201,11 +201,8 @@ function AuthPage() {
       <div className="relative grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
         {/* Left — brand / testimonial */}
         <aside className="relative hidden lg:flex flex-col justify-between p-12 xl:p-16">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-primary to-fuchsia-500 text-primary-foreground shadow-lg shadow-primary/30">
-              <Sparkles className="h-4.5 w-4.5" />
-            </div>
-            <span className="text-lg font-semibold tracking-tight">Zenwork Performance Manager</span>
+          <Link to="/" className="flex items-center">
+            <img src={zenworkLogo.url} alt="Zenwork Performance Manager" className="h-9 w-auto object-contain" />
           </Link>
 
           <div className="space-y-8 max-w-lg">
