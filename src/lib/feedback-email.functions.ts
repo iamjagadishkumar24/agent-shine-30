@@ -167,19 +167,19 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       throw new Response(`Agent email "${recipient}" is not a valid address`, { status: 400 });
     }
 
-    // Optimistic status transition: approved → queued. The drainer flips
-    // queued → sent only after the email provider accepts the message.
+    // Optimistic status transition: {draft|ready_to_send|failed} → ready_to_send.
+    // The drainer flips ready_to_send → sent once the provider accepts.
     const nowIso = new Date().toISOString();
     const { data: transitioned, error: txErr } = await supabaseAdmin
       .from("feedback")
-      .update({ status: "queued", sent_at: null, email_error: null })
+      .update({ status: "ready_to_send", sent_at: null, email_error: null })
       .eq("id", fb.id)
-      .eq("status", "approved")
+      .eq("status", sourceStatus as never)
       .select("id")
       .maybeSingle();
     if (txErr) fail("Unable to update feedback status", 500, txErr);
     if (!transitioned) {
-      throw new Response("Feedback already sent by another reviewer", { status: 409 });
+      throw new Response("Feedback was updated by someone else — refresh and retry", { status: 409 });
     }
 
     const { data: job, error: qErr } = await supabaseAdmin
@@ -205,11 +205,12 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       // Rollback the status transition so the user can retry.
       await supabaseAdmin
         .from("feedback")
-        .update({ status: "approved", sent_at: null })
+        .update({ status: sourceStatus as never, sent_at: null })
         .eq("id", fb.id)
-        .eq("status", "queued");
+        .eq("status", "ready_to_send");
       fail("Unable to enqueue email", 500, qErr);
     }
+
 
     await supabaseAdmin.from("feedback_email_events").insert({
       feedback_id: fb.id,
