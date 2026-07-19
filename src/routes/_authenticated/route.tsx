@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
+
 import zenworkMark from "@/assets/zenwork-mark.png.asset.json";
 
 import {
