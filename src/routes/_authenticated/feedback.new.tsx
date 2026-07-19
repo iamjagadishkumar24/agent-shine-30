@@ -134,9 +134,8 @@ function NewFeedback() {
       if (mode === "draft") {
         toast.success("Draft saved");
       } else if (sendResult?.ok) {
-        const dest = sendResult.devOverride
-          ? `Dev override active — delivered to ${sendResult.actualRecipient}`
-          : `Delivered to ${sendResult.actualRecipient ?? sendResult.recipient}`;
+        const r = sendResult as { actualRecipient?: string; devOverride?: boolean };
+        const dest = r.devOverride ? `Dev override active — delivered to ${r.actualRecipient}` : `Delivered to ${r.actualRecipient}`;
         toast.success(`Email accepted by provider · ${dest}`);
       } else {
         toast.warning(sendResult?.error ? `Queued (provider not accepted): ${sendResult.error}` : "Queued for background retry");
