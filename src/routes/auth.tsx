@@ -187,10 +187,15 @@ function AuthPage() {
       <main className="flex min-h-dvh flex-col justify-center px-6 py-10 sm:px-10 lg:px-16 xl:px-24">
         <div className="mx-auto w-full max-w-md">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5">
-            <img src={zenworkLogo.url} alt="Zenwork" className="h-10 w-10 object-contain" />
-            <span className="text-[15px] font-semibold tracking-tight text-slate-900">
-              Zenwork <span className="font-medium text-slate-500">Performance Manager</span>
+          <Link to="/" className="flex items-center gap-3">
+            <img src={zenworkLogo.url} alt="Zenwork" className="h-11 w-11 object-contain" />
+            <span className="flex flex-col leading-tight">
+              <span className="brand-wordmark text-xl font-semibold tracking-tight sm:text-2xl">
+                Zenwork Performance Manager
+              </span>
+              <span className="text-[10.5px] font-medium uppercase tracking-[0.16em] text-slate-500">
+                Driving Customer Success
+              </span>
             </span>
           </Link>
 
