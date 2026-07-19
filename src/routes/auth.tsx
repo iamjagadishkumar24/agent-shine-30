@@ -245,6 +245,7 @@ function AuthPage() {
 
   const handleGoogle = async () => {
     setErrorMsg(null);
+    setErrorField(null);
     setLoading(true);
     try {
       // Preserve typed input across the OAuth round-trip (password intentionally excluded).
