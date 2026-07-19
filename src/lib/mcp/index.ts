@@ -11,11 +11,11 @@ import whoAmITool from "./tools/whoami";
 const projectRef = import.meta.env.VITE_SUPABASE_PROJECT_ID ?? "project-ref-unset";
 
 export default defineMcp({
-  name: "signal-qms-mcp",
-  title: "Signal QMS",
+  name: "zenwork-performance-manager-mcp",
+  title: "Zenwork Performance Manager",
   version: "0.1.0",
   instructions:
-    "Tools for the Signal QMS quality management platform. Read agents, browse and create feedback, and view coaching sessions. All calls act as the signed-in user and respect their role and RLS policies.",
+    "Tools for the Zenwork Performance Manager quality management platform. Read agents, browse and create feedback, and view coaching sessions. All calls act as the signed-in user and respect their role and RLS policies.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",

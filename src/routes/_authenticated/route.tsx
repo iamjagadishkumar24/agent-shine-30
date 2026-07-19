@@ -138,7 +138,7 @@ function AuthedLayout() {
             <Sparkles className="h-4 w-4" />
           </div>
           {!collapsed && (
-            <span className="text-sm font-semibold tracking-tight text-sidebar-foreground">Signal QMS</span>
+            <span className="text-sm font-semibold tracking-tight text-sidebar-foreground">Zenwork Performance Manager</span>
           )}
         </div>
 
@@ -211,7 +211,7 @@ function AuthedLayout() {
         {/* Top header */}
         <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/60 bg-background/80 px-6 backdrop-blur-xl">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Signal QMS</span>
+            <span>Zenwork Performance Manager</span>
             {current && (
               <>
                 <span className="text-muted-foreground/40">/</span>

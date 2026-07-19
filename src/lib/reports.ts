@@ -82,7 +82,7 @@ export function toPdf(opts: {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(140);
-    doc.text(`Page ${i} of ${pageCount} · Signal QMS`, pageW - 40, doc.internal.pageSize.getHeight() - 20, { align: "right" });
+    doc.text(`Page ${i} of ${pageCount} · Zenwork Performance Manager`, pageW - 40, doc.internal.pageSize.getHeight() - 20, { align: "right" });
   }
 
   doc.save(opts.filename);

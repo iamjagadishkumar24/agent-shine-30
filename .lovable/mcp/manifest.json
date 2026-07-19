@@ -11,9 +11,9 @@
   },
   "mcp": {
     "server": {
-      "name": "signal-qms-mcp",
+      "name": "zenwork-performance-manager-mcp",
       "version": "0.1.0",
-      "title": "Signal QMS"
+      "title": "Zenwork Performance Manager"
     },
     "tools": [
       {
