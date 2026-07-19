@@ -362,13 +362,14 @@ function Dashboard() {
 
   // Category donut
   const catColors = [
-    "oklch(0.65 0.20 285)",
-    "oklch(0.72 0.16 160)",
-    "oklch(0.70 0.14 235)",
-    "oklch(0.80 0.16 75)",
-    "oklch(0.68 0.24 330)",
-    "oklch(0.66 0.22 20)",
+    "oklch(0.68 0.18 255)", // blue
+    "oklch(0.65 0.22 300)", // purple
+    "oklch(0.75 0.14 210)", // cyan
+    "oklch(0.72 0.18 155)", // green
+    "oklch(0.75 0.17 55)",  // orange
+    "oklch(0.70 0.20 350)", // pink
   ];
+
   const categoriesRaw: Record<string, string> = {
     constructive: "Communication",
     positive: "Customer Focus",
