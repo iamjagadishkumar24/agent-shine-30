@@ -293,6 +293,9 @@ html:not(.light) .auth-card {
 @keyframes progress-in {
   from { width: 0; }
 }
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
 @utility animate-blob-slow { animation: blob-slow 12s ease-in-out infinite; }
 @utility animate-blob-slower { animation: blob-slower 16s ease-in-out infinite; }
 @utility animate-float-slow { animation: float-slow 6s ease-in-out infinite; }

@@ -1,14 +1,8 @@
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function SkeletonBox({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(
-        "animate-pulse rounded-lg bg-muted/60",
-        className,
-      )}
-    />
-  );
+  return <Skeleton className={cn(className)} />;
 }
 
 export function KpiCardSkeleton() {
@@ -46,6 +40,52 @@ export function ListRowSkeleton() {
         <SkeletonBox className="h-3 w-3/4" />
         <SkeletonBox className="h-2.5 w-1/2" />
       </div>
+    </div>
+  );
+}
+
+/**
+ * Skeleton rows for a `<Table>`. Renders as real <tr>/<td> so it can be used
+ * inside <TableBody> during loading without layout shift.
+ */
+export function TableRowSkeleton({
+  columns,
+  rows = 5,
+  widths,
+}: {
+  columns: number;
+  rows?: number;
+  widths?: (string | undefined)[];
+}) {
+  return (
+    <>
+      {Array.from({ length: rows }).map((_, r) => (
+        <tr key={r} className="border-b border-border/50">
+          {Array.from({ length: columns }).map((_, c) => (
+            <td key={c} className="px-3 py-3">
+              <SkeletonBox className={cn("h-3.5", widths?.[c] ?? (c === 0 ? "w-3/4" : "w-1/2"))} />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </>
+  );
+}
+
+export function FormFieldSkeleton() {
+  return (
+    <div className="space-y-1.5">
+      <SkeletonBox className="h-3 w-20" />
+      <SkeletonBox className="h-10 w-full rounded-md" />
+    </div>
+  );
+}
+
+export function StatTileSkeleton() {
+  return (
+    <div className="rounded-xl border border-border/60 bg-card/60 p-4">
+      <SkeletonBox className="h-3 w-20" />
+      <SkeletonBox className="mt-3 h-7 w-24" />
     </div>
   );
 }
