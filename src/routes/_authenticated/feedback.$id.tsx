@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { sendFeedbackEmail, previewFeedbackEmail, sendFeedbackTestEmail } from "@/lib/feedback-email.functions";
 import { createUploadUrl, deleteAttachment } from "@/lib/feedback-attachments.functions";
-import { transitionFeedback } from "@/lib/feedback-workflow.functions";
+// review workflow retired — feedback flows draft → ready_to_send → sent
 import { completeFeedback } from "@/lib/agent-portal.functions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
