@@ -481,18 +481,8 @@ function Dashboard() {
               Live snapshot of quality operations across your organization.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 gap-1.5"
-              onClick={refresh}
-              disabled={isFetching}
-            >
-              <RefreshCw className={cn("h-3.5 w-3.5", isFetching && "animate-spin")} />
-              Refresh
-            </Button>
-          </div>
+          <div className="flex items-center gap-2" />
+
         </div>
       </div>
 
