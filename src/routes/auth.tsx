@@ -190,6 +190,7 @@ function AuthPage() {
       return;
     }
     setErrorMsg(null);
+    setErrorField(null);
     setLoading(true);
 
     try {
