@@ -486,27 +486,23 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
           "#64748b",
         )}
 
-        <!-- Closing -->
-        <tr><td class="px" style="padding:4px 28px 8px;">
-          <div style="font:15px/1.75 ${FONT};color:${BRAND.inkSoft};">
+        <!-- Closing / Signature (dark-mode & background-safe, all inline) -->
+        <tr><td class="px" bgcolor="#ffffff" style="padding:4px 28px 8px;background-color:#ffffff;">
+          <div style="margin:0;font-family:${FONT};font-size:15px;line-height:1.75;color:#334155;mso-line-height-rule:exactly;">
             Thank you for your continued dedication and commitment to delivering outstanding customer experiences. We appreciate your contributions and look forward to supporting your continued growth and success.
           </div>
-          <div style="margin-top:18px;font:600 15px/1.5 ${FONT};color:${BRAND.ink};">Kind Regards,</div>
-          <div style="margin-top:2px;font:700 15px/1.5 ${FONT};color:${BRAND.ink};">${escape(BRAND.name)} Team</div>
-          <div style="margin-top:4px;font:500 12.5px/1.5 ${FONT};color:${BRAND.mute};font-style:italic;">${escape(BRAND.tagline)}.</div>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:12px;border-collapse:collapse;">
-            <tr>
-              <td style="padding:2px 0;font:600 13px/1.6 ${FONT};color:${BRAND.inkSoft};">
-                <span style="display:inline-block;width:18px;color:${BRAND.accent};">📧</span>
-                <a href="mailto:${escape(BRAND.supportEmail)}" style="color:${BRAND.accent};text-decoration:none;">${escape(BRAND.supportEmail)}</a>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:2px 0;font:600 13px/1.6 ${FONT};color:${BRAND.inkSoft};">
-                <span style="display:inline-block;width:18px;color:${BRAND.accent};">🌐</span>
-                <a href="${escape(BRAND.website)}" style="color:${BRAND.accent};text-decoration:none;">${escape(BRAND.websiteLabel)}</a>
-              </td>
-            </tr>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="margin-top:18px;border-collapse:collapse;background-color:#ffffff;">
+            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:0;font-family:${FONT};font-size:15px;line-height:1.5;font-weight:600;color:#0f172a;mso-line-height-rule:exactly;">Kind Regards,</td></tr>
+            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:2px 0 0;font-family:${FONT};font-size:15px;line-height:1.5;font-weight:700;color:#0f172a;mso-line-height-rule:exactly;">${escape(BRAND.name)} Team</td></tr>
+            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:4px 0 0;font-family:${FONT};font-size:12.5px;line-height:1.5;font-weight:500;font-style:italic;color:#475569;mso-line-height-rule:exactly;">${escape(BRAND.tagline)}.</td></tr>
+            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:12px 0 0;font-family:${FONT};font-size:13px;line-height:1.6;font-weight:600;color:#334155;mso-line-height-rule:exactly;">
+              <span style="display:inline-block;width:20px;color:#4f46e5;mso-text-raise:0;">&#128231;</span>
+              <a href="mailto:${escape(BRAND.supportEmail)}" style="color:#4f46e5;text-decoration:none;font-weight:600;">${escape(BRAND.supportEmail)}</a>
+            </td></tr>
+            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:4px 0 0;font-family:${FONT};font-size:13px;line-height:1.6;font-weight:600;color:#334155;mso-line-height-rule:exactly;">
+              <span style="display:inline-block;width:20px;color:#4f46e5;mso-text-raise:0;">&#127760;</span>
+              <a href="${escape(BRAND.website)}" style="color:#4f46e5;text-decoration:none;font-weight:600;">${escape(BRAND.websiteLabel)}</a>
+            </td></tr>
           </table>
         </td></tr>
 
