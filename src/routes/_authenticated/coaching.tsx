@@ -21,6 +21,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import {
+  DataTableShell, DataTableHeader, DataTableRow, DataTableCell,
+  SortableTh, useTableSort, sortRows,
+  TableEmpty, TablePagination, usePagination, paginate,
+} from "@/components/ui/data-table";
 
 export const Route = createFileRoute("/_authenticated/coaching")({
   component: CoachingCalendar,
