@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles, BarChart3, Zap, ShieldCheck, LayoutDashboard } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
