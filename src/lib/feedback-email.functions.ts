@@ -118,7 +118,7 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       dueDate: fb.due_date,
       appBaseUrl,
       senderName: settings.sender_name,
-      logoUrl: settings.logo_url,
+      logoUrl: settings.logo_url ?? `${appBaseUrl}${zenworkLogo.url}`,
       signatureHtml: settings.signature_html,
       confidentialityNotice: settings.confidentiality_notice,
       attachmentLinks,
