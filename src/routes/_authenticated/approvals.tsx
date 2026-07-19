@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SkeletonBox } from "@/components/ui/skeleton-blocks";
+import { EmptyState } from "@/components/ui/empty-state";
 import { transitionFeedback } from "@/lib/feedback-workflow.functions";
 import { CheckCircle2, XCircle, RotateCcw, Clock, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
