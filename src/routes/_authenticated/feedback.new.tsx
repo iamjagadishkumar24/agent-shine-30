@@ -222,18 +222,38 @@ function NewFeedback() {
               Paste raw observations from your review. The AI will structure it into a professional draft you can edit before sending.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label>Observations</Label>
-            <Textarea
-              rows={8}
-              value={observations}
-              onChange={(e) => setObservations(e.target.value)}
-              placeholder="e.g. On the 10:42 billing call, agent skipped mini-Miranda, resolved the dispute in under 3 minutes, but interrupted the customer twice..."
-            />
-            <p className="text-xs text-muted-foreground">Uses agent, category, type, severity, and score from the form above.</p>
+          <div className="space-y-3">
+            <div>
+              <Label>Template</Label>
+              <Select value={template} onValueChange={(v) => setTemplate(v as EmailTemplate)}>
+                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {EMAIL_TEMPLATES.map((t) => (
+                    <SelectItem key={t} value={t} className="capitalize">
+                      {t.replace(/_/g, " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Observations</Label>
+              <Textarea
+                rows={8}
+                value={observations}
+                onChange={(e) => setObservations(e.target.value)}
+                placeholder="e.g. On the 10:42 billing call, agent skipped mini-Miranda, resolved the dispute in under 3 minutes, but interrupted the customer twice..."
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Uses agent, category, type, severity, and score from the form above.</p>
+            </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setAiOpen(false)} disabled={ai.isPending}>Cancel</Button>
+            {lastDraft ? (
+              <Button variant="secondary" onClick={() => ai.mutate()} disabled={ai.isPending}>
+                {ai.isPending ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Regenerating…</> : <><RotateCw className="mr-1.5 h-3.5 w-3.5" /> Regenerate</>}
+              </Button>
+            ) : null}
             <Button onClick={() => ai.mutate()} disabled={ai.isPending}>
               {ai.isPending ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Generating…</> : <><Sparkles className="mr-1.5 h-3.5 w-3.5" /> Generate draft</>}
             </Button>
