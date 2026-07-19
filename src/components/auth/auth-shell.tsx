@@ -72,11 +72,11 @@ export function AuthShell({
   ) : null;
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-background text-foreground">
+    <div className="auth-shell relative flex min-h-dvh flex-col text-foreground">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full bg-primary/15 blur-[130px]" />
-        <div className="absolute top-1/2 -right-32 h-[520px] w-[520px] rounded-full bg-fuchsia-500/10 blur-[130px]" />
-        <div className="absolute bottom-[-160px] left-1/3 h-[420px] w-[420px] rounded-full bg-cyan-500/10 blur-[130px]" />
+        <div className="absolute -top-48 -left-40 h-[560px] w-[560px] rounded-full bg-emerald-500/10 blur-[140px] dark:bg-emerald-400/10" />
+        <div className="absolute top-1/3 -right-40 h-[560px] w-[560px] rounded-full bg-indigo-500/10 blur-[140px] dark:bg-indigo-400/10" />
+        <div className="absolute bottom-[-180px] left-1/3 h-[440px] w-[440px] rounded-full bg-slate-400/10 blur-[140px] dark:bg-slate-500/10" />
       </div>
 
       <header className="relative z-10 flex items-center justify-end px-5 py-4 sm:px-8">
@@ -87,7 +87,7 @@ export function AuthShell({
         {sidePanel ? (
           <div className="grid w-full max-w-6xl items-center gap-10 lg:grid-cols-2">
             <div className="mx-auto w-full min-w-0 max-w-[460px] lg:mx-0 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
-              <div className="rounded-2xl border border-border/70 bg-card/70 p-7 pt-8 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-9 sm:pt-10">
+              <div className="auth-card rounded-[20px] p-7 pt-8 sm:p-10 sm:pt-11">
                 {brandBlock}
                 {children}
               </div>
@@ -101,7 +101,7 @@ export function AuthShell({
           </div>
         ) : (
           <div className="w-full max-w-[460px] motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
-            <div className="rounded-2xl border border-border/70 bg-card/70 p-7 pt-8 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-9 sm:pt-10">
+            <div className="auth-card rounded-[20px] p-7 pt-8 sm:p-10 sm:pt-11">
               {brandBlock}
               {children}
             </div>
@@ -113,6 +113,7 @@ export function AuthShell({
           </div>
         )}
       </main>
+
 
 
       <footer className="relative z-10 border-t border-border/50 bg-background/50 backdrop-blur">
