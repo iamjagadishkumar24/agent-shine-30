@@ -246,9 +246,6 @@ function FeedbackPage() {
                 <Download className="mr-1.5 h-3.5 w-3.5" /> Export
               </Button>
 
-              <Button size="sm" variant="outline" onClick={exportCsv}>
-                <Download className="mr-1.5 h-3.5 w-3.5" /> Export
-              </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button size="sm" variant="destructive" disabled={delMut.isPending}>
