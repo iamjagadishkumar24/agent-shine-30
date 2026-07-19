@@ -99,23 +99,23 @@ function AgentsPage() {
           </div>
         }
       />
-      <div className="mx-auto max-w-7xl px-8 pb-12 pt-6">
-        <Card className="overflow-hidden rounded-xl border-border/60 bg-card/60">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border/60 text-left text-xs text-muted-foreground">
+      <div className="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 lg:px-8">
+        <Card className="overflow-hidden rounded-xl border-border/60 bg-card/60 p-0">
+          <DataTableShell className="rounded-none border-0">
+            <DataTableHeader>
               <tr>
-                <th className="px-4 py-2.5 font-medium">Agent</th>
-                <th className="px-4 py-2.5 font-medium">Department</th>
-                <th className="px-4 py-2.5 font-medium">Team</th>
-                <th className="px-4 py-2.5 font-medium">Manager</th>
-                <th className="px-4 py-2.5 font-medium text-right">Quality Score</th>
-                <th className="px-4 py-2.5 font-medium text-right">Status</th>
+                <SortableTh field="full_name" active={field} dir={dir} onSort={onSort}>Agent</SortableTh>
+                <SortableTh field="department" active={field} dir={dir} onSort={onSort}>Department</SortableTh>
+                <SortableTh field="team" active={field} dir={dir} onSort={onSort}>Team</SortableTh>
+                <SortableTh field="manager_name" active={field} dir={dir} onSort={onSort}>Manager</SortableTh>
+                <SortableTh field="qa_score" active={field} dir={dir} onSort={onSort} align="right">Quality Score</SortableTh>
+                <SortableTh field="status" active={field} dir={dir} onSort={onSort} align="right">Status</SortableTh>
               </tr>
-            </thead>
+            </DataTableHeader>
             <tbody>
               {isLoading && Array.from({ length: 6 }).map((_, i) => (
                 <tr key={`sk-${i}`} className="border-b border-border/40 last:border-0" aria-busy="true">
-                  <td className="px-4 py-3">
+                  <td className="border-b border-border/40 px-4 py-3.5">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-muted/40 animate-pulse" />
                       <div className="space-y-1.5">
@@ -124,33 +124,33 @@ function AgentsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3"><div className="h-3 w-20 bg-muted/40 rounded animate-pulse" /></td>
-                  <td className="px-4 py-3"><div className="h-3 w-16 bg-muted/40 rounded animate-pulse" /></td>
-                  <td className="px-4 py-3"><div className="h-3 w-24 bg-muted/40 rounded animate-pulse" /></td>
-                  <td className="px-4 py-3 text-right"><div className="ml-auto h-4 w-10 bg-muted/40 rounded animate-pulse" /></td>
-                  <td className="px-4 py-3 text-right"><div className="ml-auto h-3 w-12 bg-muted/40 rounded animate-pulse" /></td>
+                  <td className="border-b border-border/40 px-4 py-3.5"><div className="h-3 w-20 bg-muted/40 rounded animate-pulse" /></td>
+                  <td className="border-b border-border/40 px-4 py-3.5"><div className="h-3 w-16 bg-muted/40 rounded animate-pulse" /></td>
+                  <td className="border-b border-border/40 px-4 py-3.5"><div className="h-3 w-24 bg-muted/40 rounded animate-pulse" /></td>
+                  <td className="border-b border-border/40 px-4 py-3.5 text-right"><div className="ml-auto h-4 w-10 bg-muted/40 rounded animate-pulse" /></td>
+                  <td className="border-b border-border/40 px-4 py-3.5 text-right"><div className="ml-auto h-3 w-12 bg-muted/40 rounded animate-pulse" /></td>
                 </tr>
               ))}
-              {filtered.map((a) => {
+              {!isLoading && paged.map((a) => {
                 const initials = (a.full_name ?? "?").split(" ").filter(Boolean).map((s) => s[0]).slice(0, 2).join("").toUpperCase() || "?";
                 const score = a.qa_score == null ? null : Number(a.qa_score);
                 return (
-                <tr key={a.id} className="border-b border-border/40 last:border-0 hover:bg-accent/30">
-                  <td className="px-4 py-3">
+                <DataTableRow key={a.id}>
+                  <DataTableCell>
                     <div className="flex items-center gap-3">
                       <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/15 text-[11px] font-medium text-primary">
                         {initials}
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <Link to="/feedback/new" search={{ agent: a.id }} className="font-medium hover:underline">{a.full_name}</Link>
-                        <div className="text-xs text-muted-foreground">{a.employee_id} · {a.email}</div>
+                        <div className="truncate text-xs text-muted-foreground">{a.employee_id} · {a.email}</div>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{a.department}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{a.team ?? "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{a.manager_name ?? "—"}</td>
-                  <td className="px-4 py-3 text-right">
+                  </DataTableCell>
+                  <DataTableCell className="text-muted-foreground">{a.department}</DataTableCell>
+                  <DataTableCell className="text-muted-foreground">{a.team ?? "—"}</DataTableCell>
+                  <DataTableCell className="text-muted-foreground">{a.manager_name ?? "—"}</DataTableCell>
+                  <DataTableCell align="right">
                     {score == null ? (
                       <span className="text-xs text-muted-foreground">—</span>
                     ) : (
@@ -163,8 +163,8 @@ function AgentsPage() {
                       {score.toFixed(1)}
                     </span>
                     )}
-                  </td>
-                  <td className="px-4 py-3 text-right text-xs">
+                  </DataTableCell>
+                  <DataTableCell align="right" className="text-xs">
                     <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                       <span className={cn(
                         "h-1.5 w-1.5 rounded-full",
@@ -172,19 +172,39 @@ function AgentsPage() {
                       )} />
                       {a.status}
                     </span>
-                  </td>
-                </tr>
+                  </DataTableCell>
+                </DataTableRow>
                 );
               })}
-              {!isLoading && filtered.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-xs text-muted-foreground">
-                  {data.length === 0 ? "No agents yet. Import a CSV to get started." : `No agents match “${q}”.`}
-                </td></tr>
+              {!isLoading && sorted.length === 0 && (
+                <TableEmpty
+                  colSpan={6}
+                  icon={Users}
+                  title={data.length === 0 ? "No agents yet" : "No matches"}
+                  message={data.length === 0 ? "Import a CSV or create your first agent to get started." : `No agents match “${q}”. Try a different search term.`}
+                  action={data.length === 0 ? (
+                    <Button size="sm" onClick={() => setImportOpen(true)}>
+                      <Upload className="mr-1.5 h-3.5 w-3.5" /> Import CSV
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={() => setQ("")}>Clear search</Button>
+                  )}
+                />
               )}
             </tbody>
-          </table>
+          </DataTableShell>
+          {sorted.length > 0 && (
+            <TablePagination
+              page={page}
+              pageSize={pageSize}
+              total={sorted.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
+          )}
         </Card>
       </div>
+
 
       <ImportDialog
         open={importOpen}
