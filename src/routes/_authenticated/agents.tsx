@@ -9,13 +9,18 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
-import { useState, useRef } from "react";
-import { Search, Upload, Download, FileSpreadsheet, AlertCircle, CheckCircle2 } from "lucide-react";
+import { useState, useRef, useMemo } from "react";
+import { Search, Upload, Download, FileSpreadsheet, AlertCircle, CheckCircle2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { parseCsv, toCsv, downloadCsv } from "@/lib/csv";
 import { importAgents } from "@/lib/bulk-operations.functions";
 import { format } from "date-fns";
+import {
+  DataTableShell, DataTableHeader, DataTableRow, DataTableCell,
+  SortableTh, StaticTh, useTableSort, sortRows,
+  TableEmpty, TablePagination, usePagination, paginate,
+} from "@/components/ui/data-table";
 
 export const Route = createFileRoute("/_authenticated/agents")({
   component: AgentsPage,
