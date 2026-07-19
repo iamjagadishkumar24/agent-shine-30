@@ -531,6 +531,46 @@ function FeedbackDetail() {
           </Card>
         </div>
       </div>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Email preview</DialogTitle>
+            <DialogDescription>
+              {preview.data?.recipient ? `Will be delivered to ${preview.data.recipient}` : "Preview of the rendered feedback email."}
+              {preview.data?.subject ? ` · Subject: ${preview.data.subject}` : null}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="h-[70vh] overflow-hidden rounded-lg border border-border/60 bg-white">
+            {preview.isLoading ? (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Rendering…</div>
+            ) : preview.isError ? (
+              <div className="flex h-full items-center justify-center text-sm text-destructive">Failed to render preview</div>
+            ) : (
+              <iframe
+                title="Email preview"
+                srcDoc={preview.data?.html ?? ""}
+                sandbox=""
+                className="h-full w-full"
+              />
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPreviewOpen(false)}>Close</Button>
+            {data?.status === "approved" && (
+              <Button
+                onClick={() => {
+                  setPreviewOpen(false);
+                  send();
+                }}
+                disabled={sendMutation.isPending}
+              >
+                <Send className="mr-1.5 h-3.5 w-3.5" /> Send now
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
