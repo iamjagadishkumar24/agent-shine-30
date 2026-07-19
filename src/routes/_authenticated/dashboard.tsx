@@ -279,10 +279,33 @@ function Dashboard() {
   const coachingCount = coaching.length;
   const openTasks = items.filter((i) => i.status === "open" || i.status === "in_progress").length;
   const closedTasks = items.filter((i) => i.status === "done").length;
-  const avgQA = agents.length ? agents.reduce((s, a) => s + Number(a.qa_score ?? 0), 0) / agents.length : 0;
+  // Quality Score = simple average of scored feedback records. `agents.qa_score`
+  // is a rollup of the same feedback and can lag or be zero for agents with no
+  // scored feedback, so we compute the org-wide score directly from feedback.
   const scoredFb = feedback.filter((f) => f.score != null);
-  const avgCSAT = scoredFb.length ? scoredFb.reduce((s, f) => s + Number(f.score ?? 0), 0) / scoredFb.length : 0;
-  const qualityScore = Math.min(100, avgQA * 0.6 + (completed / Math.max(1, totalFeedback)) * 40);
+  const avgCSAT = scoredFb.length
+    ? scoredFb.reduce((s, f) => s + Number(f.score ?? 0), 0) / scoredFb.length
+    : 0;
+  const avgQA = agents.length
+    ? agents.reduce((s, a) => s + Number(a.qa_score ?? 0), 0) / agents.length
+    : 0;
+  const qualityScore = avgCSAT;
+  // Previous-period comparison: same-length window ending at now-30d.
+  const nowMs = Date.now();
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+  const priorScored = feedback.filter((f) => {
+    if (f.score == null) return false;
+    const t = new Date(f.created_at).getTime();
+    return t >= nowMs - 2 * thirtyDaysMs && t < nowMs - thirtyDaysMs;
+  });
+  const priorQuality = priorScored.length
+    ? priorScored.reduce((s, f) => s + Number(f.score ?? 0), 0) / priorScored.length
+    : null;
+  const qualityLastUpdated = scoredFb.reduce<string | null>((acc, f) => {
+    const t = f.created_at as string;
+    return !acc || (t && t > acc) ? t : acc;
+  }, null);
+
 
   // Sparklines (12 weeks)
   const sparkAll = useMemo(() => bucketByWeek(feedback, () => true), [feedback]);
@@ -567,7 +590,13 @@ function Dashboard() {
           </Suspense>
 
           <Suspense fallback={<div className="col-span-12 md:col-span-6 xl:col-span-4"><ChartSkeleton height="h-52" /></div>}>
-            <HeavyCharts.Gauge avgQA={avgQA} />
+            <HeavyCharts.Gauge
+              value={qualityScore}
+              sampleSize={scoredFb.length}
+              previousValue={priorQuality}
+              lastUpdated={qualityLastUpdated}
+            />
+
           </Suspense>
 
           {/* Status (light, kept inline) */}

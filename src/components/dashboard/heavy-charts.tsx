@@ -171,33 +171,120 @@ export const CategoryDonutCard = memo(function CategoryDonutCard({
 });
 
 // ---------------------------------------------------------------------------
-export const QaGaugeCard = memo(function QaGaugeCard({ avgQA }: { avgQA: number }) {
-  const safeQA = Number.isFinite(avgQA) ? Math.min(100, Math.max(0, avgQA)) : 0;
+type QaGaugeProps = {
+  value: number;
+  sampleSize: number;
+  previousValue?: number | null;
+  lastUpdated?: string | null;
+};
+
+function qualityBand(v: number) {
+  if (v >= 90) return { label: "Excellent", color: "oklch(0.72 0.17 155)" }; // green
+  if (v >= 75) return { label: "Healthy", color: "oklch(0.65 0.16 240)" }; // blue
+  if (v >= 60) return { label: "At risk", color: "oklch(0.78 0.16 75)" }; // amber
+  return { label: "Critical", color: "oklch(0.63 0.22 25)" }; // red
+}
+
+export const QaGaugeCard = memo(function QaGaugeCard({
+  value,
+  sampleSize,
+  previousValue,
+  lastUpdated,
+}: QaGaugeProps) {
+  const hasData = sampleSize > 0 && Number.isFinite(value);
+  const safe = hasData ? Math.min(100, Math.max(0, value)) : 0;
+  const band = qualityBand(safe);
+  const delta = hasData && previousValue != null && Number.isFinite(previousValue)
+    ? safe - previousValue
+    : null;
+  const deltaTone = delta == null
+    ? "text-muted-foreground"
+    : delta > 0.05
+      ? "text-emerald-600 dark:text-emerald-400"
+      : delta < -0.05
+        ? "text-rose-600 dark:text-rose-400"
+        : "text-muted-foreground";
+  const updatedLabel = lastUpdated
+    ? new Date(lastUpdated).toLocaleString(undefined, {
+        month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+      })
+    : null;
+
   return (
-    <Card className="col-span-12 rounded-2xl border-border/60 bg-card/60 p-6 backdrop-blur-xl md:col-span-6 xl:col-span-4">
-      <div className="text-sm font-semibold">Quality Score</div>
-      <div className="relative mt-4 h-52">
+    <Card
+      className="col-span-12 rounded-2xl border-border/60 bg-card/60 p-6 backdrop-blur-xl md:col-span-6 xl:col-span-4"
+      title={`Quality Score = average of feedback scores across ${sampleSize} scored record${sampleSize === 1 ? "" : "s"}.`}
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="text-sm font-semibold">Quality Score</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">
+            Live average across scored feedback
+          </div>
+        </div>
+        {hasData && (
+          <span
+            className="rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider"
+            style={{ backgroundColor: `${band.color}22`, color: band.color }}
+          >
+            {band.label}
+          </span>
+        )}
+      </div>
+      <div className="relative mt-3 h-52">
         <ResponsiveContainer>
-          <RadialBarChart innerRadius="70%" outerRadius="100%" data={[{ name: "quality", value: safeQA, fill: "url(#gauge-grad)" }]} startAngle={180} endAngle={0}>
-            <defs>
-              <linearGradient id="gauge-grad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="oklch(0.66 0.22 20)" />
-                <stop offset="50%" stopColor="oklch(0.68 0.24 330)" />
-                <stop offset="100%" stopColor="oklch(0.72 0.16 160)" />
-              </linearGradient>
-            </defs>
+          <RadialBarChart
+            innerRadius="70%"
+            outerRadius="100%"
+            data={[{ name: "quality", value: hasData ? safe : 0.01, fill: band.color }]}
+            startAngle={180}
+            endAngle={0}
+          >
             <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-            <RadialBar background={{ fill: "var(--muted)" }} dataKey="value" cornerRadius={10} isAnimationActive={false} />
+            <RadialBar
+              background={{ fill: "var(--muted)" }}
+              dataKey="value"
+              cornerRadius={10}
+              isAnimationActive
+              animationDuration={800}
+            />
           </RadialBarChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-x-0 bottom-6 grid place-items-center">
-          <div className="text-3xl font-semibold tabular-nums">{safeQA.toFixed(1)}%</div>
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Average Quality</div>
+          {hasData ? (
+            <>
+              <div
+                className="text-3xl font-semibold tabular-nums"
+                style={{ color: band.color }}
+                aria-label={`Quality score ${safe.toFixed(1)} percent`}
+              >
+                {safe.toFixed(1)}%
+              </div>
+              <div className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                Average Quality
+              </div>
+              {delta != null && (
+                <div className={`mt-1 text-[11px] tabular-nums ${deltaTone}`}>
+                  {delta > 0 ? "▲" : delta < 0 ? "▼" : "•"} {Math.abs(delta).toFixed(1)} pts vs prior 30d
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="max-w-[70%] text-center text-xs text-muted-foreground">
+              No quality data available yet. Score feedback to populate this metric.
+            </div>
+          )}
         </div>
+      </div>
+      <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
+        <span>Sample: {sampleSize} scored</span>
+        {updatedLabel && <span>Updated {updatedLabel}</span>}
       </div>
     </Card>
   );
 });
+
+
 
 // ---------------------------------------------------------------------------
 export const EmailDonutCard = memo(function EmailDonutCard({
