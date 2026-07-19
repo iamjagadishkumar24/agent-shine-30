@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { AuthShell } from "@/components/auth/auth-shell";
@@ -48,6 +48,7 @@ function safeNext(next: string | undefined): string {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REMEMBER_KEY = "signal.auth.remember-email";
+const DRAFT_KEY = "signal.auth.draft";
 
 
 type Mode = "signin" | "signup" | "forgot";
@@ -85,6 +86,12 @@ function AuthPage() {
   const [resetSent, setResetSent] = useState(false);
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean; name?: boolean; confirm?: boolean }>({});
 
+  // Refs used for auto-focusing the first invalid field on submit and
+  // preserving input across OAuth redirects.
+  const nameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const confirmRef = useRef<HTMLInputElement>(null);
 
   const destination = safeNext(next);
   const trimmedEmail = email.trim();
@@ -95,6 +102,7 @@ function AuthPage() {
   const strength = useMemo(() => passwordStrength(password), [password]);
   const canSubmit = !loading && emailValid && (mode === "forgot" ? true : passwordValid) && nameValid && confirmValid;
 
+  // Hydrate remembered email + any input preserved across an OAuth redirect.
   useEffect(() => {
     try {
       const saved = localStorage.getItem(REMEMBER_KEY);
@@ -102,8 +110,20 @@ function AuthPage() {
         setEmail(saved);
         setRemember(true);
       }
+      const draft = sessionStorage.getItem(DRAFT_KEY);
+      if (draft) {
+        const parsed = JSON.parse(draft) as { email?: string; name?: string; mode?: Mode };
+        if (parsed.email) setEmail(parsed.email);
+        if (parsed.name) setName(parsed.name);
+        if (parsed.mode === "signup" || parsed.mode === "signin" || parsed.mode === "forgot") {
+          setMode(parsed.mode);
+        }
+        sessionStorage.removeItem(DRAFT_KEY);
+      }
     } catch {}
   }, []);
+
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -118,6 +138,14 @@ function AuthPage() {
     } catch {}
   };
 
+  const focusFirstInvalid = () => {
+    if (mode === "signup" && !nameValid) return nameRef.current?.focus();
+    if (!emailValid) return emailRef.current?.focus();
+    if (mode !== "forgot" && !passwordValid) return passwordRef.current?.focus();
+    if (mode === "signup" && !confirmValid) return confirmRef.current?.focus();
+  };
+
+
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched({ email: true, password: true, name: true, confirm: true });
@@ -127,6 +155,8 @@ function AuthPage() {
         toast.error(mode === "signup" ? "Password must be at least 8 characters" : "Enter your password");
       else if (!nameValid) toast.error("Enter your full name");
       else if (!confirmValid) toast.error("Passwords do not match");
+      // Move focus to the first invalid field so keyboard/AT users land on the fix point.
+      requestAnimationFrame(focusFirstInvalid);
       return;
     }
     setErrorMsg(null);
@@ -183,6 +213,13 @@ function AuthPage() {
     setErrorMsg(null);
     setLoading(true);
     try {
+      // Preserve typed input across the OAuth round-trip (password intentionally excluded).
+      try {
+        sessionStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({ email: trimmedEmail, name: name.trim(), mode }),
+        );
+      } catch {}
       const redirectUri = `${window.location.origin}/auth${next ? `?next=${encodeURIComponent(next)}` : ""}`;
       const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectUri });
       if (result.error) {
@@ -263,12 +300,15 @@ function AuthPage() {
                       <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="name"
+                        ref={nameRef}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         onBlur={() => setTouched((t) => ({ ...t, name: true }))}
                         required
                         placeholder="Jane Doe"
                         autoComplete="name"
+                        aria-invalid={nameError || undefined}
+                        aria-describedby={nameError ? "name-error" : undefined}
                         className={cn(
                           "h-11 rounded-lg pl-10",
                           nameError && "border-destructive focus-visible:ring-destructive/40",
@@ -276,8 +316,8 @@ function AuthPage() {
                       />
                     </div>
                     {nameError && (
-                      <p className="flex items-center gap-1 text-xs text-destructive">
-                        <AlertCircle className="h-3 w-3" /> Enter your full name
+                      <p id="name-error" className="flex items-center gap-1 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" aria-hidden /> Enter your full name
                       </p>
                     )}
                   </div>
@@ -289,6 +329,7 @@ function AuthPage() {
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="email"
+                      ref={emailRef}
                       type="email"
                       autoComplete="email"
                       value={email}
@@ -297,6 +338,7 @@ function AuthPage() {
                       required
                       placeholder="you@company.com"
                       aria-invalid={emailError || undefined}
+                      aria-describedby={emailError ? "email-error" : undefined}
                       className={cn(
                         "h-11 rounded-lg pl-10",
                         emailError && "border-destructive focus-visible:ring-destructive/40",
@@ -304,8 +346,8 @@ function AuthPage() {
                     />
                   </div>
                   {emailError && (
-                    <p className="flex items-center gap-1 text-xs text-destructive">
-                      <AlertCircle className="h-3 w-3" /> Enter a valid email address
+                    <p id="email-error" className="flex items-center gap-1 text-xs text-destructive">
+                      <AlertCircle className="h-3 w-3" aria-hidden /> Enter a valid email address
                     </p>
                   )}
                 </div>
@@ -317,6 +359,7 @@ function AuthPage() {
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="password"
+                        ref={passwordRef}
                         type={showPassword ? "text" : "password"}
                         autoComplete={mode === "signup" ? "new-password" : "current-password"}
                         value={password}
@@ -326,6 +369,7 @@ function AuthPage() {
                         minLength={mode === "signup" ? 8 : undefined}
                         placeholder={mode === "signup" ? "At least 8 characters" : "Enter your password"}
                         aria-invalid={pwError || undefined}
+                        aria-describedby={pwError ? "password-error" : undefined}
                         className={cn(
                           "h-11 rounded-lg pl-10 pr-11",
                           pwError && "border-destructive focus-visible:ring-destructive/40",
@@ -334,11 +378,11 @@ function AuthPage() {
                       <button
                         type="button"
                         onClick={() => setShowPassword((s) => !s)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
                         aria-label={showPassword ? "Hide password" : "Show password"}
-                        tabIndex={-1}
+                        aria-pressed={showPassword}
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
                       </button>
                     </div>
                     {mode === "signup" && password.length > 0 && (
@@ -360,8 +404,8 @@ function AuthPage() {
                       </div>
                     )}
                     {pwError && (
-                      <p className="flex items-center gap-1 text-xs text-destructive">
-                        <AlertCircle className="h-3 w-3" /> Must be at least 8 characters
+                      <p id="password-error" className="flex items-center gap-1 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" aria-hidden /> Must be at least 8 characters
                       </p>
                     )}
                   </div>
@@ -374,6 +418,7 @@ function AuthPage() {
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="confirm-password"
+                        ref={confirmRef}
                         type={showPassword ? "text" : "password"}
                         autoComplete="new-password"
                         value={confirmPassword}
@@ -382,6 +427,7 @@ function AuthPage() {
                         required
                         placeholder="Re-enter your password"
                         aria-invalid={confirmError || undefined}
+                        aria-describedby={confirmError ? "confirm-error" : undefined}
                         className={cn(
                           "h-11 rounded-lg pl-10",
                           confirmError && "border-destructive focus-visible:ring-destructive/40",
@@ -389,8 +435,8 @@ function AuthPage() {
                       />
                     </div>
                     {confirmError && (
-                      <p className="flex items-center gap-1 text-xs text-destructive">
-                        <AlertCircle className="h-3 w-3" /> Passwords do not match
+                      <p id="confirm-error" className="flex items-center gap-1 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" aria-hidden /> Passwords do not match
                       </p>
                     )}
                   </div>
