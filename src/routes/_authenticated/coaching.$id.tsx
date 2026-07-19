@@ -60,6 +60,7 @@ function SessionDetail() {
   const [newItem, setNewItem] = useState("");
   const [newDue, setNewDue] = useState("");
   const [outcome, setOutcome] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: session, isLoading } = useQuery({
     queryKey: ["coaching-session", id],
