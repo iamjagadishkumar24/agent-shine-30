@@ -233,7 +233,10 @@ function AuthPage() {
     } catch (err: any) {
       const msg = err?.message ?? "Something went wrong";
       setErrorMsg(msg);
+      setErrorField(inferErrorField(msg));
       toast.error(msg);
+
+
 
     } finally {
       setLoading(false);
