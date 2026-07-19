@@ -287,7 +287,7 @@ function Dashboard() {
   // Sparklines (12 weeks)
   const sparkAll = useMemo(() => bucketByWeek(feedback, () => true), [feedback]);
   const sparkSent = useMemo(() => bucketByWeek(feedback, (f) => ["sent", "acknowledged", "completed"].includes(f.status as string)), [feedback]);
-  const sparkPending = useMemo(() => bucketByWeek(feedback, (f) => ["draft", "review"].includes(f.status as string)), [feedback]);
+  const sparkPending = useMemo(() => bucketByWeek(feedback, (f) => ["draft", "ready_to_send"].includes(f.status as string)), [feedback]);
   const sparkCompleted = useMemo(() => bucketByWeek(feedback, (f) => f.status === "completed"), [feedback]);
   const sparkHigh = useMemo(() => bucketByWeek(feedback, (f) => f.severity === "critical" || f.severity === "high"), [feedback]);
   const sparkCoaching = useMemo(() => bucketByWeek(coaching as any, () => true), [coaching]);
