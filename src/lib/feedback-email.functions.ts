@@ -306,3 +306,91 @@ export const previewFeedbackEmail = createServerFn({ method: "POST" })
       recipient: fb.agent?.email ?? null,
     };
   });
+
+// Send the rendered feedback email to a chosen recipient WITHOUT changing
+// feedback state or writing to the queue. Returns the real provider response
+// (message id + latency, or provider error) so staff can dry-run before send.
+export const sendFeedbackTestEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        feedbackId: z.string().uuid(),
+        to: z.string().trim().email().max(255),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    await assertStaff(supabase, context.userId);
+
+    const { data: fb, error } = await supabase
+      .from("feedback")
+      .select("*, agent:agents(*)")
+      .eq("id", data.feedbackId)
+      .maybeSingle();
+    if (error) fail("Unable to load feedback", 500, error);
+    if (!fb) throw new Response("Feedback not found", { status: 404 });
+
+    const { data: settings, error: sErr } = await supabase
+      .from("email_settings")
+      .select("*")
+      .eq("singleton", true)
+      .maybeSingle();
+    if (sErr) fail("Unable to load email settings", 500, sErr);
+    if (!settings) throw new Response("Email settings not configured", { status: 400 });
+    if (!settings.enabled) throw new Response("Email service is disabled in Settings", { status: 400 });
+    if (!settings.sender_email) {
+      throw new Response("Configure a sender email in Settings first", { status: 400 });
+    }
+
+    const appBaseUrl = getAppBaseUrl();
+    const rendered = renderFeedbackEmail({
+      feedbackId: fb.id,
+      title: fb.title,
+      agentName: fb.agent?.full_name ?? "Agent",
+      managerName: fb.agent?.manager_name ?? undefined,
+      category: fb.category,
+      feedbackType: fb.feedback_type,
+      severity: fb.severity,
+      score: fb.score as number | null,
+      summary: fb.summary,
+      strengths: fb.strengths,
+      improvements: fb.improvements,
+      recommendedActions: fb.recommended_actions,
+      dueDate: fb.due_date,
+      appBaseUrl,
+      senderName: settings.sender_name,
+      logoUrl: settings.logo_url ?? `${appBaseUrl}${zenworkLogo.url}`,
+      signatureHtml: settings.signature_html,
+      confidentialityNotice: settings.confidentiality_notice,
+    });
+
+    const { getProvider } = await import("@/lib/email/providers.server");
+    const provider = getProvider(settings.provider);
+    const started = Date.now();
+    try {
+      const res = await provider.send({
+        from: { name: settings.sender_name ?? "", email: settings.sender_email },
+        to: data.to,
+        replyTo: settings.reply_to ?? undefined,
+        subject: `[TEST] ${rendered.subject}`,
+        text: rendered.text,
+        html: rendered.html,
+      });
+      return {
+        ...res,
+        provider: provider.displayName,
+        recipient: data.to,
+        latencyMs: Date.now() - started,
+      };
+    } catch (err) {
+      return {
+        ok: false as const,
+        provider: provider.displayName,
+        recipient: data.to,
+        latencyMs: Date.now() - started,
+        error: err instanceof Error ? err.message.slice(0, 300) : "Test send failed",
+      };
+    }
+  });

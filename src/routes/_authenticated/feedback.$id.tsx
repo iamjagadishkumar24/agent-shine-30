@@ -7,12 +7,13 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Send, CheckCircle2, Trash2, Mail, MailOpen, MousePointerClick, AlertTriangle, Paperclip, Upload, X, CalendarPlus, GitPullRequest, ThumbsUp, ThumbsDown, RotateCcw, History, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Send, CheckCircle2, Trash2, Mail, MailOpen, MousePointerClick, AlertTriangle, Paperclip, Upload, X, CalendarPlus, GitPullRequest, ThumbsUp, ThumbsDown, RotateCcw, History, Eye, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { sendFeedbackEmail, previewFeedbackEmail } from "@/lib/feedback-email.functions";
+import { sendFeedbackEmail, previewFeedbackEmail, sendFeedbackTestEmail } from "@/lib/feedback-email.functions";
 import { createUploadUrl, deleteAttachment } from "@/lib/feedback-attachments.functions";
 import { transitionFeedback } from "@/lib/feedback-workflow.functions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -50,9 +51,19 @@ function FeedbackDetail() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [testTo, setTestTo] = useState("");
+  const [testResult, setTestResult] = useState<null | {
+    ok: boolean;
+    provider: string;
+    recipient: string;
+    latencyMs: number;
+    messageId?: string;
+    error?: string;
+  }>(null);
 
   const sendEmailFn = useServerFn(sendFeedbackEmail);
   const previewFn = useServerFn(previewFeedbackEmail);
+  const testSendFn = useServerFn(sendFeedbackTestEmail);
   const uploadUrlFn = useServerFn(createUploadUrl);
   const deleteAttFn = useServerFn(deleteAttachment);
   const transitionFn = useServerFn(transitionFeedback);
@@ -63,6 +74,35 @@ function FeedbackDetail() {
     enabled: previewOpen,
     staleTime: 0,
   });
+
+  const testSend = useMutation({
+    mutationFn: async (to: string) => testSendFn({ data: { feedbackId: id, to } }),
+    onSuccess: (r) => {
+      setTestResult({
+        ok: r.ok,
+        provider: r.provider,
+        recipient: r.recipient,
+        latencyMs: r.latencyMs,
+        messageId: "messageId" in r ? r.messageId : undefined,
+        error: "error" in r ? r.error : undefined,
+      });
+      if (r.ok) toast.success(`Test delivered to ${r.recipient} (${r.latencyMs}ms)`);
+      else toast.error(`Test failed: ${"error" in r ? r.error : "unknown"}`);
+    },
+    onError: (err: any) => {
+      const msg = err?.message ?? "Test send failed";
+      setTestResult({ ok: false, provider: "unknown", recipient: testTo, latencyMs: 0, error: msg });
+      toast.error(msg);
+    },
+  });
+
+  useEffect(() => {
+    if (previewOpen && preview.data?.recipient && !testTo) {
+      setTestTo(preview.data.recipient);
+    }
+  }, [previewOpen, preview.data?.recipient, testTo]);
+
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["feedback", id],
@@ -556,6 +596,53 @@ function FeedbackDetail() {
               />
             )}
           </div>
+
+          <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-semibold">Send test email</div>
+                <p className="text-xs text-muted-foreground">
+                  Sends this exact rendered email to any address (subject prefixed <code>[TEST]</code>). Does not change feedback state.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="test.recipient@example.com"
+                value={testTo}
+                onChange={(e) => setTestTo(e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                variant="secondary"
+                onClick={() => testSend.mutate(testTo.trim())}
+                disabled={testSend.isPending || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testTo.trim())}
+              >
+                {testSend.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Mail className="mr-1.5 h-3.5 w-3.5" />}
+                Send test
+              </Button>
+            </div>
+            {testResult && (
+              <div
+                className={`rounded-md border p-2 text-xs ${
+                  testResult.ok
+                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                    : "border-destructive/40 bg-destructive/10 text-destructive"
+                }`}
+              >
+                <div className="font-semibold">
+                  {testResult.ok ? "✓ Provider accepted" : "✗ Provider rejected"} · {testResult.provider} · {testResult.latencyMs}ms
+                </div>
+                <div className="mt-1 space-y-0.5 text-[11px] opacity-90">
+                  <div>Recipient: <span className="font-mono">{testResult.recipient}</span></div>
+                  {testResult.messageId && <div>Message id: <span className="font-mono break-all">{testResult.messageId}</span></div>}
+                  {testResult.error && <div>Error: <span className="font-mono break-all">{testResult.error}</span></div>}
+                </div>
+              </div>
+            )}
+          </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setPreviewOpen(false)}>Close</Button>
             {data?.status === "approved" && (
@@ -566,7 +653,7 @@ function FeedbackDetail() {
                 }}
                 disabled={sendMutation.isPending}
               >
-                <Send className="mr-1.5 h-3.5 w-3.5" /> Send now
+                <Send className="mr-1.5 h-3.5 w-3.5" /> Send to agent
               </Button>
             )}
           </DialogFooter>
