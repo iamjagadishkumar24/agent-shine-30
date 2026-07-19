@@ -51,12 +51,14 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
     if (error) fail("Unable to load feedback", 500, error);
     if (!fb) throw new Response("Feedback not found", { status: 404 });
     if (!fb.agent?.email) throw new Response("Agent has no email on file", { status: 400 });
-    if (fb.status !== "approved") {
+    if (!["draft", "ready_to_send", "failed"].includes(fb.status as string)) {
       throw new Response(
-        `Cannot send from status "${fb.status}" — feedback must be approved first`,
+        `Cannot send from status "${fb.status}"`,
         { status: 409 },
       );
     }
+    const sourceStatus = fb.status as string;
+
 
     const { data: settings, error: settingsErr } = await supabase
       .from("email_settings")
