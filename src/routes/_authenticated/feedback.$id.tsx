@@ -46,6 +46,7 @@ function FeedbackDetail() {
   const { id } = Route.useParams();
   useRealtimeInvalidate("feedback", [["feedback", id]], { filter: `id=eq.${id}` });
   useRealtimeInvalidate("feedback_audit_log", [["feedback", id]], { filter: `feedback_id=eq.${id}` });
+  useRealtimeInvalidate("email_queue", [["feedback-queue", id]], { filter: `feedback_id=eq.${id}` });
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [ackNote, setAckNote] = useState("");
