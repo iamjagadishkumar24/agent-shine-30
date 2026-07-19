@@ -44,12 +44,21 @@ export function AuthShell({
   showLearnMore = true,
   sidePanel,
   showBrand = true,
+  loading = false,
+  loadingLabel = "Working…",
+  error = null,
+  onDismissError,
 }: {
   children: ReactNode;
   showLearnMore?: boolean;
   sidePanel?: ReactNode;
   showBrand?: boolean;
+  loading?: boolean;
+  loadingLabel?: string;
+  error?: string | null;
+  onDismissError?: () => void;
 }) {
+
   const brandBlock = showBrand ? (
     <div className="mb-6 flex flex-col items-center gap-2.5 sm:mb-7">
       <img
