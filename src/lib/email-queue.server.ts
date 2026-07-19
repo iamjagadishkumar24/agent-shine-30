@@ -131,6 +131,8 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
           delivered_at: now2,
           provider: res.provider,
           provider_message_id: res.messageId ?? null,
+          to_email: actualTo,
+          to_email_intended: intendedTo,
           last_error: null,
         })
         .eq("id", job.id);
@@ -154,9 +156,17 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
         await supabaseAdmin.from("feedback_email_events").insert({
           feedback_id: job.feedback_id,
           event_type: job.kind === "reminder" ? "reminder_sent" : "sent",
-          detail: { provider: res.provider, message_id: res.messageId ?? null, queue_id: job.id },
+          detail: {
+            provider: res.provider,
+            message_id: res.messageId ?? null,
+            queue_id: job.id,
+            intended_to: intendedTo,
+            actual_to: actualTo,
+            dev_override: applyOverride,
+          },
         });
       }
+
       results.push({ id: job.id, ok: true });
     } else {
       const done = attempt >= (job.max_attempts ?? 5);
