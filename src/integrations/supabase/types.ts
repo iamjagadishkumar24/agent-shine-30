@@ -217,49 +217,79 @@ export type Database = {
       }
       coaching_sessions: {
         Row: {
+          agenda: string | null
           agent_id: string
+          cancelled_at: string | null
+          cancelled_reason: string | null
           coach_id: string | null
           completed_at: string | null
           created_at: string
           duration_minutes: number
           feedback_id: string | null
+          follow_up_date: string | null
           id: string
+          meeting_link: string | null
+          meeting_location: string | null
           notes: string | null
           outcome: string | null
           plan_id: string | null
+          priority: Database["public"]["Enums"]["coaching_priority"]
+          reminder_minutes: number | null
+          rescheduled_from_id: string | null
           scheduled_at: string
+          session_type: Database["public"]["Enums"]["coaching_session_type"]
           status: Database["public"]["Enums"]["coaching_status"]
           topic: string
           updated_at: string
         }
         Insert: {
+          agenda?: string | null
           agent_id: string
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
           coach_id?: string | null
           completed_at?: string | null
           created_at?: string
           duration_minutes?: number
           feedback_id?: string | null
+          follow_up_date?: string | null
           id?: string
+          meeting_link?: string | null
+          meeting_location?: string | null
           notes?: string | null
           outcome?: string | null
           plan_id?: string | null
+          priority?: Database["public"]["Enums"]["coaching_priority"]
+          reminder_minutes?: number | null
+          rescheduled_from_id?: string | null
           scheduled_at: string
+          session_type?: Database["public"]["Enums"]["coaching_session_type"]
           status?: Database["public"]["Enums"]["coaching_status"]
           topic: string
           updated_at?: string
         }
         Update: {
+          agenda?: string | null
           agent_id?: string
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
           coach_id?: string | null
           completed_at?: string | null
           created_at?: string
           duration_minutes?: number
           feedback_id?: string | null
+          follow_up_date?: string | null
           id?: string
+          meeting_link?: string | null
+          meeting_location?: string | null
           notes?: string | null
           outcome?: string | null
           plan_id?: string | null
+          priority?: Database["public"]["Enums"]["coaching_priority"]
+          reminder_minutes?: number | null
+          rescheduled_from_id?: string | null
           scheduled_at?: string
+          session_type?: Database["public"]["Enums"]["coaching_session_type"]
           status?: Database["public"]["Enums"]["coaching_status"]
           topic?: string
           updated_at?: string
@@ -284,6 +314,13 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "coaching_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coaching_sessions_rescheduled_from_id_fkey"
+            columns: ["rescheduled_from_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -903,7 +940,23 @@ export type Database = {
       app_role: "super_admin" | "qa_admin" | "team_manager" | "read_only"
       coaching_goal_status: "on_track" | "at_risk" | "achieved" | "missed"
       coaching_plan_status: "active" | "completed" | "archived"
-      coaching_status: "scheduled" | "completed" | "canceled" | "no_show"
+      coaching_priority: "low" | "medium" | "high" | "urgent"
+      coaching_session_type:
+        | "coaching"
+        | "review"
+        | "one_on_one"
+        | "training"
+        | "follow_up"
+      coaching_status:
+        | "scheduled"
+        | "completed"
+        | "canceled"
+        | "no_show"
+        | "pending_approval"
+        | "confirmed"
+        | "in_progress"
+        | "missed"
+        | "rescheduled"
       feedback_severity: "low" | "medium" | "high" | "critical"
       feedback_status:
         | "draft"
@@ -1054,7 +1107,25 @@ export const Constants = {
       app_role: ["super_admin", "qa_admin", "team_manager", "read_only"],
       coaching_goal_status: ["on_track", "at_risk", "achieved", "missed"],
       coaching_plan_status: ["active", "completed", "archived"],
-      coaching_status: ["scheduled", "completed", "canceled", "no_show"],
+      coaching_priority: ["low", "medium", "high", "urgent"],
+      coaching_session_type: [
+        "coaching",
+        "review",
+        "one_on_one",
+        "training",
+        "follow_up",
+      ],
+      coaching_status: [
+        "scheduled",
+        "completed",
+        "canceled",
+        "no_show",
+        "pending_approval",
+        "confirmed",
+        "in_progress",
+        "missed",
+        "rescheduled",
+      ],
       feedback_severity: ["low", "medium", "high", "critical"],
       feedback_status: [
         "draft",
