@@ -18,6 +18,7 @@ import {
   saveEmailSettings,
   verifyEmailConnection,
   sendTestEmail,
+  sendBrandingTestEmail,
   saveFeedbackTemplate,
   previewFeedbackTemplate,
   sendFeedbackTemplateTest,
