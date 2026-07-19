@@ -409,8 +409,8 @@ function AuthPage() {
                       </div>
                     )}
                     {pwError && (
-                      <p className="flex items-center gap-1 text-xs text-destructive">
-                        <AlertCircle className="h-3 w-3" /> Must be at least 8 characters
+                      <p id="password-error" className="flex items-center gap-1 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" aria-hidden /> Must be at least 8 characters
                       </p>
                     )}
                   </div>
