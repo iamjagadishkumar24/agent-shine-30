@@ -15,7 +15,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { getMyProfile, updateMyProfile } from "@/lib/profile.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme, type AccentColor, type ThemeMode, type Density } from "@/lib/theme";
-import { Sun, Moon, Monitor, Upload, Loader2, KeyRound, User as UserIcon, Palette } from "lucide-react";
+import { Sun, Moon, Monitor, Upload, Loader2, KeyRound, User as UserIcon, Palette, CalendarDays, Copy, RefreshCw, Trash2 } from "lucide-react";
+import { getMyCalendarFeed, rotateCalendarFeed, revokeCalendarFeed } from "@/lib/calendar-feed.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/account")({
