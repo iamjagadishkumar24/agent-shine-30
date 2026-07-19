@@ -17,6 +17,9 @@ import {
   saveEmailSettings,
   verifyEmailConnection,
   sendTestEmail,
+  saveFeedbackTemplate,
+  previewFeedbackTemplate,
+  sendFeedbackTemplateTest,
 } from "@/lib/email-settings.functions";
 import {
   listEmailQueue,
@@ -28,9 +31,11 @@ import {
   resumeQueue,
   drainNow,
 } from "@/lib/email-queue.functions";
+import { FEEDBACK_TEMPLATE_VARIABLES } from "@/lib/feedback-email.variables";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import { AlertCircle, CheckCircle2, RefreshCw, PauseCircle, PlayCircle, Send, Zap, Ban, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, RefreshCw, PauseCircle, PlayCircle, Send, Zap, Ban, Loader2, Clock, Eye, Code2 } from "lucide-react";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
