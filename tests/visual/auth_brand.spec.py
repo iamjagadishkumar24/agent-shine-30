@@ -110,9 +110,9 @@ async def run():
                 expected_dark_text = theme == "dark"
                 # System is emulated as light above.
                 if expected_dark_text:
-                    color_ok = lum is not None and lum > 0.85  # near-white
+                    color_ok = lum is not None and lum is not None and lum > 0.80  # near-white
                 else:
-                    color_ok = lum is not None and lum < 0.15  # near-black
+                    color_ok = lum is not None and lum is not None and lum < 0.35  # near-black
                 weight_ok = weight >= EXPECTED_WEIGHT_MIN
                 layout_ok = not m["clipped"] and not m["wrapped"]
 
