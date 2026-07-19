@@ -224,26 +224,35 @@ function AuthedLayout() {
           </div>
 
 
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="ml-auto flex items-center gap-2">
             <button
               onClick={() => setCmdOpen(true)}
-              className="hidden md:flex items-center gap-2 rounded-md border border-border bg-secondary/40 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-secondary/70 transition-colors"
+              className="hidden md:flex items-center gap-2 rounded-lg border border-border/70 bg-secondary/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/70 hover:border-border transition-all lg:min-w-[220px]"
             >
               <Search className="h-3.5 w-3.5" />
-              <span>Search</span>
-              <kbd className="rounded border border-border px-1 text-[10px] font-mono">⌘K</kbd>
+              <span className="flex-1 text-left">Search…</span>
+              <kbd className="rounded border border-border/70 bg-background/60 px-1.5 py-0.5 text-[10px] font-mono">⌘K</kbd>
+            </button>
+
+            <button
+              onClick={() => setCmdOpen(true)}
+              aria-label="Search"
+              className="md:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-secondary/40 text-muted-foreground hover:bg-secondary/70"
+            >
+              <Search className="h-4 w-4" />
             </button>
 
             {isStaff && (
               <Button
                 size="sm"
-                className="h-8 gap-1.5"
+                className="h-9 gap-1.5 rounded-lg bg-[image:var(--gradient-brand)] text-primary-foreground shadow-sm hover:opacity-95 hover:shadow-md transition-all border-0"
                 onClick={() => navigate({ to: "/feedback/new" })}
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">New feedback</span>
               </Button>
             )}
+
 
 
 
