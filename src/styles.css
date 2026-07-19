@@ -45,8 +45,56 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --gradient-brand: linear-gradient(135deg, oklch(0.62 0.18 265) 0%, oklch(0.60 0.22 295) 55%, oklch(0.72 0.14 220) 100%);
+
+  /* Type scale — modular, 1.125 minor-third at small, 1.2 at large. */
+  --text-2xs: 0.6875rem;   /* 11px — micro labels, eyebrows */
+  --text-xs:  0.75rem;     /* 12px — helper, table meta */
+  --text-sm:  0.8125rem;   /* 13px — body-small, dense UI */
+  --text-base:0.875rem;    /* 14px — default UI body */
+  --text-md:  0.9375rem;   /* 15px — comfortable body */
+  --text-lg:  1.0625rem;   /* 17px — subhead */
+  --text-xl:  1.25rem;     /* 20px — card title */
+  --text-2xl: 1.5rem;      /* 24px — page title */
+  --text-3xl: 1.875rem;    /* 30px — section hero */
+  --text-4xl: 2.25rem;     /* 36px — auth / display */
+  --text-5xl: 3rem;        /* 48px */
+
+  /* Line heights */
+  --leading-tight: 1.15;
+  --leading-snug: 1.35;
+  --leading-normal: 1.55;
+  --leading-relaxed: 1.7;
+
+  /* Letter spacing */
+  --tracking-tightest: -0.03em;
+  --tracking-tighter: -0.02em;
+  --tracking-tight: -0.012em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.02em;
+  --tracking-wider: 0.06em;
+  --tracking-widest: 0.12em;
+
+  /* Spacing scale — 4px base, dense enterprise rhythm. */
+  --space-0: 0;
+  --space-0-5: 0.125rem;   /* 2 */
+  --space-1: 0.25rem;      /* 4 */
+  --space-1-5: 0.375rem;   /* 6 */
+  --space-2: 0.5rem;       /* 8 */
+  --space-2-5: 0.625rem;   /* 10 */
+  --space-3: 0.75rem;      /* 12 */
+  --space-4: 1rem;         /* 16 */
+  --space-5: 1.25rem;      /* 20 */
+  --space-6: 1.5rem;       /* 24 */
+  --space-7: 1.75rem;      /* 28 */
+  --space-8: 2rem;         /* 32 */
+  --space-10: 2.5rem;      /* 40 */
+  --space-12: 3rem;        /* 48 */
+  --space-16: 4rem;        /* 64 */
+  --space-20: 5rem;        /* 80 */
 }
+
 
 /* Linear-inspired dark theme as default */
 :root {
@@ -148,10 +196,21 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    letter-spacing: var(--tracking-tight);
     -webkit-font-smoothing: antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
     transition: background-color 200ms ease, color 200ms ease;
   }
+  /* Balanced and pretty text wrapping where supported */
+  h1, h2, h3, h4 { text-wrap: balance; }
+  p, li, dd { text-wrap: pretty; }
+  /* Numeric UI — tabular by default in tables/lists */
+  table, tbody, thead, tfoot, [data-numeric] { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1, "cv11" 1; }
+
   ::selection { background: color-mix(in oklab, var(--primary) 40%, transparent); }
   :focus-visible {
     outline: 2px solid var(--color-ring);
@@ -258,8 +317,160 @@ html:not(.light) .auth-card {
   color: transparent;
 }
 
-/* Display font for headings */
-h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.015em; }
+/* ─────────────────────────────────────────────────────────────
+   Typography scale — semantic classes for consistent hierarchy.
+   Use these instead of ad-hoc text-* sizes to keep pages aligned.
+   ───────────────────────────────────────────────────────────── */
+
+/* Native heading defaults — display font, tight tracking, snug leading */
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  font-weight: 600;
+}
+h1 { font-size: var(--text-3xl); letter-spacing: var(--tracking-tighter); }
+h2 { font-size: var(--text-2xl); }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+
+/* Eyebrow / kicker — small uppercase tag above titles */
+@utility eyebrow {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* Page title — main H1 in a route header */
+@utility page-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tighter);
+  color: var(--foreground);
+}
+@media (min-width: 768px) {
+  .page-title { font-size: var(--text-3xl); }
+}
+
+/* Page subtitle — descriptive line under page-title */
+@utility page-subtitle {
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--muted-foreground);
+  letter-spacing: var(--tracking-normal);
+}
+
+/* Section title — cards, panels */
+@utility section-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--foreground);
+}
+
+/* Section subtitle */
+@utility section-subtitle {
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  color: var(--muted-foreground);
+}
+
+/* Body text — long-form paragraphs (docs, dialogs, empty states) */
+@utility body-text {
+  font-size: var(--text-md);
+  line-height: var(--leading-relaxed);
+  color: var(--foreground);
+}
+
+/* Form field label */
+@utility field-label {
+  display: inline-block;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: var(--tracking-wide);
+  color: var(--foreground);
+}
+
+/* Form helper / helper microcopy */
+@utility helper-text {
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  color: var(--muted-foreground);
+}
+
+/* KPI numeric — large tabular figure */
+@utility stat-value {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: var(--tracking-tighter);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+  color: var(--foreground);
+}
+
+/* KPI label under stat-value */
+@utility stat-label {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* Monospaced numeric (IDs, timestamps, currency in tables) */
+@utility numeric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+  letter-spacing: var(--tracking-normal);
+}
+@utility mono {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  letter-spacing: var(--tracking-normal);
+}
+
+/* Muted small text — captions, footnotes */
+@utility caption {
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  color: var(--muted-foreground);
+}
+
+/* Vertical rhythm — consistent stack spacing on page sections. */
+@utility stack-sm  { display: flex; flex-direction: column; gap: var(--space-3); }
+@utility stack-md  { display: flex; flex-direction: column; gap: var(--space-6); }
+@utility stack-lg  { display: flex; flex-direction: column; gap: var(--space-8); }
+@utility stack-xl  { display: flex; flex-direction: column; gap: var(--space-12); }
+
+/* Page container — canonical horizontal padding + max-width. */
+@utility page-container {
+  width: 100%;
+  max-width: 80rem;      /* 1280px */
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+  padding-block: var(--space-6);
+}
+@media (min-width: 640px)  { .page-container { padding-inline: var(--space-6); } }
+@media (min-width: 1024px) { .page-container { padding-inline: var(--space-8); padding-block: var(--space-8); } }
+
+/* Section spacing — separates card groups on a page. */
+@utility page-section { margin-block-end: var(--space-8); }
+
+/* Truncate helpers for tables — one/two lines */
+@utility line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+@utility line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+
 
 /* Card surface polish */
 @utility card-surface {
