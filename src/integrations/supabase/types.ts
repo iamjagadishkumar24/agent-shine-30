@@ -1073,6 +1073,8 @@ export type Database = {
         | "completed"
         | "rejected"
         | "revision_required"
+        | "ready_to_send"
+        | "failed"
       feedback_type:
         | "positive"
         | "constructive"
@@ -1243,6 +1245,8 @@ export const Constants = {
         "completed",
         "rejected",
         "revision_required",
+        "ready_to_send",
+        "failed",
       ],
       feedback_type: [
         "positive",
