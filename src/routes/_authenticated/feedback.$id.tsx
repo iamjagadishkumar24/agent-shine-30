@@ -210,6 +210,19 @@ function FeedbackDetail() {
 
   // Delete confirmation is handled by AlertDialog (see actions area).
 
+  const completeFn = useServerFn(completeFeedback);
+  const completeMutation = useMutation({
+    mutationFn: () => completeFn({ data: { feedbackId: id } }),
+    onSuccess: () => {
+      toast.success("Marked complete");
+      qc.invalidateQueries({ queryKey: ["feedback", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-list"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Unable to mark complete"),
+  });
+
+
 
   const sendMutation = useMutation({
     mutationFn: () => sendEmailFn({ data: { feedbackId: id } }),
