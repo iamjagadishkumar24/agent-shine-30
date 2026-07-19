@@ -12,8 +12,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Trash2, Plus, ArrowLeft, Save } from "lucide-react";
+import { CheckCircle2, XCircle, Trash2, Plus, ArrowLeft, Save, Pencil, LinkIcon, MapPin, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SessionDialog } from "@/components/coaching/session-dialog";
 
 const safeDate = (v: unknown) => {
   if (!v) return "—";
@@ -59,6 +60,7 @@ function SessionDetail() {
   const [newItem, setNewItem] = useState("");
   const [newDue, setNewDue] = useState("");
   const [outcome, setOutcome] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: session, isLoading } = useQuery({
     queryKey: ["coaching-session", id],
@@ -164,10 +166,14 @@ function SessionDetail() {
         title={s.topic || "Coaching session"}
         subtitle={`with ${s.agent?.full_name ?? "—"} · ${safeDateTime(s.scheduled_at)}`}
         actions={
-          <Link to="/coaching">
-
-            <Button variant="ghost" size="sm" className="h-8 gap-1"><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
-          </Link>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" className="h-8 gap-1" onClick={() => setEditOpen(true)}>
+              <Pencil className="h-3.5 w-3.5" /> Edit
+            </Button>
+            <Link to="/coaching">
+              <Button variant="ghost" size="sm" className="h-8 gap-1"><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
+            </Link>
+          </div>
         }
       />
 
@@ -270,7 +276,28 @@ function SessionDetail() {
             <div className="mt-4 space-y-2 text-xs">
               <div><span className="text-muted-foreground">Agent:</span> <span className="font-medium">{s.agent?.full_name ?? "Unassigned"}</span></div>
               <div><span className="text-muted-foreground">Department:</span> {s.agent?.department ?? "—"}</div>
+              <div><span className="text-muted-foreground">Type:</span> <span className="capitalize">{(s.session_type ?? "coaching").replace("_", " ")}</span></div>
+              <div><span className="text-muted-foreground">Priority:</span> <span className="capitalize">{s.priority ?? "medium"}</span></div>
               <div><span className="text-muted-foreground">Duration:</span> {s.duration_minutes ?? 30} min</div>
+              {s.meeting_link && (
+                <div className="flex items-center gap-1">
+                  <LinkIcon className="h-3 w-3 text-muted-foreground" />
+                  <a href={s.meeting_link} target="_blank" rel="noreferrer" className="text-primary hover:underline truncate">Join meeting</a>
+                </div>
+              )}
+              {s.meeting_location && (
+                <div className="flex items-start gap-1">
+                  <MapPin className="h-3 w-3 mt-0.5 text-muted-foreground" />
+                  <span>{s.meeting_location}</span>
+                </div>
+              )}
+              {s.follow_up_date && <div><span className="text-muted-foreground">Follow-up:</span> {safeDate(s.follow_up_date)}</div>}
+              {s.reminder_minutes != null && (
+                <div className="flex items-center gap-1">
+                  <Bell className="h-3 w-3 text-muted-foreground" />
+                  <span>{s.reminder_minutes} min before</span>
+                </div>
+              )}
               {s.feedback && (
                 <div>
                   <span className="text-muted-foreground">Feedback:</span>{" "}
@@ -282,6 +309,13 @@ function SessionDetail() {
               {s.completed_at && <div><span className="text-muted-foreground">Completed:</span> {safeDateTime(s.completed_at)}</div>}
             </div>
           </Card>
+
+          {s.agenda && (
+            <Card className="p-5">
+              <h3 className="text-sm font-semibold mb-2">Agenda</h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{s.agenda}</p>
+            </Card>
+          )}
 
           {isActive && (
             <Card className="p-5 space-y-2">
@@ -321,6 +355,8 @@ function SessionDetail() {
           </AlertDialog>
         </div>
       </div>
+
+      <SessionDialog open={editOpen} onOpenChange={setEditOpen} session={s} />
     </div>
   );
 }
