@@ -467,7 +467,10 @@ function AuthPage() {
           )}
           </div>
           </div>
+          </div>
+        </div>
       </main>
+
 
 
       {/* ============ RIGHT — Hero panel ============ */}
