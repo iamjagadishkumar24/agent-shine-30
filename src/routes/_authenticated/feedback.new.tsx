@@ -138,7 +138,8 @@ function NewFeedback() {
         const dest = r.devOverride ? `Dev override active — delivered to ${r.actualRecipient}` : `Delivered to ${r.actualRecipient}`;
         toast.success(`Email accepted by provider · ${dest}`);
       } else {
-        toast.warning(sendResult?.error ? `Queued (provider not accepted): ${sendResult.error}` : "Queued for background retry");
+        const err = (sendResult as any)?.error;
+        toast.warning(err ? `Queued (provider not accepted): ${err}` : "Queued for background retry");
       }
       navigate({ to: "/feedback/$id", params: { id } });
     },
