@@ -43,6 +43,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 });
 
 function SettingsPage() {
+  useRealtimeInvalidate("email_queue", [["email-queue"], ["email-queue-summary"]]);
   return (
     <div>
       <PageHeader title="Settings" subtitle="Email service configuration, queue, and delivery history." />
