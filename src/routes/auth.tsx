@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
 import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -200,11 +201,8 @@ function AuthPage() {
       <div className="relative grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
         {/* Left — brand / testimonial */}
         <aside className="relative hidden lg:flex flex-col justify-between p-12 xl:p-16">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-primary to-fuchsia-500 text-primary-foreground shadow-lg shadow-primary/30">
-              <Sparkles className="h-4.5 w-4.5" />
-            </div>
-            <span className="text-lg font-semibold tracking-tight">Zenwork Performance Manager</span>
+          <Link to="/" className="flex items-center">
+            <img src={zenworkLogo.url} alt="Zenwork Performance Manager" className="h-9 w-auto object-contain" />
           </Link>
 
           <div className="space-y-8 max-w-lg">
@@ -245,11 +243,8 @@ function AuthPage() {
           <div className="w-full max-w-md">
             <div className="rounded-2xl border border-border/60 bg-background/50 p-7 sm:p-8 shadow-2xl shadow-black/20 backdrop-blur-2xl">
               {/* Mobile brand */}
-              <Link to="/" className="lg:hidden flex items-center gap-2 mb-6">
-                <div className="grid h-8 w-8 place-items-center rounded-md bg-gradient-to-br from-primary to-fuchsia-500 text-primary-foreground">
-                  <Sparkles className="h-4 w-4" />
-                </div>
-                <span className="font-semibold tracking-tight">Zenwork Performance Manager</span>
+              <Link to="/" className="lg:hidden flex items-center mb-6">
+                <img src={zenworkLogo.url} alt="Zenwork Performance Manager" className="h-8 w-auto object-contain" />
               </Link>
 
               {mode === "forgot" ? (

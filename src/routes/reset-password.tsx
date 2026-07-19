@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,11 +82,8 @@ function ResetPasswordPage() {
       </div>
       <div className="relative flex min-h-screen items-center justify-center p-6">
         <div className="w-full max-w-md">
-          <Link to="/" className="mb-6 flex items-center justify-center gap-2">
-            <div className="grid h-8 w-8 place-items-center rounded-md bg-gradient-to-br from-primary to-fuchsia-500 text-primary-foreground">
-              <Sparkles className="h-4 w-4" />
-            </div>
-            <span className="font-semibold tracking-tight">Zenwork Performance Manager</span>
+          <Link to="/" className="mb-6 flex items-center justify-center">
+            <img src={zenworkLogo.url} alt="Zenwork Performance Manager" className="h-9 w-auto object-contain" />
           </Link>
 
           <div className="rounded-2xl border border-border/60 bg-background/50 p-7 sm:p-8 shadow-2xl shadow-black/20 backdrop-blur-2xl">

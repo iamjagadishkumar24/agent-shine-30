@@ -1,5 +1,7 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
+import zenworkMark from "@/assets/zenwork-mark.png.asset.json";
 
 import {
   LayoutDashboard,
@@ -134,11 +136,10 @@ function AuthedLayout() {
         )}
       >
         <div className={cn("flex h-14 items-center border-b border-sidebar-border", collapsed ? "justify-center px-2" : "gap-2 px-4")}>
-          <div className="grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br from-primary to-primary/60 text-primary-foreground shadow-sm">
-            <Sparkles className="h-4 w-4" />
-          </div>
-          {!collapsed && (
-            <span className="text-sm font-semibold tracking-tight text-sidebar-foreground">Zenwork Performance Manager</span>
+          {collapsed ? (
+            <img src={zenworkMark.url} alt="Zenwork" className="h-7 w-7 object-contain" />
+          ) : (
+            <img src={zenworkLogo.url} alt="Zenwork Performance Manager" className="h-7 w-auto object-contain" />
           )}
         </div>
 
