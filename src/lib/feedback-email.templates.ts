@@ -296,7 +296,7 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
           <td class="fallback px" style="padding:28px 28px 30px;background:${BRAND.gradient};background-color:${BRAND.gradientFallback};">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
               <tr>
-                <td valign="middle">${logoBlock}</td>
+                <td valign="middle">${logoHeader}</td>
                 <td valign="middle" align="right" style="font:600 11px/1 ${FONT};letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.85);">
                   ${escape(feedbackTypeLabel)} · ${escape(reviewDate)}
                 </td>
