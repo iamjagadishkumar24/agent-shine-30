@@ -699,7 +699,7 @@ function FeedbackDetail() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setPreviewOpen(false)}>Close</Button>
-            {data?.status === "approved" && (
+            {["draft", "ready_to_send", "failed"].includes(data?.status ?? "") && (
               <Button
                 onClick={() => {
                   setPreviewOpen(false);
@@ -710,6 +710,7 @@ function FeedbackDetail() {
                 <Send className="mr-1.5 h-3.5 w-3.5" /> Send to agent
               </Button>
             )}
+
           </DialogFooter>
         </DialogContent>
       </Dialog>
