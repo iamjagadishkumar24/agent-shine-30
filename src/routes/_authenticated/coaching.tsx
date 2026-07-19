@@ -6,7 +6,7 @@ import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import { format, parse, startOfWeek, getDay, addMinutes } from "date-fns";
 import { enUS } from "date-fns/locale";
 import { toast } from "sonner";
-import { CalendarPlus, LayoutGrid, ListFilter, Search } from "lucide-react";
+import { CalendarPlus, LayoutGrid, ListFilter, Search, CalendarDays } from "lucide-react";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 
