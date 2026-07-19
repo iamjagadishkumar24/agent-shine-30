@@ -356,11 +356,27 @@ function ProviderCard({
   verify: { mutate: () => void; isPending: boolean };
   verifyResult: any;
 }) {
+  const testFn = useServerFn(sendTestEmail);
   const [lastVerifiedAt, setLastVerifiedAt] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     return window.localStorage.getItem(LAST_VERIFIED_KEY);
   });
   const [diagOpen, setDiagOpen] = useState(false);
+  const [diagTestTo, setDiagTestTo] = useState("");
+  const [diagTestResult, setDiagTestResult] = useState<any>(null);
+  const diagTestEmailValid = EMAIL_RE.test(diagTestTo.trim());
+  const diagTest = useMutation({
+    mutationFn: () => testFn({ data: { to: diagTestTo.trim() } }),
+    onSuccess: (r: any) => {
+      setDiagTestResult(r);
+      if (r.ok) toast.success(`Test email sent (${r.latencyMs}ms)`);
+      else toast.error(r.error ?? "Send failed");
+    },
+    onError: (e: any) => {
+      setDiagTestResult({ ok: false, error: e?.message ?? "Send failed" });
+      toast.error(e?.message ?? "Send failed");
+    },
+  });
 
   // Cache last successful verification so the pill survives page reloads.
   useEffect(() => {
