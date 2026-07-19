@@ -238,6 +238,7 @@ function FeedbackDetail() {
       qc.invalidateQueries({ queryKey: ["feedback-events", id] });
       qc.invalidateQueries({ queryKey: ["email-queue"] });
       qc.invalidateQueries({ queryKey: ["email-queue-summary"] });
+      qc.invalidateQueries({ queryKey: ["feedback-queue", id] });
     },
     onError: (e: any) => toast.error(e.message),
   });
