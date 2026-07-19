@@ -118,7 +118,7 @@ export function AuthShell({
 
 
       <footer className="relative z-10 border-t border-border/50 bg-background/50 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-4 text-xs text-muted-foreground sm:flex-row sm:px-8">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:flex-row sm:px-8 lg:py-2">
           <p>&copy; {new Date().getFullYear()} Zenwork · {APP_VERSION}</p>
           <nav className="flex items-center gap-4">
             <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
