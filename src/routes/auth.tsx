@@ -85,6 +85,12 @@ function AuthPage() {
   const [resetSent, setResetSent] = useState(false);
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean; name?: boolean; confirm?: boolean }>({});
 
+  // Refs used for auto-focusing the first invalid field on submit and
+  // preserving input across OAuth redirects.
+  const nameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const confirmRef = useRef<HTMLInputElement>(null);
 
   const destination = safeNext(next);
   const trimmedEmail = email.trim();
@@ -95,6 +101,7 @@ function AuthPage() {
   const strength = useMemo(() => passwordStrength(password), [password]);
   const canSubmit = !loading && emailValid && (mode === "forgot" ? true : passwordValid) && nameValid && confirmValid;
 
+  // Hydrate remembered email + any input preserved across an OAuth redirect.
   useEffect(() => {
     try {
       const saved = localStorage.getItem(REMEMBER_KEY);
@@ -102,8 +109,25 @@ function AuthPage() {
         setEmail(saved);
         setRemember(true);
       }
+      const draft = sessionStorage.getItem(DRAFT_KEY);
+      if (draft) {
+        const parsed = JSON.parse(draft) as { email?: string; name?: string; mode?: Mode };
+        if (parsed.email) setEmail(parsed.email);
+        if (parsed.name) setName(parsed.name);
+        if (parsed.mode === "signup" || parsed.mode === "signin" || parsed.mode === "forgot") {
+          setMode(parsed.mode);
+        }
+        sessionStorage.removeItem(DRAFT_KEY);
+      }
     } catch {}
   }, []);
+
+  // Move focus to the error banner when it appears so screen-reader / keyboard
+  // users hear the failure without hunting for it.
+  const errorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (errorMsg) errorRef.current?.focus();
+  }, [errorMsg]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -117,6 +141,14 @@ function AuthPage() {
       else localStorage.removeItem(REMEMBER_KEY);
     } catch {}
   };
+
+  const focusFirstInvalid = () => {
+    if (mode === "signup" && !nameValid) return nameRef.current?.focus();
+    if (!emailValid) return emailRef.current?.focus();
+    if (mode !== "forgot" && !passwordValid) return passwordRef.current?.focus();
+    if (mode === "signup" && !confirmValid) return confirmRef.current?.focus();
+  };
+
 
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
