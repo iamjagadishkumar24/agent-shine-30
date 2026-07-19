@@ -781,7 +781,7 @@ function computeStages(
 ): { stages: Stage[]; finalState: "delivered" | "failed" | "in_progress" | "idle"; failReason?: string | null } {
   // No queue row yet — feedback hasn't been sent.
   if (!queue) {
-    const isPre = ["draft", "review", "approved", "revision_required", "rejected"].includes(feedbackStatus);
+    const isPre = ["draft", "ready_to_send", "failed"].includes(feedbackStatus);
     return {
       stages: [
         { key: "preparing", label: "Preparing", state: sending ? "active" : isPre ? "active" : "pending" },
