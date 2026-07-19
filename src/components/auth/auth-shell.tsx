@@ -73,7 +73,7 @@ export function AuthShell({
       />
       <h1
         className={cn(
-          "font-display font-extrabold leading-[1.05] tracking-tight text-center whitespace-nowrap",
+          "font-display !font-extrabold leading-[1.05] tracking-tight text-center whitespace-nowrap",
           "text-[16px] sm:text-[20px] md:text-[22px] lg:text-[20px] xl:text-[22px]",
           // Solid theme token: black in light mode, white in dark mode, follows system automatically.
           "text-foreground",
