@@ -229,9 +229,13 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
         })
         .eq("id", job.id);
       if (job.feedback_id) {
+        const patch: Record<string, unknown> = { email_error: res.error };
+        // Only flip the feedback to a terminal `failed` state once retries
+        // are exhausted; intermediate retries stay under `ready_to_send`.
+        if (done && job.kind !== "reminder") patch.status = "failed";
         await supabaseAdmin
           .from("feedback")
-          .update({ email_error: res.error })
+          .update(patch)
           .eq("id", job.feedback_id);
         await supabaseAdmin.from("feedback_email_events").insert({
           feedback_id: job.feedback_id,
@@ -248,6 +252,7 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
       }
       results.push({ id: job.id, ok: false, error: res.error, willRetry: !done });
     }
+
   }
 
   return { processed: results.length, results };
