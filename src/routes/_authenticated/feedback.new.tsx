@@ -63,13 +63,20 @@ function NewFeedback() {
           severity: form.severity,
           observations: observations.trim(),
           score: form.score ? Number(form.score) : null,
+          template,
         },
       });
     },
     onSuccess: (draft) => {
+      setLastDraft(draft);
       setForm((f) => ({
         ...f,
         title: draft.title || f.title,
+        summary: draft.summary || f.summary,
+        strengths: draft.strengths || f.strengths,
+        improvements: draft.improvements || f.improvements,
+        recommended_actions: draft.recommended_actions || f.recommended_actions,
+      }));
         summary: draft.summary || f.summary,
         strengths: draft.strengths || f.strengths,
         improvements: draft.improvements || f.improvements,
