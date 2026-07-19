@@ -203,6 +203,39 @@
 @utility animate-dash { animation: dash 2.2s ease-out both; }
 @utility animate-progress-in { animation: progress-in 1.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
+/* Brand wordmark — subtle indigo→purple→cyan gradient text */
+@utility brand-wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, oklch(0.58 0.20 265) 0%, oklch(0.55 0.24 295) 50%, oklch(0.65 0.15 220) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.dark .brand-wordmark, :root:not(.light) .brand-wordmark {
+  background: linear-gradient(135deg, oklch(0.78 0.16 265) 0%, oklch(0.76 0.18 295) 50%, oklch(0.82 0.12 220) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Display font for headings */
+h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.015em; }
+
+/* Card surface polish */
+@utility card-surface {
+  background: var(--card);
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  border-radius: calc(var(--radius) + 6px);
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.04), 0 8px 24px -12px oklch(0 0 0 / 0.08);
+  transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease;
+}
+@utility card-surface-hover {
+  box-shadow: 0 4px 8px oklch(0 0 0 / 0.06), 0 20px 40px -16px oklch(0 0 0 / 0.14);
+  border-color: color-mix(in oklab, var(--primary) 25%, var(--border));
+}
+
 
 
 
