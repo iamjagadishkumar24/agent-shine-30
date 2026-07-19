@@ -227,22 +227,23 @@ function AuthPage() {
 
           {/* Auth card */}
           <div className="mt-10 flex flex-1 flex-col justify-center">
+          <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-6 sm:p-8 shadow-[0_30px_80px_-30px_rgba(2,6,23,0.9),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl transition-shadow hover:shadow-[0_40px_100px_-30px_rgba(79,70,229,0.35)]">
           <div className="text-center">
             {mode === "forgot" && (
               <button
                 type="button"
                 onClick={() => { setMode("signin"); setResetSent(false); }}
-                className="mb-4 inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors"
+                className="mb-4 inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-100 transition-colors"
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> Back to sign in
               </button>
             )}
-            <h2 className="text-[26px] font-semibold tracking-tight text-slate-900 sm:text-[28px]">
+            <h2 className="text-[26px] font-semibold tracking-tight text-slate-50 sm:text-[28px]">
               {mode === "signin" && "Welcome Back"}
               {mode === "signup" && "Create your account"}
               {mode === "forgot" && "Reset your password"}
             </h2>
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-2 text-sm text-slate-400">
               {mode === "signin" && "Sign in to continue to Zenwork Performance Manager"}
               {mode === "signup" && "Join Zenwork Performance Manager and start managing customer success, coaching, feedback, and performance from a single platform."}
               {mode === "forgot" && "We'll email you a secure link to set a new password"}
@@ -252,12 +253,12 @@ function AuthPage() {
 
           {/* Forgot success */}
           {mode === "forgot" && resetSent ? (
-            <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            <div className="mt-8 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4">
               <div className="flex items-start gap-3">
-                <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600 shrink-0" />
+                <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-400 shrink-0" />
                 <div className="text-sm">
-                  <p className="font-medium text-emerald-900">Check your inbox</p>
-                  <p className="mt-1 text-emerald-800/80">
+                  <p className="font-medium text-emerald-100">Check your inbox</p>
+                  <p className="mt-1 text-emerald-200/80">
                     If an account exists for <span className="font-medium">{trimmedEmail}</span>, a reset link is on its way.
                   </p>
                 </div>
@@ -267,9 +268,9 @@ function AuthPage() {
             <form onSubmit={handleEmail} className="mt-8 space-y-5">
               {mode === "signup" && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="name" className="text-[13px] font-semibold text-slate-800">Full Name</Label>
+                  <Label htmlFor="name" className="text-[13px] font-semibold text-slate-200">Full Name</Label>
                   <div className="relative">
-                    <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                     <Input
                       id="name"
                       value={name}
@@ -278,13 +279,13 @@ function AuthPage() {
                       required
                       placeholder="Jane Doe"
                       className={cn(
-                        "pl-10 h-12 rounded-xl border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:border-indigo-500",
-                        nameError && "border-red-400 focus-visible:ring-red-400/30",
+                        "pl-10 h-12 rounded-xl border-white/10 bg-slate-900/60 text-slate-100 placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:border-indigo-400",
+                        nameError && "border-red-400/60 focus-visible:ring-red-400/30",
                       )}
                     />
                   </div>
                   {nameError && (
-                    <p className="flex items-center gap-1 text-xs text-red-600">
+                    <p className="flex items-center gap-1 text-xs text-red-400">
                       <AlertCircle className="h-3 w-3" /> Enter your full name
                     </p>
                   )}
@@ -292,9 +293,9 @@ function AuthPage() {
               )}
 
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-[13px] font-semibold text-slate-800">Work Email</Label>
+                <Label htmlFor="email" className="text-[13px] font-semibold text-slate-200">Work Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                   <Input
                     id="email"
                     type="email"
@@ -306,13 +307,13 @@ function AuthPage() {
                     placeholder="you@company.com"
                     aria-invalid={emailError || undefined}
                     className={cn(
-                      "pl-10 h-12 rounded-xl border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:border-indigo-500",
-                      emailError && "border-red-400 focus-visible:ring-red-400/30",
+                      "pl-10 h-12 rounded-xl border-white/10 bg-slate-900/60 text-slate-100 placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:border-indigo-400",
+                      emailError && "border-red-400/60 focus-visible:ring-red-400/30",
                     )}
                   />
                 </div>
                 {emailError && (
-                  <p className="flex items-center gap-1 text-xs text-red-600">
+                  <p className="flex items-center gap-1 text-xs text-red-400">
                     <AlertCircle className="h-3 w-3" /> Enter a valid email address
                   </p>
                 )}
@@ -320,9 +321,9 @@ function AuthPage() {
 
               {mode !== "forgot" && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="password" className="text-[13px] font-semibold text-slate-800">Password</Label>
+                  <Label htmlFor="password" className="text-[13px] font-semibold text-slate-200">Password</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
@@ -335,14 +336,14 @@ function AuthPage() {
                       placeholder={mode === "signup" ? "At least 8 characters" : "Enter your password"}
                       aria-invalid={pwError || undefined}
                       className={cn(
-                        "pl-10 pr-11 h-12 rounded-xl border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:border-indigo-500",
-                        pwError && "border-red-400 focus-visible:ring-red-400/30",
+                        "pl-10 pr-11 h-12 rounded-xl border-white/10 bg-slate-900/60 text-slate-100 placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:border-indigo-400",
+                        pwError && "border-red-400/60 focus-visible:ring-red-400/30",
                       )}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword((s) => !s)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-500 hover:text-slate-200 hover:bg-white/5 transition-colors"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                       tabIndex={-1}
                     >
@@ -357,18 +358,18 @@ function AuthPage() {
                             key={i}
                             className={cn(
                               "h-1 flex-1 rounded-full transition-colors",
-                              i < strength.score ? strength.tone : "bg-slate-200",
+                              i < strength.score ? strength.tone : "bg-white/10",
                             )}
                           />
                         ))}
                       </div>
-                      <p className="mt-1.5 text-xs text-slate-500">
-                        Strength: <span className="text-slate-900 font-medium">{strength.label}</span>
+                      <p className="mt-1.5 text-xs text-slate-400">
+                        Strength: <span className="text-slate-100 font-medium">{strength.label}</span>
                       </p>
                     </div>
                   )}
                   {pwError && (
-                    <p className="flex items-center gap-1 text-xs text-red-600">
+                    <p className="flex items-center gap-1 text-xs text-red-400">
                       <AlertCircle className="h-3 w-3" /> Must be at least 8 characters
                     </p>
                   )}
@@ -382,16 +383,16 @@ function AuthPage() {
                       id="remember"
                       checked={remember}
                       onCheckedChange={(v) => setRemember(v === true)}
-                      className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                      className="border-white/20 bg-slate-900/60 data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500"
                     />
-                    <Label htmlFor="remember" className="text-sm font-normal text-slate-600 cursor-pointer">
+                    <Label htmlFor="remember" className="text-sm font-normal text-slate-300 cursor-pointer">
                       Remember me
                     </Label>
                   </div>
                   <button
                     type="button"
                     onClick={() => { setMode("forgot"); setResetSent(false); }}
-                    className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
+                    className="text-sm font-medium text-indigo-300 hover:text-indigo-200 transition-colors"
                   >
                     Forgot Password?
                   </button>
@@ -404,8 +405,8 @@ function AuthPage() {
                 className={cn(
                   "group relative w-full h-12 rounded-xl overflow-hidden",
                   "bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 hover:from-indigo-500 hover:via-violet-500 hover:to-purple-500",
-                  "text-white font-semibold shadow-[0_10px_30px_-10px_rgba(99,102,241,0.6)] transition-all",
-                  "hover:shadow-[0_16px_40px_-12px_rgba(139,92,246,0.7)] hover:-translate-y-0.5",
+                  "text-white font-semibold shadow-[0_10px_30px_-10px_rgba(99,102,241,0.7)] transition-all",
+                  "hover:shadow-[0_16px_40px_-12px_rgba(139,92,246,0.8)] hover:-translate-y-0.5",
                 )}
               >
                 <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent group-hover:translate-x-full transition-transform duration-700" />
@@ -420,17 +421,17 @@ function AuthPage() {
 
               {mode !== "forgot" && (
                 <>
-                  <div className="relative flex items-center gap-3 text-[11px] uppercase tracking-wider text-slate-400">
-                    <div className="h-px flex-1 bg-slate-200" />
+                  <div className="relative flex items-center gap-3 text-[11px] uppercase tracking-wider text-slate-500">
+                    <div className="h-px flex-1 bg-white/10" />
                     <span>or continue with</span>
-                    <div className="h-px flex-1 bg-slate-200" />
+                    <div className="h-px flex-1 bg-white/10" />
                   </div>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={handleGoogle}
                     disabled={loading}
-                    className="w-full h-12 rounded-xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    className="w-full h-12 rounded-xl border-white/10 bg-white/5 text-slate-100 hover:bg-white/10 hover:text-white"
                   >
                     <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden>
                       <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.6 3.4 14.5 2.4 12 2.4 6.7 2.4 2.4 6.7 2.4 12S6.7 21.6 12 21.6c6.9 0 9.5-4.8 9.5-7.3 0-.5 0-.9-.1-1.3H12z"/>
@@ -446,18 +447,18 @@ function AuthPage() {
           {mode !== "forgot" && (
             <p className="mt-8 text-center text-xs text-slate-500">
               By continuing you agree to our{" "}
-              <a href="#" className="font-medium text-indigo-600 hover:underline">Terms of Service</a>{" "}
+              <a href="#" className="font-medium text-indigo-300 hover:text-indigo-200 hover:underline">Terms of Service</a>{" "}
               and{" "}
-              <a href="#" className="font-medium text-indigo-600 hover:underline">Privacy Policy</a>.
+              <a href="#" className="font-medium text-indigo-300 hover:text-indigo-200 hover:underline">Privacy Policy</a>.
             </p>
           )}
 
           {mode !== "forgot" && (
-            <p className="mt-4 text-center text-sm text-slate-600">
+            <p className="mt-4 text-center text-sm text-slate-400">
               {mode === "signin" ? "Don't have an account?" : "Have an account?"}{" "}
               <button
                 type="button"
-                className="font-semibold text-indigo-600 hover:text-indigo-700"
+                className="font-semibold text-indigo-300 hover:text-indigo-200"
                 onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setTouched({}); }}
               >
                 {mode === "signin" ? "Sign Up" : "Sign In"}
@@ -465,7 +466,7 @@ function AuthPage() {
             </p>
           )}
           </div>
-        </div>
+          </div>
       </main>
 
 
