@@ -83,8 +83,18 @@ function FeedbackDetail() {
       html: preview.data.html,
       subject: preview.data.subject,
       text: preview.data.text,
+      provider: preview.data.provider
+        ? {
+            provider: preview.data.provider.id,
+            senderEmail: preview.data.provider.senderEmail,
+            replyTo: preview.data.provider.replyTo,
+            hasListUnsubscribe: preview.data.provider.hasListUnsubscribe,
+            hasOneClickUnsubscribe: preview.data.provider.hasOneClickUnsubscribe,
+            isBulk: preview.data.provider.isBulk,
+          }
+        : undefined,
     });
-  }, [preview.data?.html, preview.data?.subject, preview.data?.text]);
+  }, [preview.data]);
 
   const testSend = useMutation({
     mutationFn: async (to: string) => testSendFn({ data: { feedbackId: id, to } }),
