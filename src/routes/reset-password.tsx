@@ -74,6 +74,7 @@ function ResetPasswordPage() {
       else if (!match) toast.error("Passwords do not match");
       return;
     }
+    setErrorMsg(null);
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
@@ -84,14 +85,22 @@ function ResetPasswordPage() {
         window.location.href = "/auth";
       }, 1500);
     } catch (err: any) {
-      toast.error(err?.message ?? "Could not update password");
+      const msg = err?.message ?? "Could not update password";
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthShell>
+    <AuthShell
+      loading={loading}
+      loadingLabel="Updating your password…"
+      error={errorMsg}
+      onDismissError={() => setErrorMsg(null)}
+    >
+
       {done ? (
         <div className="text-center">
           <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-emerald-500/15 text-emerald-500">
