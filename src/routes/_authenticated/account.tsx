@@ -157,7 +157,7 @@ function ProfileTab() {
         </div>
         <div className="space-y-1.5">
           <Label>Designation</Label>
-          <Input value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} placeholder="e.g. QA Manager" />
+          <Input value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} placeholder="e.g. Customer Success Manager" />
         </div>
         <div className="space-y-1.5">
           <Label>Phone</Label>

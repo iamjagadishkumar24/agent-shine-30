@@ -55,7 +55,7 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
     const model = gateway("google/gemini-3-flash-preview");
 
     const system = [
-      "You are a senior QA coach writing agent feedback for an enterprise contact center.",
+      "You are a senior Customer Success coach writing agent feedback for an enterprise contact center.",
       "Tone: professional, empathetic, specific, action-oriented. No fluff, no clichés.",
       "Write each field as plain prose (no markdown headings). Keep each section under 120 words.",
       "Never invent facts the observer didn't mention. If a section has no basis, keep it short and honest.",
@@ -69,7 +69,7 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
       `Category: ${data.category}`,
       `Feedback type: ${data.feedback_type}`,
       `Severity: ${data.severity}`,
-      data.score != null ? `QA score: ${data.score}/100` : "",
+      data.score != null ? `Quality score: ${data.score}/100` : "",
       "",
       "Reviewer observations:",
       data.observations,

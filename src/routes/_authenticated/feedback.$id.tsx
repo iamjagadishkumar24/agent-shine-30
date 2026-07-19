@@ -425,7 +425,7 @@ function FeedbackDetail() {
             <dl className="mt-4 space-y-2 text-xs">
               <Row k="Team" v={data.agent?.team ?? "—"} />
               <Row k="Manager" v={data.agent?.manager_name ?? "—"} />
-              <Row k="QA Score" v={data.agent?.qa_score == null ? "—" : Number(data.agent.qa_score).toFixed(1)} />
+              <Row k="Quality Score" v={data.agent?.qa_score == null ? "—" : Number(data.agent.qa_score).toFixed(1)} />
             </dl>
           </Card>
 

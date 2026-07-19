@@ -70,7 +70,7 @@ function ReportsPage() {
         Department: a.department ?? "",
         Team: a.team ?? "",
         Status: a.status ?? "",
-        "QA Score": a.qa_score ?? "",
+        "Quality Score": a.qa_score ?? "",
         "Feedback Count": fs.length,
         "Avg Feedback Score": avg ?? "",
       };
@@ -126,7 +126,7 @@ function ReportsPage() {
       key: "agent-performance",
       icon: Users,
       title: "Agent Performance",
-      desc: "QA scores, feedback counts, and averages per agent.",
+      desc: "Quality scores, feedback counts, and averages per agent.",
       getRows: perfRows,
       csv: (rows: any[]) => toCsv(rows, "agent-performance.csv"),
       pdf: (rows: any[]) => toPdf({
