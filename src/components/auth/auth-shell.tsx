@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { BrandLockup } from "@/components/brand/brand-lockup";
+import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
