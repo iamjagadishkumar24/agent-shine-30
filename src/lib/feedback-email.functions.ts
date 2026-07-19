@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getRequestHost } from "@tanstack/react-start/server";
 import { renderFeedbackEmail, type FeedbackEmailAttachmentLink } from "./feedback-email.templates";
+import { buildVariableMap, renderCustomTemplate } from "./feedback-email.variables";
 
 const STAFF_ROLES = ["qa_admin", "qa_manager", "qa_reviewer"] as const;
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
