@@ -590,7 +590,13 @@ function Dashboard() {
           </Suspense>
 
           <Suspense fallback={<div className="col-span-12 md:col-span-6 xl:col-span-4"><ChartSkeleton height="h-52" /></div>}>
-            <HeavyCharts.Gauge avgQA={avgQA} />
+            <HeavyCharts.Gauge
+              value={qualityScore}
+              sampleSize={scoredFb.length}
+              previousValue={priorQuality}
+              lastUpdated={qualityLastUpdated}
+            />
+
           </Suspense>
 
           {/* Status (light, kept inline) */}
