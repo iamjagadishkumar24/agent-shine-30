@@ -96,9 +96,24 @@ def test_insert_every_status_and_transition():
     # since DELETE is also blocked here.
 
 
-    # Cleanup
-    psql(f"DELETE FROM coaching_sessions WHERE id IN ({ids_csv})")
-    print(f"  ✓ Cleaned up {len(created_ids)} test rows")
+def test_triggers_have_no_bad_literals():
+    """
+    Static guard: neither coaching trigger function may contain the string
+    'cancelled' (double-l) as a status comparison. This is the exact bug
+    that caused the original enum blowup — if it ever comes back in a
+    migration, this test catches it before it hits users.
+    """
+    for fn in ("tg_coaching_session_notifications", "tg_coaching_prevent_overlap"):
+        body = psql(f"SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname='{fn}'")
+        # Allow the substring inside quoted display text like "Coaching session cancelled",
+        # but forbid it as a bare enum comparison literal.
+        bad = re.findall(r"'cancelled'(?!\s*[A-Za-z])", body)
+        if bad:
+            raise AssertionError(
+                f"Trigger {fn} still references 'cancelled' as an enum literal: {bad}"
+            )
+    print("  ✓ Triggers contain no 'cancelled' enum comparisons")
+
 
 
 def test_misspelling_rejected():
@@ -124,6 +139,8 @@ if __name__ == "__main__":
         test_insert_every_status_and_transition()
         print("\n[3] Guard: 'cancelled' misspelling is rejected")
         test_misspelling_rejected()
+        print("\n[4] Static guard: trigger bodies have no 'cancelled' literals")
+        test_triggers_have_no_bad_literals()
         print("\n✅ All coaching_status regression checks passed.")
     except AssertionError as e:
         print(f"\n❌ FAIL: {e}")
