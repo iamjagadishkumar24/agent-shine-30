@@ -108,13 +108,13 @@ def seed_sent_feedback() -> str:
     psql(
         f"""
         INSERT INTO email_queue
-          (feedback_id, to_email, to_email_intended, subject, body_html,
+          (feedback_id, to_email, to_email_intended, subject, html, text_body,
            status, provider, provider_message_id, provider_status,
            attempts, max_attempts, sent_at, delivered_at, last_event_at)
         VALUES
           ('{fid}', 'ops@example.com', 'ops@example.com',
            '[e2e] provider-leak',
-           '<p>e2e</p>',
+           '<p>e2e</p>', 'e2e',
            'delivered', '{INJECTED_PROVIDER}', '{INJECTED_MESSAGE_ID}',
            'delivered', 1, 5, now(), now(), now())
         """
