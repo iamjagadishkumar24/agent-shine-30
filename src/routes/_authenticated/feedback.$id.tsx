@@ -608,6 +608,62 @@ function FeedbackDetail() {
             )}
           </div>
 
+          {spamRisk && (
+            <div
+              className={cn(
+                "rounded-lg border p-3 text-xs",
+                spamRisk.level === "high" && "border-destructive/50 bg-destructive/10",
+                spamRisk.level === "medium" && "border-amber-500/50 bg-amber-500/10",
+                spamRisk.level === "low" && "border-emerald-500/40 bg-emerald-500/10",
+              )}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  {spamRisk.level === "high" ? (
+                    <ShieldX className="h-4 w-4 text-destructive" />
+                  ) : spamRisk.level === "medium" ? (
+                    <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  ) : (
+                    <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  )}
+                  <div className="text-sm font-semibold">
+                    Deliverability risk: {spamRisk.level.toUpperCase()}
+                    <span className="ml-2 font-mono text-xs opacity-80">{spamRisk.score}/100</span>
+                  </div>
+                </div>
+                <div className="hidden gap-3 text-[11px] text-muted-foreground sm:flex">
+                  <span>{spamRisk.stats.imageCount} img</span>
+                  <span>{spamRisk.stats.linkCount} link{spamRisk.stats.linkCount === 1 ? "" : "s"}</span>
+                  <span>{(spamRisk.stats.htmlBytes / 1024).toFixed(0)} KB</span>
+                  <span>{spamRisk.stats.textLength} chars</span>
+                </div>
+              </div>
+              {spamRisk.issues.length === 0 ? (
+                <p className="mt-2 text-[11px] opacity-80">No issues detected in the rendered email.</p>
+              ) : (
+                <ul className="mt-2 space-y-1">
+                  {spamRisk.issues.map((iss) => (
+                    <li key={iss.id} className="flex items-start gap-2 text-[11px]">
+                      <span
+                        className={cn(
+                          "mt-0.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full",
+                          iss.severity === "high" && "bg-destructive",
+                          iss.severity === "warn" && "bg-amber-500",
+                          iss.severity === "info" && "bg-muted-foreground",
+                        )}
+                      />
+                      <span>
+                        <span className="font-medium">{iss.message}</span>
+                        {iss.detail && <span className="ml-1 opacity-75">— {iss.detail}</span>}
+                        <span className="ml-1 font-mono opacity-60">+{iss.points}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
           <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3">
             <div className="flex items-center justify-between">
               <div>
