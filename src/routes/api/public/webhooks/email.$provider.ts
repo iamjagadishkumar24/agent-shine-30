@@ -248,7 +248,7 @@ async function applyEvent(evt: NormalizedEvent, signatureValid: boolean) {
 
       if (signatureValid) {
         const now = evt.occurredAt;
-        const patch: Record<string, unknown> = {
+        const patch: any = {
           last_event_at: now,
           provider_status: evt.status,
         };
@@ -270,7 +270,7 @@ async function applyEvent(evt: NormalizedEvent, signatureValid: boolean) {
         await supabaseAdmin.from("email_queue").update(patch).eq("id", matchedQueueId);
 
         if (matchedFeedbackId) {
-          const fbPatch: Record<string, unknown> = {};
+          const fbPatch: any = {};
           if (evt.status === "delivered") fbPatch.delivered_at = now;
           if (evt.status === "bounced") fbPatch.email_error = evt.reason ?? "Bounced";
           if (Object.keys(fbPatch).length) {
