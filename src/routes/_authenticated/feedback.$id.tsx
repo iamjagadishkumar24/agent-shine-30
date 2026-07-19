@@ -198,11 +198,17 @@ function FeedbackDetail() {
     mutationFn: () => sendEmailFn({ data: { feedbackId: id } }),
     onSuccess: (res: any) => {
       if (res?.ok) {
-        toast.success(
-          res.providerMessageId
-            ? `Delivered to ${res.recipient} · id ${String(res.providerMessageId).slice(0, 12)}…`
-            : `Delivered to ${res.recipient}`,
-        );
+        const inbox = res.actualRecipient ?? res.recipient;
+        const idSuffix = res.providerMessageId
+          ? ` · id ${String(res.providerMessageId).slice(0, 12)}…`
+          : "";
+        if (res.devOverride && res.actualRecipient && res.actualRecipient !== res.recipient) {
+          toast.warning(
+            `Dev override is ON — email redirected to ${inbox} instead of ${res.recipient}.${idSuffix}`,
+          );
+        } else {
+          toast.success(`Delivered to ${inbox}${idSuffix}`);
+        }
       } else if (res?.queued) {
         toast.warning(
           `Not delivered yet — queued for retry${res.error ? `: ${res.error}` : ""}`,
