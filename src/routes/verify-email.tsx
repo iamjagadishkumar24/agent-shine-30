@@ -27,8 +27,8 @@ function VerifyEmailPage() {
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [feedback, setFeedback] = useState<
-    | { kind: "success"; message: string; at: Date }
-    | { kind: "error"; message: string }
+    | { kind: "success"; message: string; at: Date; nonce: number }
+    | { kind: "error"; message: string; nonce: number }
     | null
   >(null);
 
