@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/layout/page-header";
@@ -21,6 +22,8 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 function CoachingList() {
+  useRealtimeInvalidate("coaching_sessions", [["coaching-sessions"]]);
+  useRealtimeInvalidate("coaching_action_items", [["coaching-sessions"]]);
   const { data = [], isLoading } = useQuery({
     queryKey: ["coaching-sessions"],
     queryFn: async () => {

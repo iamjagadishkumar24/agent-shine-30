@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -35,6 +36,7 @@ function safeTimeAgo(iso: string | null | undefined) {
 type Filter = "all" | "unread";
 
 function NotificationsPage() {
+  useRealtimeInvalidate("notifications", [["notifications"]]);
   const list = useServerFn(listMyNotifications);
   const markRead = useServerFn(markNotificationRead);
   const markAll = useServerFn(markAllNotificationsRead);

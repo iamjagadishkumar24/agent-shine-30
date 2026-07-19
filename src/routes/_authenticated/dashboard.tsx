@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { lazy, Suspense, useMemo, useState } from "react";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -254,6 +255,9 @@ function bucketByWeek<T extends { created_at: string }>(rows: T[], filter: (r: T
 // ---------------------------------------------------------------------------
 function Dashboard() {
   const qc = useQueryClient();
+  useRealtimeInvalidate("feedback", [["dashboard"]]);
+  useRealtimeInvalidate("coaching_sessions", [["dashboard"]]);
+  useRealtimeInvalidate("email_queue", [["dashboard"]]);
   const navigate = useNavigate();
   const { data, isLoading, isFetching, isError, error, refetch } = useDashboardData();
   const [range, setRange] = useState<"Daily" | "Weekly" | "Monthly">("Weekly");

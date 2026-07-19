@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -44,6 +45,7 @@ const SEV_TONE: Record<string, string> = {
 type SevFilter = "all" | "critical" | "high" | "medium" | "low";
 
 function ApprovalsPage() {
+  useRealtimeInvalidate("feedback", [["approval-queue"], ["feedback-list"], ["dashboard"]]);
   const qc = useQueryClient();
   const transitionFn = useServerFn(transitionFeedback);
   const [openId, setOpenId] = useState<string | null>(null);

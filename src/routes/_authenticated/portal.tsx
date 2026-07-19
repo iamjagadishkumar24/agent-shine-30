@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyAgent, listMyFeedback } from "@/lib/agent-portal.functions";
@@ -35,6 +36,7 @@ const SEV_TONE: Record<string, string> = {
 };
 
 function PortalPage() {
+  useRealtimeInvalidate("feedback", [["my-feedback"]]);
   const fetchAgent = useServerFn(getMyAgent);
   const fetchList = useServerFn(listMyFeedback);
 

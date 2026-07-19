@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -42,6 +43,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 });
 
 function SettingsPage() {
+  useRealtimeInvalidate("email_queue", [["email-queue"], ["email-queue-summary"]]);
   return (
     <div>
       <PageHeader title="Settings" subtitle="Email service configuration, queue, and delivery history." />
