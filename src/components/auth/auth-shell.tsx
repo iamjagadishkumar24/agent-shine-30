@@ -60,21 +60,30 @@ export function AuthShell({
 }) {
 
   const brandBlock = showBrand ? (
-    <div className="mb-4 flex flex-col items-center gap-2 sm:mb-5 sm:gap-3 lg:mb-3 lg:gap-2">
+    <div
+      role="group"
+      aria-label="Zenwork Performance Manager"
+      className="mb-4 flex flex-col items-center gap-2 sm:mb-5 sm:gap-3 lg:mb-3 lg:gap-2"
+    >
       <img
         src={zenworkLogo.url}
         alt=""
         aria-hidden="true"
-        className="h-12 w-12 sm:h-14 sm:w-14 lg:h-11 lg:w-11 xl:h-12 xl:w-12 object-contain rounded-xl dark:bg-white/5 dark:ring-1 dark:ring-white/10 dark:p-1"
+        className="h-12 w-12 sm:h-14 sm:w-14 lg:h-11 lg:w-11 xl:h-12 xl:w-12 object-contain rounded-xl bg-white ring-1 ring-black/5 p-1 dark:bg-white/5 dark:ring-white/10"
       />
       <h1
         className={cn(
           "font-display font-bold leading-[1.05] tracking-tight text-center",
           "text-[18px] sm:text-[20px] md:text-[22px] lg:text-[18px] xl:text-[20px]",
-          "text-indigo-600 dark:text-indigo-300",
-          "bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600",
-          "dark:from-indigo-300 dark:via-violet-300 dark:to-fuchsia-300",
+          // Solid, WCAG-AA compliant color used as fallback and in high-contrast modes
+          "text-indigo-700 dark:text-indigo-200",
+          // Decorative gradient overlay — disabled when users prefer more contrast or
+          // when forced-colors is active so the accessible solid color is used instead.
+          "bg-gradient-to-r from-indigo-700 via-violet-700 to-purple-700",
+          "dark:from-indigo-200 dark:via-violet-200 dark:to-fuchsia-200",
           "bg-clip-text text-transparent",
+          "contrast-more:bg-none contrast-more:text-transparent-none contrast-more:[-webkit-text-fill-color:currentColor]",
+          "forced-colors:bg-none forced-colors:text-[CanvasText] forced-colors:[-webkit-text-fill-color:CanvasText]",
         )}
       >
         Zenwork Performance Manager
