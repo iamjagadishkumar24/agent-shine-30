@@ -84,7 +84,7 @@ function Landing() {
           <h1 className="mt-6 text-5xl font-semibold tracking-tight leading-[1.05]">
             Retire the spreadsheet.
             <br />
-            <span className="text-muted-foreground">Run QA like a product team.</span>
+            <span className="text-muted-foreground">Run Customer Success like a product team.</span>
           </h1>
           <p className="mt-5 max-w-xl text-base text-muted-foreground">
             Signal is the modern quality management platform for support, sales, and success teams.
@@ -116,7 +116,7 @@ function Landing() {
             {
               icon: BarChart3,
               title: "Trends you can act on",
-              body: "Live QA scores by team, category, and time. Spot regressions before they escalate.",
+              body: "Live quality scores by team, category, and time. Spot regressions before they escalate.",
             },
             {
               icon: ShieldCheck,

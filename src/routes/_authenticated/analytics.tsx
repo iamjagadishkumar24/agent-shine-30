@@ -243,7 +243,7 @@ function AnalyticsPage() {
             icon={<BarChart3 className="h-4 w-4" />}
           />
           <KpiCard
-            label="Avg QA score"
+            label="Avg Quality score"
             value={metrics.avgScore ? metrics.avgScore.toFixed(2) : "—"}
             hint={`${feedback.filter((f) => f.score != null).length.toLocaleString()} scored`}
             icon={<Target className="h-4 w-4" />}

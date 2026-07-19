@@ -136,7 +136,7 @@ function PortalFeedbackDetail() {
         <Card className="rounded-xl border-border/60 bg-card/60 p-5 space-y-4">
           {data.score != null && (
             <div>
-              <div className="text-xs uppercase tracking-wide text-muted-foreground">QA Score</div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Quality Score</div>
               <div className="mt-1 text-2xl font-semibold tracking-tight">{data.score}</div>
             </div>
           )}
@@ -158,7 +158,7 @@ function PortalFeedbackDetail() {
             <div>
               <div className="text-sm font-medium">Acknowledge this feedback</div>
               <div className="text-xs text-muted-foreground">
-                Confirm you've read and understood. Your note is visible to your manager and QA.
+                Confirm you've read and understood. Your note is visible to your manager and Customer Success team.
               </div>
             </div>
             <Textarea

@@ -525,13 +525,13 @@ function Dashboard() {
             sparkline={sparkCoaching} drillTo="/coaching"
             tooltip="1:1 coaching sessions scheduled or completed." />
           <KpiCard label="Quality Score" value={`${qualityScore.toFixed(1)}%`} icon={Sparkles} tone="teal"
-            tooltip="Blended score of QA average and completion rate." />
+            tooltip="Blended score of quality average and completion rate." />
 
           <KpiCard label="Avg Feedback Score" value={`${avgCSAT.toFixed(1)}%`} icon={Star} tone="amber"
             tooltip="Average score recorded on scored feedback (0-100)." />
-          <KpiCard label="Average QA Score" value={`${avgQA.toFixed(1)}%`} icon={Activity} tone="indigo"
+          <KpiCard label="Average Quality Score" value={`${avgQA.toFixed(1)}%`} icon={Activity} tone="indigo"
             drillTo="/agents"
-            tooltip="Average QA score across all agents." />
+            tooltip="Average quality score across all agents." />
           <KpiCard label="High Priority" value={highPriority.toLocaleString()} icon={ShieldAlert} tone="rose"
             drillTo="/feedback" drillSearch={{ status: "high_priority" }}
             tooltip="Feedback marked high or critical severity." />
@@ -549,7 +549,7 @@ function Dashboard() {
         </div>
 
 
-        {/* MIDDLE — Trend, Category, QA, Status, Email, Heatmap (charts lazy-loaded) */}
+        {/* MIDDLE — Trend, Category, Quality, Status, Email, Heatmap (charts lazy-loaded) */}
         <div className="mt-5 grid grid-cols-12 gap-5">
           <Suspense fallback={<div className="col-span-12 xl:col-span-8"><ChartSkeleton /></div>}>
             <HeavyCharts.Trend data={trendData} range={range} onRangeChange={setRange} />
@@ -784,7 +784,7 @@ function Dashboard() {
                     <div className="truncate text-[10px] text-muted-foreground">{a.department}</div>
                   </div>
                   <div className="shrink-0 text-right">
-                    <div className="text-[10px] text-muted-foreground">QA Score</div>
+                    <div className="text-[10px] text-muted-foreground">Quality Score</div>
                     <div className="text-xs font-medium tabular-nums">{Number(a.qa_score ?? 0).toFixed(1)}%</div>
                   </div>
                 </div>

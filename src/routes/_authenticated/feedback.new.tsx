@@ -188,7 +188,7 @@ function NewFeedback() {
             </div>
             <div className="sm:col-span-2">
               <Label>Score (0-100)</Label>
-              <Input type="number" min={0} max={100} className="mt-1.5" value={form.score} onChange={(e) => setForm({ ...form, score: e.target.value })} placeholder="Optional QA score" />
+              <Input type="number" min={0} max={100} className="mt-1.5" value={form.score} onChange={(e) => setForm({ ...form, score: e.target.value })} placeholder="Optional quality score" />
             </div>
             <div className="sm:col-span-2">
               <Label>Summary</Label>

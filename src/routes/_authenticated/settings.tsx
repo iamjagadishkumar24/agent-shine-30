@@ -237,7 +237,7 @@ function EmailConfig() {
           <div className="sm:col-span-2">
             <Label>Email signature (HTML)</Label>
             <Textarea className="mt-1.5 font-mono text-xs" rows={4} value={s.signature_html ?? ""} onChange={(e) => set({ signature_html: e.target.value })}
-              placeholder="<strong>QA Team</strong><br>Contoso Global Support" />
+              placeholder="<strong>Customer Success Team</strong><br>Contoso Global Support" />
           </div>
           <div className="sm:col-span-2">
             <Label>Confidentiality notice</Label>
@@ -546,7 +546,7 @@ const DEFAULT_HTML = `<div style="font:14px/1.6 -apple-system,Segoe UI,Roboto,sa
   <p style="color:#a1a1aa;font-size:12px;margin-top:24px;">— {{senderName}}</p>
 </div>`;
 
-const DEFAULT_SUBJECT = "New QA feedback: {{title}}";
+const DEFAULT_SUBJECT = "New Customer Success feedback: {{title}}";
 const DEFAULT_TEXT = `{{title}}
 
 Agent: {{agentName}}

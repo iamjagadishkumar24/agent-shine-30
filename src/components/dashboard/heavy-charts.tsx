@@ -175,10 +175,10 @@ export const QaGaugeCard = memo(function QaGaugeCard({ avgQA }: { avgQA: number 
   const safeQA = Number.isFinite(avgQA) ? Math.min(100, Math.max(0, avgQA)) : 0;
   return (
     <Card className="col-span-12 rounded-2xl border-border/60 bg-card/60 p-6 backdrop-blur-xl md:col-span-6 xl:col-span-4">
-      <div className="text-sm font-semibold">QA Score</div>
+      <div className="text-sm font-semibold">Quality Score</div>
       <div className="relative mt-4 h-52">
         <ResponsiveContainer>
-          <RadialBarChart innerRadius="70%" outerRadius="100%" data={[{ name: "qa", value: safeQA, fill: "url(#gauge-grad)" }]} startAngle={180} endAngle={0}>
+          <RadialBarChart innerRadius="70%" outerRadius="100%" data={[{ name: "quality", value: safeQA, fill: "url(#gauge-grad)" }]} startAngle={180} endAngle={0}>
             <defs>
               <linearGradient id="gauge-grad" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="oklch(0.66 0.22 20)" />
@@ -192,7 +192,7 @@ export const QaGaugeCard = memo(function QaGaugeCard({ avgQA }: { avgQA: number 
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-x-0 bottom-6 grid place-items-center">
           <div className="text-3xl font-semibold tabular-nums">{safeQA.toFixed(1)}%</div>
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Average QA</div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Average Quality</div>
         </div>
       </div>
     </Card>

@@ -15,7 +15,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { getMyProfile, updateMyProfile } from "@/lib/profile.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme, type AccentColor, type ThemeMode, type Density } from "@/lib/theme";
-import { Sun, Moon, Monitor, Upload, Loader2, KeyRound, User as UserIcon, Palette } from "lucide-react";
+import { Sun, Moon, Monitor, Upload, Loader2, KeyRound, User as UserIcon, Palette, CalendarDays, Copy, RefreshCw, Trash2 } from "lucide-react";
+import { getMyCalendarFeed, rotateCalendarFeed, revokeCalendarFeed } from "@/lib/calendar-feed.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/account")({
@@ -31,10 +32,12 @@ function AccountPage() {
           <TabsList>
             <TabsTrigger value="profile"><UserIcon className="mr-2 h-3.5 w-3.5" />Profile</TabsTrigger>
             <TabsTrigger value="security"><KeyRound className="mr-2 h-3.5 w-3.5" />Security</TabsTrigger>
+            <TabsTrigger value="calendar"><CalendarDays className="mr-2 h-3.5 w-3.5" />Calendar</TabsTrigger>
             <TabsTrigger value="appearance"><Palette className="mr-2 h-3.5 w-3.5" />Appearance</TabsTrigger>
           </TabsList>
           <TabsContent value="profile"><ProfileTab /></TabsContent>
           <TabsContent value="security"><SecurityTab /></TabsContent>
+          <TabsContent value="calendar"><CalendarTab /></TabsContent>
           <TabsContent value="appearance"><AppearanceTab /></TabsContent>
         </Tabs>
       </div>
@@ -157,7 +160,7 @@ function ProfileTab() {
         </div>
         <div className="space-y-1.5">
           <Label>Designation</Label>
-          <Input value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} placeholder="e.g. QA Manager" />
+          <Input value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} placeholder="e.g. Customer Success Manager" />
         </div>
         <div className="space-y-1.5">
           <Label>Phone</Label>
@@ -311,6 +314,115 @@ function AppearanceTab() {
       <div className="flex justify-end">
         <Button variant="ghost" onClick={reset}>Reset to defaults</Button>
       </div>
+    </div>
+  );
+}
+
+function CalendarTab() {
+  const qc = useQueryClient();
+  const fetchFeed = useServerFn(getMyCalendarFeed);
+  const rotate = useServerFn(rotateCalendarFeed);
+  const revoke = useServerFn(revokeCalendarFeed);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["my-calendar-feed"],
+    queryFn: () => fetchFeed(),
+  });
+
+  const rotateMut = useMutation({
+    mutationFn: () => rotate(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-calendar-feed"] });
+      toast.success("New calendar link generated");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not rotate link"),
+  });
+
+  const revokeMut = useMutation({
+    mutationFn: () => revoke(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-calendar-feed"] });
+      toast.success("Calendar link revoked");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not revoke link"),
+  });
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const feedUrl = data?.token ? `${origin}/api/public/calendar/${data.token}.ics` : null;
+  const webcalUrl = feedUrl ? feedUrl.replace(/^https?:/, "webcal:") : null;
+
+  const copy = (v: string) => {
+    navigator.clipboard.writeText(v).then(() => toast.success("Copied to clipboard"));
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-6 space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="font-semibold">Calendar subscription</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Subscribe to a live feed of your coaching sessions in Outlook, Google Calendar, or Apple Calendar.
+              Changes made in Zenwork appear automatically — no import needed.
+            </p>
+          </div>
+          {feedUrl ? (
+            <Button variant="outline" size="sm" onClick={() => rotateMut.mutate()} disabled={rotateMut.isPending}>
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Rotate link
+            </Button>
+          ) : (
+            <Button size="sm" onClick={() => rotateMut.mutate()} disabled={rotateMut.isPending}>
+              {rotateMut.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <CalendarDays className="mr-1.5 h-3.5 w-3.5" />}
+              Generate my link
+            </Button>
+          )}
+        </div>
+
+        {isLoading ? (
+          <div className="text-sm text-muted-foreground">Loading…</div>
+        ) : feedUrl ? (
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs uppercase tracking-wide text-muted-foreground">HTTPS URL (Google, Outlook Web)</Label>
+              <div className="flex gap-2">
+                <Input readOnly value={feedUrl} className="font-mono text-xs" />
+                <Button variant="outline" size="sm" onClick={() => copy(feedUrl)}>
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs uppercase tracking-wide text-muted-foreground">webcal:// URL (Apple Calendar, Outlook desktop)</Label>
+              <div className="flex gap-2">
+                <Input readOnly value={webcalUrl ?? ""} className="font-mono text-xs" />
+                <Button variant="outline" size="sm" onClick={() => webcalUrl && copy(webcalUrl)}>
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+            <div className="rounded-md border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground leading-relaxed">
+              <strong className="text-foreground">How to subscribe:</strong>
+              <ul className="mt-2 list-disc pl-4 space-y-1">
+                <li><span className="text-foreground">Google Calendar</span> — Other calendars → “From URL” → paste the HTTPS URL.</li>
+                <li><span className="text-foreground">Outlook Web / 365</span> — Add calendar → Subscribe from web → paste HTTPS URL.</li>
+                <li><span className="text-foreground">Apple Calendar / Outlook desktop</span> — File → New calendar subscription → paste the webcal:// URL.</li>
+              </ul>
+            </div>
+            <div className="flex items-center justify-between pt-2 border-t border-border/50">
+              <p className="text-xs text-muted-foreground">
+                Anyone with this link can view your session titles and times — keep it private.
+              </p>
+              <Button variant="ghost" size="sm" onClick={() => revokeMut.mutate()} disabled={revokeMut.isPending} className="text-destructive hover:text-destructive">
+                <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Revoke
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Generate a personal link to subscribe your calendar app to Zenwork coaching sessions.
+          </p>
+        )}
+      </Card>
     </div>
   );
 }

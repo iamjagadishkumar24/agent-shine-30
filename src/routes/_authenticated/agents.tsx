@@ -93,7 +93,7 @@ function AgentsPage() {
                 <th className="px-4 py-2.5 font-medium">Department</th>
                 <th className="px-4 py-2.5 font-medium">Team</th>
                 <th className="px-4 py-2.5 font-medium">Manager</th>
-                <th className="px-4 py-2.5 font-medium text-right">QA Score</th>
+                <th className="px-4 py-2.5 font-medium text-right">Quality Score</th>
                 <th className="px-4 py-2.5 font-medium text-right">Status</th>
               </tr>
             </thead>

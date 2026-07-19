@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { AddToCalendarMenu } from "@/components/coaching/add-to-calendar-menu";
 
 export type SessionRow = {
   id?: string;
@@ -95,7 +96,7 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
   const { data: agents = [] } = useQuery({
     queryKey: ["agents-picker"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("agents").select("id, full_name, department").order("full_name");
+      const { data, error } = await supabase.from("agents").select("id, full_name, department, email").order("full_name");
       if (error) throw error;
       return data;
     },
@@ -130,6 +131,30 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
     reminder_minutes: "",
   });
 
+  const [savedEvent, setSavedEvent] = useState<import("@/lib/calendar-links").CalendarEvent | null>(null);
+  const agentLookup = useMemo(() => new Map(agents.map((a: any) => [a.id, a])), [agents]);
+
+  const buildEventFromForm = (id: string): import("@/lib/calendar-links").CalendarEvent => {
+    const startISO = combine(form.date, form.start_time).toISOString();
+    const endISO = combine(form.date, form.end_time).toISOString();
+    const agent = agentLookup.get(form.agent_id) as any;
+    const parts: string[] = [];
+    if (form.agenda) parts.push(`Agenda:\n${form.agenda}`);
+    if (form.notes) parts.push(`Notes:\n${form.notes}`);
+    if (agent?.full_name) parts.push(`Agent: ${agent.full_name}`);
+    return {
+      uid: `${id}@zenwork.coaching`,
+      title: form.topic || "Coaching session",
+      description: parts.join("\n\n") || undefined,
+      location: form.meeting_location || undefined,
+      url: form.meeting_link || undefined,
+      startISO,
+      endISO,
+      attendees: agent?.email ? [{ email: agent.email, name: agent.full_name ?? undefined }] : [],
+      reminderMinutes: form.reminder_minutes ? Number(form.reminder_minutes) : null,
+    };
+  };
+
   useEffect(() => {
     if (!open) return;
     setForm({
@@ -148,6 +173,7 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
       follow_up_date: session?.follow_up_date ?? "",
       reminder_minutes: session?.reminder_minutes != null ? String(session.reminder_minutes) : "",
     });
+    setSavedEvent(null);
   }, [open, session, startBits.date, startBits.time, endBits.time]);
 
   const parsed = Schema.safeParse(form);
@@ -213,12 +239,21 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
       qc.invalidateQueries({ queryKey: ["coaching-sessions"] });
       qc.invalidateQueries({ queryKey: ["coaching-session", row.id] });
       toast.success(isEdit ? "Session updated" : "Session scheduled");
+      setSavedEvent(buildEventFromForm(row.id));
       onSaved?.(row.id);
-      onOpenChange(false);
+      // Keep dialog open so user can add to calendar; they close it themselves.
+      if (isEdit) onOpenChange(false);
     },
     onError: (e: any) => {
-      const msg = e?.message ?? "Could not save";
-      toast.error(msg.includes("overlaps") ? "That time overlaps another session for this coach or agent" : msg);
+      // Surface the real database / RLS / trigger error text so users can act on it.
+      const msg = e?.message ?? e?.details ?? e?.hint ?? "Could not save session";
+      if (typeof msg === "string" && msg.toLowerCase().includes("overlap")) {
+        toast.error("That time overlaps another session for this coach or agent.");
+      } else if (typeof msg === "string" && msg.toLowerCase().includes("row-level security")) {
+        toast.error("You don't have permission to schedule for this agent. Ask an admin to add you as coach.");
+      } else {
+        toast.error(String(msg).slice(0, 240));
+      }
     },
   });
 
@@ -396,12 +431,23 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
           </div>
         </div>
 
+        {savedEvent && (
+          <div className="rounded-md border border-emerald-500/20 bg-emerald-500/5 p-3 text-sm">
+            <div className="mb-2 font-medium text-emerald-300">Session scheduled — add it to your calendar</div>
+            <AddToCalendarMenu event={savedEvent} triggerLabel="Add to my calendar" />
+          </div>
+        )}
+
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={() => save.mutate()} disabled={!canSubmit || save.isPending}>
-            {save.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
-            {isEdit ? "Save changes" : "Schedule session"}
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            {savedEvent ? "Close" : "Cancel"}
           </Button>
+          {!savedEvent && (
+            <Button onClick={() => save.mutate()} disabled={!canSubmit || save.isPending}>
+              {save.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+              {isEdit ? "Save changes" : "Schedule session"}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

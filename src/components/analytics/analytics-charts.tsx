@@ -75,7 +75,7 @@ function AnalyticsCharts({
         <div className="mb-4 flex items-center justify-between">
           <div>
             <div className="text-sm font-semibold">12-month feedback trend</div>
-            <div className="text-xs text-muted-foreground">Volume and average QA score by month.</div>
+            <div className="text-xs text-muted-foreground">Volume and average quality score by month.</div>
           </div>
           <div className="flex items-center gap-4 text-xs">
             <span className="flex items-center gap-1.5 text-muted-foreground">

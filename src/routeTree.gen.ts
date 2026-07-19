@@ -45,6 +45,7 @@ import { Route as AuthenticatedCoachingPlansNewRouteImport } from './routes/_aut
 import { Route as AuthenticatedCoachingPlansIdRouteImport } from './routes/_authenticated/coaching.plans.$id'
 import { Route as ApiPublicTrackOpenIdRouteImport } from './routes/api/public/track/open.$id'
 import { Route as ApiPublicTrackClickIdRouteImport } from './routes/api/public/track/click.$id'
+import { Route as ApiPublicCalendarTokenIcsRouteImport } from './routes/api/public/calendar/$token.ics'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -239,6 +240,12 @@ const ApiPublicTrackClickIdRoute = ApiPublicTrackClickIdRouteImport.update({
   path: '/api/public/track/click/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCalendarTokenIcsRoute =
+  ApiPublicCalendarTokenIcsRouteImport.update({
+    id: '/api/public/calendar/$token/ics',
+    path: '/api/public/calendar/$token/ics',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -274,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
+  '/api/public/calendar/$token/ics': typeof ApiPublicCalendarTokenIcsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
   '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
 }
@@ -311,6 +319,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
+  '/api/public/calendar/$token/ics': typeof ApiPublicCalendarTokenIcsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
   '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
 }
@@ -350,6 +359,7 @@ export interface FileRoutesById {
   '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
+  '/api/public/calendar/$token/ics': typeof ApiPublicCalendarTokenIcsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
   '/api/public/track/open/$id': typeof ApiPublicTrackOpenIdRoute
 }
@@ -389,6 +399,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
+    | '/api/public/calendar/$token/ics'
     | '/api/public/track/click/$id'
     | '/api/public/track/open/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -426,6 +437,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
+    | '/api/public/calendar/$token/ics'
     | '/api/public/track/click/$id'
     | '/api/public/track/open/$id'
   id:
@@ -464,6 +476,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
+    | '/api/public/calendar/$token/ics'
     | '/api/public/track/click/$id'
     | '/api/public/track/open/$id'
   fileRoutesById: FileRoutesById
@@ -481,6 +494,7 @@ export interface RootRouteChildren {
   ApiPublicHooksDispatchScheduledReportsRoute: typeof ApiPublicHooksDispatchScheduledReportsRoute
   ApiPublicHooksDrainEmailQueueRoute: typeof ApiPublicHooksDrainEmailQueueRoute
   ApiPublicHooksFeedbackEscalationsRoute: typeof ApiPublicHooksFeedbackEscalationsRoute
+  ApiPublicCalendarTokenIcsRoute: typeof ApiPublicCalendarTokenIcsRoute
   ApiPublicTrackClickIdRoute: typeof ApiPublicTrackClickIdRoute
   ApiPublicTrackOpenIdRoute: typeof ApiPublicTrackOpenIdRoute
 }
@@ -739,6 +753,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTrackClickIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/calendar/$token/ics': {
+      id: '/api/public/calendar/$token/ics'
+      path: '/api/public/calendar/$token/ics'
+      fullPath: '/api/public/calendar/$token/ics'
+      preLoaderRoute: typeof ApiPublicCalendarTokenIcsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -852,6 +873,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksDrainEmailQueueRoute: ApiPublicHooksDrainEmailQueueRoute,
   ApiPublicHooksFeedbackEscalationsRoute:
     ApiPublicHooksFeedbackEscalationsRoute,
+  ApiPublicCalendarTokenIcsRoute: ApiPublicCalendarTokenIcsRoute,
   ApiPublicTrackClickIdRoute: ApiPublicTrackClickIdRoute,
   ApiPublicTrackOpenIdRoute: ApiPublicTrackOpenIdRoute,
 }

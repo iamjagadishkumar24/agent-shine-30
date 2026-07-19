@@ -90,7 +90,7 @@ export async function buildReportRows(
         Department: a.department ?? "",
         Team: a.team ?? "",
         Status: a.status ?? "",
-        "QA Score": a.qa_score ?? "",
+        "Quality Score": a.qa_score ?? "",
         "Feedback Count": fs.length,
         "Avg Feedback Score": avg ?? "",
       };

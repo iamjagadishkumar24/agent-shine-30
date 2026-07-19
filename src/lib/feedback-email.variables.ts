@@ -1,4 +1,4 @@
-// Client- and server-safe: variables system for the QA feedback email template.
+// Client- and server-safe: variables system for the Customer Success feedback email template.
 // Kept separate from the default renderer so the settings UI can import it.
 
 import type { FeedbackEmailData } from "./feedback-email.templates";
@@ -16,7 +16,7 @@ export const FEEDBACK_TEMPLATE_VARIABLES: TemplateVariable[] = [
   { key: "Customer_Name", label: "Customer name", description: "Person the email is addressed to (falls back to the agent).", sample: "Priya Ramanathan" },
   { key: "Agent_Name", label: "Support agent", description: "Agent under review.", sample: "Priya Ramanathan" },
   { key: "Manager_Name", label: "Reporting manager", description: "Agent's direct manager, if set.", sample: "Alex Chen" },
-  { key: "Reviewer_Name", label: "Reviewer name", description: "QA reviewer who authored the feedback.", sample: "Jordan Miles" },
+  { key: "Reviewer_Name", label: "Reviewer name", description: "Customer Success reviewer who authored the feedback.", sample: "Jordan Miles" },
   { key: "Feedback_ID", label: "Feedback ID", description: "Short reference ID (first 8 chars).", sample: "A1B2C3D4" },
   { key: "Title", label: "Review title", description: "Short title of the review.", sample: "Customer escalation — Case 44821" },
   { key: "Department", label: "Department", description: "Business unit the agent belongs to.", sample: "Customer Success" },
@@ -24,7 +24,7 @@ export const FEEDBACK_TEMPLATE_VARIABLES: TemplateVariable[] = [
   { key: "Feedback_Type", label: "Review type", description: "positive · constructive · corrective.", sample: "constructive" },
   { key: "Severity", label: "Severity", description: "low · medium · high · critical.", sample: "high" },
   { key: "Priority", label: "Priority", description: "Priority label shown on the summary card.", sample: "High" },
-  { key: "Quality_Score", label: "Quality score", description: "Numeric QA score, rounded to 1 decimal.", sample: "82.5" },
+  { key: "Quality_Score", label: "Quality score", description: "Numeric quality score, rounded to 1 decimal.", sample: "82.5" },
   { key: "Overall_Score", label: "Overall score", description: "Alias of quality score.", sample: "82.5" },
   { key: "Overall_Rating", label: "Overall rating", description: "Rating label derived from the score.", sample: "Exceeds Expectations" },
   { key: "Review_Status", label: "Review status", description: "Current workflow status.", sample: "Ready for review" },

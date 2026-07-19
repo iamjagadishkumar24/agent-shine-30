@@ -215,12 +215,12 @@ function AuthPage() {
               The quality operating system for modern support teams.
             </p>
             <p className="text-base text-muted-foreground leading-relaxed">
-              Automate QA feedback, coaching, and reporting across every agent — with the polish of Linear and the depth of an enterprise platform.
+              Automate Customer Success feedback, coaching, and reporting across every agent — with the polish of Linear and the depth of an enterprise platform.
             </p>
 
             <blockquote className="rounded-2xl border border-border/60 bg-background/40 p-5 backdrop-blur-xl">
               <p className="text-sm leading-relaxed">
-                "We replaced four spreadsheets and a Trello board with Signal. QA scores are up 18% in a quarter."
+                "We replaced four spreadsheets and a Trello board with Zenwork. Quality scores are up 18% in a quarter."
               </p>
               <footer className="mt-3 text-xs text-muted-foreground">
                 — Head of Support Operations, Fintech Co.
