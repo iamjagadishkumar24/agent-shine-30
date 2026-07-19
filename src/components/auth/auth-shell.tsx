@@ -90,19 +90,19 @@ export function AuthShell({
         <div className="absolute bottom-[-180px] left-1/3 h-[440px] w-[440px] rounded-full bg-slate-400/10 blur-[140px] dark:bg-slate-500/10" />
       </div>
 
-      <header className="relative z-10 flex items-center justify-end px-5 py-3 sm:px-8 lg:py-2">
+      <header className="relative z-10 flex items-center justify-end px-5 py-3 sm:px-8 lg:py-1.5">
         <ThemeToggle />
       </header>
 
       <main className="relative z-10 flex-1 lg:min-h-0 lg:overflow-y-auto">
-        <div className="flex min-h-full items-center justify-center px-5 py-6 sm:px-8 lg:py-4">
+        <div className="flex min-h-full items-center justify-center px-5 py-5 sm:px-8 lg:py-3">
         {sidePanel ? (
           <div className="grid w-full max-w-6xl items-center gap-10 lg:grid-cols-2">
             <div className="mx-auto w-full min-w-0 max-w-[460px] lg:mx-0 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
-              <div className="auth-card rounded-[20px] p-7 pt-8 sm:p-9 sm:pt-10 lg:p-8 lg:pt-8">
+              <AuthCard loading={loading} loadingLabel={loadingLabel} error={error} onDismissError={onDismissError}>
                 {brandBlock}
                 {children}
-              </div>
+              </AuthCard>
               {showLearnMore && (
                 <div className="mt-4 flex justify-center lg:justify-start">
                   <LearnMoreDialog />
@@ -113,11 +113,10 @@ export function AuthShell({
           </div>
         ) : (
           <div className="w-full max-w-[460px] motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
-            <div className="auth-card rounded-[20px] p-7 pt-8 sm:p-9 sm:pt-10 lg:p-8 lg:pt-8">
-
+            <AuthCard loading={loading} loadingLabel={loadingLabel} error={error} onDismissError={onDismissError}>
               {brandBlock}
               {children}
-            </div>
+            </AuthCard>
             {showLearnMore && (
               <div className="mt-4 flex justify-center">
                 <LearnMoreDialog />
@@ -128,11 +127,8 @@ export function AuthShell({
         </div>
       </main>
 
-
-
-
       <footer className="relative z-10 border-t border-border/50 bg-background/50 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:flex-row sm:px-8 lg:py-2">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:flex-row sm:px-8 lg:py-1.5">
           <p>&copy; {new Date().getFullYear()} Zenwork · {APP_VERSION}</p>
           <nav className="flex items-center gap-4">
             <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
@@ -141,6 +137,7 @@ export function AuthShell({
           </nav>
         </div>
       </footer>
+
     </div>
   );
 }
