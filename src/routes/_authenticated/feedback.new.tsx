@@ -136,12 +136,9 @@ function NewFeedback() {
       if (mode === "draft") {
         toast.success("Draft saved");
       } else if (sendResult?.ok) {
-        const r = sendResult as { actualRecipient?: string; devOverride?: boolean };
-        const dest = r.devOverride ? `Dev override active — delivered to ${r.actualRecipient}` : `Delivered to ${r.actualRecipient}`;
-        toast.success(`Email accepted by provider · ${dest}`);
+        toast.success("Feedback email sent successfully.");
       } else {
-        const err = (sendResult as any)?.error;
-        toast.warning(err ? `Queued (provider not accepted): ${err}` : "Queued for background retry");
+        toast.warning("Email has been queued successfully.");
       }
       navigate({ to: "/feedback/$id", params: { id } });
     },
