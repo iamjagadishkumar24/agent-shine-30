@@ -289,7 +289,7 @@ function AuthPage() {
       loading={loading}
       loadingLabel={loadingLabel}
       error={errorMsg}
-      onDismissError={() => setErrorMsg(null)}
+      onDismissError={dismissError}
     >
 
       <>
