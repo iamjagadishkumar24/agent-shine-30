@@ -77,11 +77,6 @@ function NewFeedback() {
         improvements: draft.improvements || f.improvements,
         recommended_actions: draft.recommended_actions || f.recommended_actions,
       }));
-        summary: draft.summary || f.summary,
-        strengths: draft.strengths || f.strengths,
-        improvements: draft.improvements || f.improvements,
-        recommended_actions: draft.recommended_actions || f.recommended_actions,
-      }));
       setAiOpen(false);
       toast.success("AI draft applied — review before sending");
     },
