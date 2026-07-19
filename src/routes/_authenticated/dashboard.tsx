@@ -272,7 +272,7 @@ function Dashboard() {
   const activeAgents = agents.filter((a) => a.status === "active").length;
   const totalFeedback = feedback.length;
   const sent = feedback.filter((f) => ["sent", "acknowledged", "completed"].includes(f.status as string)).length;
-  const pending = feedback.filter((f) => ["draft", "review"].includes(f.status as string)).length;
+  const pending = feedback.filter((f) => ["draft", "ready_to_send"].includes(f.status as string)).length;
   const completed = feedback.filter((f) => f.status === "completed").length;
   const acknowledged = feedback.filter((f) => f.status === "acknowledged" || f.status === "completed").length;
   const highPriority = feedback.filter((f) => f.severity === "critical" || f.severity === "high").length;
