@@ -66,7 +66,7 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
       throw new Response("Failed to verify permissions", { status: 500 });
     }
     const isStaff = (roles ?? []).some((r) =>
-      ["qa_admin", "qa_reviewer", "team_lead", "manager"].includes(r.role as string),
+      ["super_admin", "qa_admin", "team_manager"].includes(r.role as string),
     );
     if (!isStaff) throw new Response("Forbidden", { status: 403 });
 
