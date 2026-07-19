@@ -37,6 +37,7 @@ import { Route as AuthenticatedFeedbackIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedCoachingPlansRouteImport } from './routes/_authenticated/coaching.plans'
 import { Route as AuthenticatedCoachingNewRouteImport } from './routes/_authenticated/coaching.new'
 import { Route as AuthenticatedCoachingIdRouteImport } from './routes/_authenticated/coaching.$id'
+import { Route as AuthenticatedAnalyticsEmailRouteImport } from './routes/_authenticated/analytics.email'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicHooksFeedbackEscalationsRouteImport } from './routes/api/public/hooks/feedback-escalations'
@@ -196,6 +197,12 @@ const AuthenticatedCoachingIdRoute = AuthenticatedCoachingIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedCoachingRoute,
 } as any)
+const AuthenticatedAnalyticsEmailRoute =
+  AuthenticatedAnalyticsEmailRouteImport.update({
+    id: '/email',
+    path: '/email',
+    getParentRoute: () => AuthenticatedAnalyticsRoute,
+  } as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
     id: '/.mcp/invoke-tool/$tool',
@@ -272,7 +279,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/account': typeof AuthenticatedAccountRoute
   '/agents': typeof AuthenticatedAgentsRoute
-  '/analytics': typeof AuthenticatedAnalyticsRoute
+  '/analytics': typeof AuthenticatedAnalyticsRouteWithChildren
   '/approvals': typeof AuthenticatedApprovalsRoute
   '/coaching': typeof AuthenticatedCoachingRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -282,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/analytics/email': typeof AuthenticatedAnalyticsEmailRoute
   '/coaching/$id': typeof AuthenticatedCoachingIdRoute
   '/coaching/new': typeof AuthenticatedCoachingNewRoute
   '/coaching/plans': typeof AuthenticatedCoachingPlansRouteWithChildren
@@ -312,7 +320,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/account': typeof AuthenticatedAccountRoute
   '/agents': typeof AuthenticatedAgentsRoute
-  '/analytics': typeof AuthenticatedAnalyticsRoute
+  '/analytics': typeof AuthenticatedAnalyticsRouteWithChildren
   '/approvals': typeof AuthenticatedApprovalsRoute
   '/coaching': typeof AuthenticatedCoachingRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -322,6 +330,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/analytics/email': typeof AuthenticatedAnalyticsEmailRoute
   '/coaching/$id': typeof AuthenticatedCoachingIdRoute
   '/coaching/new': typeof AuthenticatedCoachingNewRoute
   '/coaching/plans': typeof AuthenticatedCoachingPlansRouteWithChildren
@@ -354,7 +363,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/agents': typeof AuthenticatedAgentsRoute
-  '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
+  '/_authenticated/analytics': typeof AuthenticatedAnalyticsRouteWithChildren
   '/_authenticated/approvals': typeof AuthenticatedApprovalsRoute
   '/_authenticated/coaching': typeof AuthenticatedCoachingRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -364,6 +373,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/_authenticated/analytics/email': typeof AuthenticatedAnalyticsEmailRoute
   '/_authenticated/coaching/$id': typeof AuthenticatedCoachingIdRoute
   '/_authenticated/coaching/new': typeof AuthenticatedCoachingNewRoute
   '/_authenticated/coaching/plans': typeof AuthenticatedCoachingPlansRouteWithChildren
@@ -406,6 +416,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/analytics/email'
     | '/coaching/$id'
     | '/coaching/new'
     | '/coaching/plans'
@@ -446,6 +457,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/analytics/email'
     | '/coaching/$id'
     | '/coaching/new'
     | '/coaching/plans'
@@ -487,6 +499,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/_authenticated/analytics/email'
     | '/_authenticated/coaching/$id'
     | '/_authenticated/coaching/new'
     | '/_authenticated/coaching/plans'
@@ -726,6 +739,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachingIdRouteImport
       parentRoute: typeof AuthenticatedCoachingRoute
     }
+    '/_authenticated/analytics/email': {
+      id: '/_authenticated/analytics/email'
+      path: '/email'
+      fullPath: '/analytics/email'
+      preLoaderRoute: typeof AuthenticatedAnalyticsEmailRouteImport
+      parentRoute: typeof AuthenticatedAnalyticsRoute
+    }
     '/.mcp/invoke-tool/$tool': {
       id: '/.mcp/invoke-tool/$tool'
       path: '/.mcp/invoke-tool/$tool'
@@ -806,6 +826,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAnalyticsRouteChildren {
+  AuthenticatedAnalyticsEmailRoute: typeof AuthenticatedAnalyticsEmailRoute
+}
+
+const AuthenticatedAnalyticsRouteChildren: AuthenticatedAnalyticsRouteChildren =
+  {
+    AuthenticatedAnalyticsEmailRoute: AuthenticatedAnalyticsEmailRoute,
+  }
+
+const AuthenticatedAnalyticsRouteWithChildren =
+  AuthenticatedAnalyticsRoute._addFileChildren(
+    AuthenticatedAnalyticsRouteChildren,
+  )
+
 interface AuthenticatedCoachingPlansRouteChildren {
   AuthenticatedCoachingPlansIdRoute: typeof AuthenticatedCoachingPlansIdRoute
   AuthenticatedCoachingPlansNewRoute: typeof AuthenticatedCoachingPlansNewRoute
@@ -864,7 +898,7 @@ const AuthenticatedReportsRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedAgentsRoute: typeof AuthenticatedAgentsRoute
-  AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
+  AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRouteWithChildren
   AuthenticatedApprovalsRoute: typeof AuthenticatedApprovalsRoute
   AuthenticatedCoachingRoute: typeof AuthenticatedCoachingRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -880,7 +914,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedAgentsRoute: AuthenticatedAgentsRoute,
-  AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
+  AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRouteWithChildren,
   AuthenticatedApprovalsRoute: AuthenticatedApprovalsRoute,
   AuthenticatedCoachingRoute: AuthenticatedCoachingRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,

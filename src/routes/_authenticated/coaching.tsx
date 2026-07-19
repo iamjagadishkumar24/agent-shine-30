@@ -136,7 +136,14 @@ function CoachingCalendar() {
       qc.invalidateQueries({ queryKey: ["coaching-sessions"] });
       toast.success("Session rescheduled");
     },
-    onError: (e: any) => toast.error(e?.message ?? "Could not reschedule"),
+    onError: (e: any) => {
+      const msg = String(e?.message ?? "Could not reschedule");
+      if (/overlap/i.test(msg)) {
+        toast.error("Time conflict", { description: "Another session overlaps this slot for the agent or coach. Pick a different time." });
+      } else {
+        toast.error(msg);
+      }
+    },
   });
 
   const openCreate = (start?: Date, end?: Date) => {
