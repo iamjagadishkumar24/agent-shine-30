@@ -213,12 +213,21 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
       qc.invalidateQueries({ queryKey: ["coaching-sessions"] });
       qc.invalidateQueries({ queryKey: ["coaching-session", row.id] });
       toast.success(isEdit ? "Session updated" : "Session scheduled");
+      setSavedEvent(buildEventFromForm(row.id));
       onSaved?.(row.id);
-      onOpenChange(false);
+      // Keep dialog open so user can add to calendar; they close it themselves.
+      if (isEdit) onOpenChange(false);
     },
     onError: (e: any) => {
-      const msg = e?.message ?? "Could not save";
-      toast.error(msg.includes("overlaps") ? "That time overlaps another session for this coach or agent" : msg);
+      // Surface the real database / RLS / trigger error text so users can act on it.
+      const msg = e?.message ?? e?.details ?? e?.hint ?? "Could not save session";
+      if (typeof msg === "string" && msg.toLowerCase().includes("overlap")) {
+        toast.error("That time overlaps another session for this coach or agent.");
+      } else if (typeof msg === "string" && msg.toLowerCase().includes("row-level security")) {
+        toast.error("You don't have permission to schedule for this agent. Ask an admin to add you as coach.");
+      } else {
+        toast.error(String(msg).slice(0, 240));
+      }
     },
   });
 
