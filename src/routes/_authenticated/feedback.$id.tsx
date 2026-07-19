@@ -929,18 +929,9 @@ function DeliveryPipeline({
         })}
       </ol>
 
-      {queue && (
+      {queue && queue.attempts != null && queue.max_attempts != null && queue.attempts > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border/60 pt-3 text-[11px] text-muted-foreground">
-          {queue.provider && <span className="capitalize">{queue.provider}</span>}
-          <span>→ <span className="font-mono text-foreground/80">{queue.to_email}</span></span>
-          {queue.to_email_intended && queue.to_email_intended !== queue.to_email && (
-            <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-amber-600 dark:text-amber-400">
-              override · intended {queue.to_email_intended}
-            </span>
-          )}
-          {queue.attempts != null && queue.max_attempts != null && (
-            <span>· {queue.attempts}/{queue.max_attempts} attempts</span>
-          )}
+          <span>{queue.attempts}/{queue.max_attempts} attempts</span>
         </div>
       )}
 
