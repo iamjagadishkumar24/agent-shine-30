@@ -271,53 +271,76 @@ function CoachingCalendar() {
             />
           </Card>
         ) : (
-          <Card className="overflow-hidden">
-            {isLoading ? (
-              <div className="p-6 text-xs text-muted-foreground">Loading…</div>
-            ) : filtered.length === 0 ? (
-              <div className="p-10 text-center">
-                <p className="text-sm font-medium">No sessions match your filters</p>
-                <Button size="sm" className="mt-4" onClick={() => openCreate()}>Schedule a session</Button>
-              </div>
-            ) : (
-              <table className="w-full text-sm">
-                <thead className="border-b border-border/60 bg-muted/30 text-xs text-muted-foreground">
-                  <tr>
-                    <th className="px-4 py-2.5 text-left font-medium">Topic</th>
-                    <th className="px-4 py-2.5 text-left font-medium">Agent</th>
-                    <th className="px-4 py-2.5 text-left font-medium">Scheduled</th>
-                    <th className="px-4 py-2.5 text-left font-medium">Type</th>
-                    <th className="px-4 py-2.5 text-left font-medium">Priority</th>
-                    <th className="px-4 py-2.5 text-left font-medium">Status</th>
+          <Card className="overflow-hidden p-0">
+            <DataTableShell className="rounded-none border-0">
+              <DataTableHeader>
+                <tr>
+                  <SortableTh field="topic" active={sortField} dir={sortDir} onSort={onSort}>Topic</SortableTh>
+                  <SortableTh field="agent" active={sortField} dir={sortDir} onSort={onSort}>Agent</SortableTh>
+                  <SortableTh field="scheduled_at" active={sortField} dir={sortDir} onSort={onSort}>Scheduled</SortableTh>
+                  <SortableTh field="session_type" active={sortField} dir={sortDir} onSort={onSort}>Type</SortableTh>
+                  <SortableTh field="priority" active={sortField} dir={sortDir} onSort={onSort}>Priority</SortableTh>
+                  <SortableTh field="status" active={sortField} dir={sortDir} onSort={onSort}>Status</SortableTh>
+                </tr>
+              </DataTableHeader>
+              <tbody>
+                {isLoading && Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={`sk-${i}`} className="border-b border-border/40 last:border-0" aria-busy="true">
+                    {Array.from({ length: 6 }).map((__, j) => (
+                      <td key={j} className="border-b border-border/40 px-4 py-3.5">
+                        <div className="h-3 w-24 bg-muted/40 rounded animate-pulse" />
+                      </td>
+                    ))}
                   </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((s: any) => {
-                    const sched = s.scheduled_at ? new Date(s.scheduled_at) : null;
-                    const meta = STATUS_META[s.status ?? "scheduled"] ?? STATUS_META.scheduled;
-                    return (
-                      <tr key={s.id} className="border-b border-border/40 last:border-0 hover:bg-muted/20 cursor-pointer" onClick={() => openEdit(s)}>
-                        <td className="px-4 py-2.5">
-                          <Link to="/coaching/$id" params={{ id: s.id }} className="font-medium hover:text-primary" onClick={(e) => e.stopPropagation()}>
-                            {s.topic || "Untitled"}
-                          </Link>
-                        </td>
-                        <td className="px-4 py-2.5 text-muted-foreground">{s.agent?.full_name ?? "—"}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground">
-                          {sched && !Number.isNaN(sched.getTime()) ? sched.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—"}
-                        </td>
-                        <td className="px-4 py-2.5 text-muted-foreground capitalize">{(s.session_type ?? "coaching").replace("_", " ")}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground capitalize">{s.priority ?? "medium"}</td>
-                        <td className="px-4 py-2.5">
-                          <Badge variant="outline" className={cn("text-xs", meta.className)}>{meta.label}</Badge>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                ))}
+                {!isLoading && paged.map((s: any) => {
+                  const sched = s.scheduled_at ? new Date(s.scheduled_at) : null;
+                  const meta = STATUS_META[s.status ?? "scheduled"] ?? STATUS_META.scheduled;
+                  return (
+                    <DataTableRow key={s.id} onClick={() => openEdit(s)} className="cursor-pointer">
+                      <DataTableCell>
+                        <Link to="/coaching/$id" params={{ id: s.id }} className="font-medium hover:text-primary" onClick={(e) => e.stopPropagation()}>
+                          {s.topic || "Untitled"}
+                        </Link>
+                      </DataTableCell>
+                      <DataTableCell className="text-muted-foreground">{s.agent?.full_name ?? "—"}</DataTableCell>
+                      <DataTableCell className="text-muted-foreground">
+                        {sched && !Number.isNaN(sched.getTime()) ? sched.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—"}
+                      </DataTableCell>
+                      <DataTableCell className="text-muted-foreground capitalize">{(s.session_type ?? "coaching").replace("_", " ")}</DataTableCell>
+                      <DataTableCell className="text-muted-foreground capitalize">{s.priority ?? "medium"}</DataTableCell>
+                      <DataTableCell>
+                        <Badge variant="outline" className={cn("text-xs", meta.className)}>{meta.label}</Badge>
+                      </DataTableCell>
+                    </DataTableRow>
+                  );
+                })}
+                {!isLoading && sorted.length === 0 && (
+                  <TableEmpty
+                    colSpan={6}
+                    icon={CalendarDays}
+                    title="No sessions match your filters"
+                    message="Try adjusting the filters above, or schedule a new session to get started."
+                    action={
+                      <Button size="sm" onClick={() => openCreate()}>
+                        <CalendarPlus className="mr-1.5 h-3.5 w-3.5" /> Schedule session
+                      </Button>
+                    }
+                  />
+                )}
+              </tbody>
+            </DataTableShell>
+            {sorted.length > 0 && (
+              <TablePagination
+                page={page}
+                pageSize={pageSize}
+                total={sorted.length}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+              />
             )}
           </Card>
+
         )}
 
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
