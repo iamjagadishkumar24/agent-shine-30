@@ -79,9 +79,8 @@ function NewFeedback() {
         recommended_actions: draft.recommended_actions || f.recommended_actions,
       }));
       setAiOpen(false);
-      toast.success("AI draft applied — review before sending");
     },
-    onError: (e: any) => toast.error(e.message ?? "AI draft failed"),
+    onError: () => toast.error("Unable to generate AI draft. Please try again."),
   });
 
   const { data: agents = [] } = useQuery({
