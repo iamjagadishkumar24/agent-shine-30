@@ -144,6 +144,16 @@ function EmailConfig() {
     onError: (e: any) => toast.error(e?.message ?? "Send failed"),
   });
 
+  const brandingTest = useMutation({
+    mutationFn: () => brandingTestFn({ data: { to: brandingTo } }),
+    onSuccess: (r: any) => {
+      setBrandingResult(r);
+      if (r.ok) toast.success(`Branding preview sent (${r.latencyMs}ms)`);
+      else toast.error(r.error ?? "Send failed");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Send failed"),
+  });
+
   if (isLoading || !s) {
     return (
       <Card className="p-6">
