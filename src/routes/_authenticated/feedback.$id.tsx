@@ -50,9 +50,19 @@ function FeedbackDetail() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [testTo, setTestTo] = useState("");
+  const [testResult, setTestResult] = useState<null | {
+    ok: boolean;
+    provider: string;
+    recipient: string;
+    latencyMs: number;
+    messageId?: string;
+    error?: string;
+  }>(null);
 
   const sendEmailFn = useServerFn(sendFeedbackEmail);
   const previewFn = useServerFn(previewFeedbackEmail);
+  const testSendFn = useServerFn(sendFeedbackTestEmail);
   const uploadUrlFn = useServerFn(createUploadUrl);
   const deleteAttFn = useServerFn(deleteAttachment);
   const transitionFn = useServerFn(transitionFeedback);
@@ -62,6 +72,27 @@ function FeedbackDetail() {
     queryFn: () => previewFn({ data: { feedbackId: id } }),
     enabled: previewOpen,
     staleTime: 0,
+  });
+
+  const testSend = useMutation({
+    mutationFn: async (to: string) => testSendFn({ data: { feedbackId: id, to } }),
+    onSuccess: (r) => {
+      setTestResult({
+        ok: r.ok,
+        provider: r.provider,
+        recipient: r.recipient,
+        latencyMs: r.latencyMs,
+        messageId: "messageId" in r ? r.messageId : undefined,
+        error: "error" in r ? r.error : undefined,
+      });
+      if (r.ok) toast.success(`Test delivered to ${r.recipient} (${r.latencyMs}ms)`);
+      else toast.error(`Test failed: ${"error" in r ? r.error : "unknown"}`);
+    },
+    onError: (err: any) => {
+      const msg = err?.message ?? "Test send failed";
+      setTestResult({ ok: false, provider: "unknown", recipient: testTo, latencyMs: 0, error: msg });
+      toast.error(msg);
+    },
   });
 
   const { data, isLoading } = useQuery({
