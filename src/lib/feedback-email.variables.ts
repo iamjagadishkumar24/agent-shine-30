@@ -53,7 +53,51 @@ export function buildVariableMap(d: FeedbackEmailVariables): Record<string, stri
   const acknowledgeUrl =
     d.acknowledgeUrl ??
     (d.feedbackId ? `${appBaseUrl}/api/public/track/click/${d.feedbackId}?to=${encodeURIComponent(`/feedback/${d.feedbackId}`)}` : "");
+  const score = d.score != null ? Number(d.score).toFixed(1) : "";
+  const feedbackId = d.feedbackId ? d.feedbackId.slice(0, 8).toUpperCase() : "";
+  const rating =
+    d.score == null
+      ? "Not scored"
+      : d.score >= 90
+        ? "Outstanding"
+        : d.score >= 80
+          ? "Exceeds Expectations"
+          : d.score >= 70
+            ? "Meets Expectations"
+            : d.score >= 60
+              ? "Developing"
+              : "Needs Improvement";
+  const priority = d.severity ? d.severity.charAt(0).toUpperCase() + d.severity.slice(1) : "";
   return {
+    // Zenwork-branded canonical keys
+    Customer_Name: d.agentName ?? "",
+    Agent_Name: d.agentName ?? "",
+    Manager_Name: d.managerName ?? "",
+    Reviewer_Name: d.reviewerName ?? "",
+    Feedback_ID: feedbackId,
+    Title: d.title ?? "",
+    Department: "Customer Success",
+    Category: d.category ?? "",
+    Feedback_Type: d.feedbackType ?? "",
+    Severity: d.severity ?? "",
+    Priority: priority,
+    Quality_Score: score,
+    Overall_Score: score,
+    Overall_Rating: rating,
+    Review_Status: "",
+    Interaction_Date: "",
+    Review_Date: new Date().toISOString().slice(0, 10),
+    Summary: d.summary ?? "",
+    Strengths: d.strengths ?? "",
+    Improvements: d.improvements ?? "",
+    Manager_Comments: "",
+    Coaching_Recommendations: d.recommendedActions ?? "",
+    Next_Steps: "",
+    Due_Date: d.dueDate ?? "",
+    Acknowledge_URL: acknowledgeUrl,
+    App_Base_URL: appBaseUrl,
+    Sender_Name: d.senderName ?? "",
+    // Legacy camelCase aliases (kept so previously-saved templates still render)
     agentName: d.agentName ?? "",
     managerName: d.managerName ?? "",
     reviewerName: d.reviewerName ?? "",
@@ -61,7 +105,7 @@ export function buildVariableMap(d: FeedbackEmailVariables): Record<string, stri
     category: d.category ?? "",
     feedbackType: d.feedbackType ?? "",
     severity: d.severity ?? "",
-    score: d.score != null ? Number(d.score).toFixed(1) : "",
+    score,
     summary: d.summary ?? "",
     strengths: d.strengths ?? "",
     improvements: d.improvements ?? "",
@@ -72,6 +116,7 @@ export function buildVariableMap(d: FeedbackEmailVariables): Record<string, stri
     senderName: d.senderName ?? "",
   };
 }
+
 
 // Build a sample variable set for the preview pane / test emails.
 export function sampleVariableMap(): Record<string, string> {
