@@ -321,8 +321,8 @@ function AuthPage() {
                       />
                     </div>
                     {nameError && (
-                      <p className="flex items-center gap-1 text-xs text-destructive">
-                        <AlertCircle className="h-3 w-3" /> Enter your full name
+                      <p id="name-error" className="flex items-center gap-1 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" aria-hidden /> Enter your full name
                       </p>
                     )}
                   </div>
