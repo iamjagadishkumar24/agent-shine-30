@@ -48,6 +48,8 @@ function NewFeedback() {
   });
   const [aiOpen, setAiOpen] = useState(false);
   const [observations, setObservations] = useState("");
+  const [template, setTemplate] = useState<EmailTemplate>("performance_feedback");
+  const [lastDraft, setLastDraft] = useState<null | { title: string; summary: string; strengths: string; improvements: string; recommended_actions: string }>(null);
   const runAi = useServerFn(generateFeedbackDraft);
   const ai = useMutation({
     mutationFn: async () => {
