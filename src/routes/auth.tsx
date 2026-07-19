@@ -364,6 +364,7 @@ function AuthPage() {
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="password"
+                        ref={passwordRef}
                         type={showPassword ? "text" : "password"}
                         autoComplete={mode === "signup" ? "new-password" : "current-password"}
                         value={password}
@@ -373,6 +374,7 @@ function AuthPage() {
                         minLength={mode === "signup" ? 8 : undefined}
                         placeholder={mode === "signup" ? "At least 8 characters" : "Enter your password"}
                         aria-invalid={pwError || undefined}
+                        aria-describedby={pwError ? "password-error" : undefined}
                         className={cn(
                           "h-11 rounded-lg pl-10 pr-11",
                           pwError && "border-destructive focus-visible:ring-destructive/40",
@@ -381,11 +383,11 @@ function AuthPage() {
                       <button
                         type="button"
                         onClick={() => setShowPassword((s) => !s)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
                         aria-label={showPassword ? "Hide password" : "Show password"}
-                        tabIndex={-1}
+                        aria-pressed={showPassword}
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
                       </button>
                     </div>
                     {mode === "signup" && password.length > 0 && (
