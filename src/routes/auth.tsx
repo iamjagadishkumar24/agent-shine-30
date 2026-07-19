@@ -243,11 +243,8 @@ function AuthPage() {
           <div className="w-full max-w-md">
             <div className="rounded-2xl border border-border/60 bg-background/50 p-7 sm:p-8 shadow-2xl shadow-black/20 backdrop-blur-2xl">
               {/* Mobile brand */}
-              <Link to="/" className="lg:hidden flex items-center gap-2 mb-6">
-                <div className="grid h-8 w-8 place-items-center rounded-md bg-gradient-to-br from-primary to-fuchsia-500 text-primary-foreground">
-                  <Sparkles className="h-4 w-4" />
-                </div>
-                <span className="font-semibold tracking-tight">Zenwork Performance Manager</span>
+              <Link to="/" className="lg:hidden flex items-center mb-6">
+                <img src={zenworkLogo.url} alt="Zenwork Performance Manager" className="h-8 w-auto object-contain" />
               </Link>
 
               {mode === "forgot" ? (
