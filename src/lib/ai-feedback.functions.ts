@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { generateText, Output, NoObjectGeneratedError } from "ai";
+import { generateObject, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 
@@ -79,7 +79,9 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Response("AI service is not configured", { status: 503 });
 
-    const gateway = createLovableAiGatewayProvider(key);
+    const gateway = createLovableAiGatewayProvider(key, {
+      structuredOutputs: true,
+    });
     const model = gateway("google/gemini-3-flash-preview");
 
     const system = [
@@ -87,6 +89,7 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
       "Tone: professional, empathetic, specific, action-oriented. No fluff, no clichés.",
       "Write each field as plain prose (no markdown headings). Keep each section under 120 words.",
       "Never invent facts the observer didn't mention. If a section has no basis, keep it short and honest.",
+      "Always return every field as a non-empty string; if a section truly has no material, write a single sentence acknowledging that.",
       `Template guidance: ${TEMPLATE_GUIDANCE[data.template]}`,
     ].join(" ");
 
@@ -103,7 +106,7 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
       "Reviewer observations:",
       data.observations,
       "",
-      "Produce a structured feedback draft with fields: title (short, <=90 chars), summary (1 paragraph), strengths, improvements, recommended_actions.",
+      "Produce a structured feedback draft as JSON with fields: title (short, <=90 chars), summary (1 paragraph), strengths, improvements, recommended_actions.",
     ]
       .filter(Boolean)
       .join("\n");
@@ -113,35 +116,41 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
     const timer = setTimeout(() => abort.abort(), 25_000);
 
     try {
-      const { output } = await generateText({
+      const { object } = await generateObject({
         model,
         system,
         prompt,
-        output: Output.object({ schema: DraftSchema }),
+        schema: DraftSchema,
         abortSignal: abort.signal,
       });
-      // Clamp lengths to defend against a model that ignores instructions.
       return {
-        title: clamp(output.title, 120),
-        summary: clamp(output.summary, 2000),
-        strengths: clamp(output.strengths, 1500),
-        improvements: clamp(output.improvements, 1500),
-        recommended_actions: clamp(output.recommended_actions, 1500),
+        title: clamp(object.title, 120),
+        summary: clamp(object.summary, 2000),
+        strengths: clamp(object.strengths, 1500),
+        improvements: clamp(object.improvements, 1500),
+        recommended_actions: clamp(object.recommended_actions, 1500),
       };
     } catch (error) {
-      if (NoObjectGeneratedError.isInstance(error)) {
-        // Fallback: return observations as summary so the user isn't blocked
-        return {
-          title: `${clamp(data.category, 60)} feedback`,
-          summary: data.observations,
-          strengths: "",
-          improvements: "",
-          recommended_actions: "",
-        };
-      }
       if (error instanceof Error && error.name === "AbortError") {
         throw new Response("AI request timed out. Try again.", { status: 504 });
       }
+      if (NoObjectGeneratedError.isInstance(error)) {
+        // Model returned unparseable output. Try to salvage from error.text
+        // (raw provider text captured by the SDK) rather than silently
+        // returning empty fields. Surface the failure so the UI can retry.
+        const raw = typeof (error as { text?: unknown }).text === "string"
+          ? (error as { text: string }).text
+          : "";
+        console.error("[ai-feedback] Structured output parse failed", {
+          template: data.template,
+          rawPreview: raw.slice(0, 400),
+        });
+        throw new Response(
+          "AI couldn't produce a structured draft. Try again or shorten your observations.",
+          { status: 502 },
+        );
+      }
+      console.error("[ai-feedback] Draft generation failed", error);
       throw error;
     } finally {
       clearTimeout(timer);
