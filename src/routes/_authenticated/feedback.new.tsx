@@ -15,6 +15,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { generateFeedbackDraft, EMAIL_TEMPLATES, type EmailTemplate } from "@/lib/ai-feedback.functions";
+import { sendFeedbackEmail } from "@/lib/feedback-email.functions";
 
 export const Route = createFileRoute("/_authenticated/feedback/new")({
   validateSearch: (s: Record<string, unknown>): { agent?: string } =>
