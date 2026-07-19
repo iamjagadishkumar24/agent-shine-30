@@ -128,10 +128,15 @@ function AnalyticsCharts({
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} horizontal={false} />
                   <XAxis type="number" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
                   <YAxis type="category" dataKey="label" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} width={110} />
-                  <Tooltip contentStyle={TOOLTIP_STYLE} />
-                  <Bar dataKey="value" fill="oklch(0.65 0.20 285)" radius={[0, 6, 6, 0]} isAnimationActive={false} />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "var(--muted)", opacity: 0.25 }} />
+                  <Bar dataKey="value" radius={[0, 6, 6, 0]} isAnimationActive={false}>
+                    {safeByType.map((_, i) => (
+                      <Cell key={i} fill={CATEGORY_PALETTE[i % CATEGORY_PALETTE.length]} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
+
             ) : (
               <EmptyState label="No categorized feedback yet." />
             )}
