@@ -334,6 +334,7 @@ function AuthPage() {
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="email"
+                      ref={emailRef}
                       type="email"
                       autoComplete="email"
                       value={email}
@@ -342,6 +343,7 @@ function AuthPage() {
                       required
                       placeholder="you@company.com"
                       aria-invalid={emailError || undefined}
+                      aria-describedby={emailError ? "email-error" : undefined}
                       className={cn(
                         "h-11 rounded-lg pl-10",
                         emailError && "border-destructive focus-visible:ring-destructive/40",
@@ -349,8 +351,8 @@ function AuthPage() {
                     />
                   </div>
                   {emailError && (
-                    <p className="flex items-center gap-1 text-xs text-destructive">
-                      <AlertCircle className="h-3 w-3" /> Enter a valid email address
+                    <p id="email-error" className="flex items-center gap-1 text-xs text-destructive">
+                      <AlertCircle className="h-3 w-3" aria-hidden /> Enter a valid email address
                     </p>
                   )}
                 </div>
