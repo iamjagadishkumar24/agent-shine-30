@@ -269,6 +269,7 @@ function AuthPage() {
     } catch (err: any) {
       const msg = err?.message ?? "Google sign-in failed";
       setErrorMsg(msg);
+      setErrorField(inferErrorField(msg));
       toast.error(msg);
       setLoading(false);
     }
