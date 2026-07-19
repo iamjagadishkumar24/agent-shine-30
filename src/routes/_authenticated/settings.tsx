@@ -661,7 +661,16 @@ function QueueMonitor() {
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">Queue is empty.</td></tr>
+              <tr>
+                <td colSpan={7} className="px-4 py-2">
+                  <EmptyState
+                    icon={Inbox}
+                    title="Queue is empty"
+                    description="Outbound messages waiting to send will show up here."
+                    size="sm"
+                  />
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
