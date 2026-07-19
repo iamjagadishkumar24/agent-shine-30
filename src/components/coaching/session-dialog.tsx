@@ -429,12 +429,23 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
           </div>
         </div>
 
+        {savedEvent && (
+          <div className="rounded-md border border-emerald-500/20 bg-emerald-500/5 p-3 text-sm">
+            <div className="mb-2 font-medium text-emerald-300">Session scheduled — add it to your calendar</div>
+            <AddToCalendarMenu event={savedEvent} triggerLabel="Add to my calendar" />
+          </div>
+        )}
+
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={() => save.mutate()} disabled={!canSubmit || save.isPending}>
-            {save.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
-            {isEdit ? "Save changes" : "Schedule session"}
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            {savedEvent ? "Close" : "Cancel"}
           </Button>
+          {!savedEvent && (
+            <Button onClick={() => save.mutate()} disabled={!canSubmit || save.isPending}>
+              {save.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+              {isEdit ? "Save changes" : "Schedule session"}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
