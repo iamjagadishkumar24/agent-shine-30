@@ -31,8 +31,7 @@ export function useRealtimeInvalidate(
     const channel = supabase
       .channel(channelName)
       .on(
-        // @ts-expect-error - postgres_changes is a valid realtime event
-        "postgres_changes",
+        "postgres_changes" as never,
         { event: "*", schema: "public", table, ...(filter ? { filter } : {}) },
         () => {
           for (const key of invalidateKeys) {
