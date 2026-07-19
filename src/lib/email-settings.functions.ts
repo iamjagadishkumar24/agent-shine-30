@@ -170,3 +170,158 @@ export const sendTestEmail = createServerFn({ method: "POST" })
       );
     }
   });
+
+// ---------------------------------------------------------------------------
+// Feedback email template editor
+// ---------------------------------------------------------------------------
+
+const TemplateInput = z.object({
+  feedback_template_subject: z.string().trim().min(1).max(300),
+  feedback_template_html: z.string().min(1).max(200_000),
+  feedback_template_text: z.string().max(50_000).optional().nullable(),
+  feedback_template_enabled: z.boolean(),
+});
+
+export const saveFeedbackTemplate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => TemplateInput.parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: row, error } = await context.supabase
+      .from("email_settings")
+      .update({
+        feedback_template_subject: sanitizeHeader(data.feedback_template_subject),
+        feedback_template_html: data.feedback_template_html,
+        feedback_template_text: data.feedback_template_text ?? null,
+        feedback_template_enabled: data.feedback_template_enabled,
+        updated_by: context.userId,
+      })
+      .eq("singleton", true)
+      .select("*")
+      .maybeSingle();
+    if (error) {
+      console.error("[email-settings] template save failed", error);
+      throw new Response("Unable to save template", { status: 500 });
+    }
+    if (!row) throw new Response("Email settings row missing", { status: 404 });
+    return row;
+  });
+
+const PreviewInput = z.object({
+  subject: z.string().max(300),
+  html: z.string().max(200_000),
+  text: z.string().max(50_000).optional().nullable(),
+  overrides: z.record(z.string(), z.string()).optional(),
+});
+
+export const previewFeedbackTemplate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => PreviewInput.parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const vars = { ...sampleVariableMap(), ...(data.overrides ?? {}) };
+    return renderCustomTemplate(
+      { subject: data.subject, html: data.html, text: data.text ?? "" },
+      vars,
+    );
+  });
+
+const TemplateTestInput = z.object({
+  to: z.string().trim().email().max(255),
+  subject: z.string().min(1).max(300),
+  html: z.string().min(1).max(200_000),
+  text: z.string().max(50_000).optional().nullable(),
+  overrides: z.record(z.string(), z.string()).optional(),
+  scheduledAt: z.string().datetime().optional().nullable(),
+});
+
+export const sendFeedbackTemplateTest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => TemplateTestInput.parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+
+    const { data: s, error } = await context.supabase
+      .from("email_settings")
+      .select("*")
+      .eq("singleton", true)
+      .maybeSingle();
+    if (error) {
+      console.error("[email-settings] settings lookup failed", error);
+      throw new Response("Unable to load settings", { status: 500 });
+    }
+    if (!s || !s.sender_email) throw new Response("Configure sender email first", { status: 400 });
+    if (!s.enabled) throw new Response("Email service is disabled", { status: 400 });
+
+    const vars = { ...sampleVariableMap(), ...(data.overrides ?? {}) };
+    // Ensure branding values reflect the actual account.
+    vars.senderName = s.sender_name ?? vars.senderName;
+    const rendered = renderCustomTemplate(
+      { subject: data.subject, html: data.html, text: data.text ?? "" },
+      vars,
+    );
+    const subject = sanitizeHeader(`[TEST] ${rendered.subject}`);
+
+    // Scheduled path: enqueue with a future next_attempt_at so the drainer
+    // picks it up when due. Rejects timestamps in the past or > 30 days out.
+    if (data.scheduledAt) {
+      const at = new Date(data.scheduledAt);
+      const now = Date.now();
+      const max = now + 30 * 24 * 60 * 60 * 1000;
+      if (isNaN(at.getTime())) throw new Response("Invalid schedule time", { status: 400 });
+      if (at.getTime() < now - 60_000) throw new Response("Schedule time is in the past", { status: 400 });
+      if (at.getTime() > max) throw new Response("Schedule time must be within 30 days", { status: 400 });
+
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: job, error: qErr } = await supabaseAdmin
+        .from("email_queue")
+        .insert({
+          feedback_id: null,
+          kind: "test",
+          to_email: data.to,
+          to_name: null,
+          subject,
+          html: rendered.html,
+          text_body: rendered.text,
+          attachments: [],
+          priority: 5,
+          status: "queued",
+          max_attempts: 3,
+          next_attempt_at: at.toISOString(),
+          created_by: context.userId,
+        })
+        .select("id, next_attempt_at")
+        .single();
+      if (qErr || !job) {
+        console.error("[email-settings] template test schedule failed", qErr);
+        throw new Response("Unable to schedule test email", { status: 500 });
+      }
+      return { ok: true as const, scheduled: true, queueId: job.id, nextAttemptAt: job.next_attempt_at };
+    }
+
+    // Immediate send via provider.
+    const { getProvider } = await import("@/lib/email/providers.server");
+    const provider = getProvider(s.provider);
+    const started = Date.now();
+    try {
+      const res = await provider.send({
+        from: { name: sanitizeHeader(s.sender_name ?? ""), email: s.sender_email },
+        to: data.to,
+        replyTo: s.reply_to,
+        subject,
+        html: rendered.html,
+        text: rendered.text,
+      });
+      return { ...res, scheduled: false as const, latencyMs: Date.now() - started };
+    } catch (err) {
+      console.error("[email-settings] template test send failed", err);
+      throw new Response(
+        err instanceof Error ? err.message.slice(0, 300) : "Test email failed",
+        { status: 502 },
+      );
+    }
+  });
+
+// Expose the current variable-map derivation for demo use (unused server-side; kept
+// as an intentional touch so `buildVariableMap` stays imported alongside the sample map).
+export const _touchVars = buildVariableMap;
