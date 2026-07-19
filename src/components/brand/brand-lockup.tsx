@@ -38,16 +38,17 @@ const DEFAULT_TAGLINE =
   "Driving Customer Success Through Quality, Performance & Continuous Improvement";
 
 const LOGO_SIZE: Record<BrandLockupSize, string> = {
-  sm: "h-9 w-9 sm:h-10 sm:w-10",
-  md: "h-10 w-10 sm:h-11 sm:w-11 lg:h-12 lg:w-12",
-  lg: "h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14",
+  sm: "h-8 w-8 sm:h-9 sm:w-9",
+  md: "h-9 w-9 sm:h-10 sm:w-10 lg:h-11 lg:w-11",
+  lg: "h-9 w-9 sm:h-11 sm:w-11 md:h-12 md:w-12 lg:h-13 lg:w-13 xl:h-14 xl:w-14",
 };
 
 const WORDMARK_SIZE: Record<BrandLockupSize, string> = {
-  sm: "text-[18px] sm:text-[20px]",
-  md: "text-[20px] sm:text-[24px] lg:text-[26px]",
-  lg: "text-[22px] sm:text-[26px] md:text-[28px] lg:text-[30px]",
+  sm: "text-[16px] sm:text-[18px]",
+  md: "text-[18px] sm:text-[22px] lg:text-[24px]",
+  lg: "text-[18px] sm:text-[22px] md:text-[26px] lg:text-[28px] xl:text-[30px]",
 };
+
 
 const TAGLINE_SIZE: Record<BrandLockupSize, string> = {
   sm: "text-[11.5px] sm:text-[12px]",
