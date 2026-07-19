@@ -76,20 +76,22 @@ function AuthPage() {
   const [mode, setMode] = useState<Mode>(initialMode === "signup" ? "signup" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
-  const [touched, setTouched] = useState<{ email?: boolean; password?: boolean; name?: boolean }>({});
+  const [touched, setTouched] = useState<{ email?: boolean; password?: boolean; name?: boolean; confirm?: boolean }>({});
 
   const destination = safeNext(next);
   const trimmedEmail = email.trim();
   const emailValid = EMAIL_RE.test(trimmedEmail);
   const passwordValid = mode === "signup" ? password.length >= 8 : password.length > 0;
   const nameValid = mode === "signup" ? name.trim().length >= 2 : true;
+  const confirmValid = mode === "signup" ? confirmPassword === password && confirmPassword.length > 0 : true;
   const strength = useMemo(() => passwordStrength(password), [password]);
-  const canSubmit = !loading && emailValid && (mode === "forgot" ? true : passwordValid) && nameValid;
+  const canSubmit = !loading && emailValid && (mode === "forgot" ? true : passwordValid) && nameValid && confirmValid;
 
   useEffect(() => {
     try {
