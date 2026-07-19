@@ -192,7 +192,7 @@ function AuthPage() {
   const nameError = touched.name && mode === "signup" && name.length > 0 && !nameValid;
 
   return (
-    <AuthShell>
+    <AuthShell sidePanel={mode === "signin" ? <SignInMarketingPanel /> : undefined}>
       <>
         <div className="text-center">
 
