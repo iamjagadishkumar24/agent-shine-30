@@ -28,7 +28,7 @@ const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, keywords: "home overview kpi" },
   { to: "/agents", label: "Agents", icon: Users, keywords: "team people users staff" },
   { to: "/feedback", label: "Feedback", icon: MessageSquareText, keywords: "reviews quality evaluations customer success" },
-  { to: "/approvals", label: "Approvals", icon: ShieldCheck, keywords: "review approve queue" },
+  
   { to: "/coaching", label: "Coaching", icon: GraduationCap, keywords: "sessions 1:1 mentoring" },
   { to: "/coaching/plans", label: "Coaching plans", icon: GraduationCap, keywords: "goals development" },
   { to: "/analytics", label: "Analytics", icon: BarChart3, keywords: "charts insights metrics" },
