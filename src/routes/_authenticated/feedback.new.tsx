@@ -117,7 +117,7 @@ function NewFeedback() {
       // can transition approved → queued → sent based on the real provider response.
       const payload = {
         ...parsed.data,
-        status: mode === "send" ? "approved" : "draft",
+        status: (mode === "send" ? "approved" : "draft") as "approved" | "draft",
         sent_at: null,
         created_by: userData.user.id,
       };
