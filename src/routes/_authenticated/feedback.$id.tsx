@@ -227,24 +227,13 @@ function FeedbackDetail() {
     mutationFn: () => sendEmailFn({ data: { feedbackId: id } }),
     onSuccess: (res: any) => {
       if (res?.ok) {
-        const inbox = res.actualRecipient ?? res.recipient;
-        const idSuffix = res.providerMessageId
-          ? ` · id ${String(res.providerMessageId).slice(0, 12)}…`
-          : "";
-        if (res.devOverride && res.actualRecipient && res.actualRecipient !== res.recipient) {
-          toast.warning(
-            `Dev override is ON — email redirected to ${inbox} instead of ${res.recipient}.${idSuffix}`,
-          );
-        } else {
-          toast.success(`Delivered to ${inbox}${idSuffix}`);
-        }
+        toast.success("Feedback email sent successfully.");
       } else if (res?.queued) {
-        toast.warning(
-          `Not delivered yet — queued for retry${res.error ? `: ${res.error}` : ""}`,
-        );
+        toast.warning("Email has been queued successfully.");
       } else {
-        toast.error(`Send failed: ${res?.error ?? "unknown"}`);
+        toast.error("Unable to send feedback email. Please try again.");
       }
+
       qc.invalidateQueries({ queryKey: ["feedback", id] });
       qc.invalidateQueries({ queryKey: ["feedback-list"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
