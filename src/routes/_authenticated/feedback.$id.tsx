@@ -227,24 +227,13 @@ function FeedbackDetail() {
     mutationFn: () => sendEmailFn({ data: { feedbackId: id } }),
     onSuccess: (res: any) => {
       if (res?.ok) {
-        const inbox = res.actualRecipient ?? res.recipient;
-        const idSuffix = res.providerMessageId
-          ? ` · id ${String(res.providerMessageId).slice(0, 12)}…`
-          : "";
-        if (res.devOverride && res.actualRecipient && res.actualRecipient !== res.recipient) {
-          toast.warning(
-            `Dev override is ON — email redirected to ${inbox} instead of ${res.recipient}.${idSuffix}`,
-          );
-        } else {
-          toast.success(`Delivered to ${inbox}${idSuffix}`);
-        }
+        toast.success("Feedback email sent successfully.");
       } else if (res?.queued) {
-        toast.warning(
-          `Not delivered yet — queued for retry${res.error ? `: ${res.error}` : ""}`,
-        );
+        toast.warning("Email has been queued successfully.");
       } else {
-        toast.error(`Send failed: ${res?.error ?? "unknown"}`);
+        toast.error("Unable to send feedback email. Please try again.");
       }
+
       qc.invalidateQueries({ queryKey: ["feedback", id] });
       qc.invalidateQueries({ queryKey: ["feedback-list"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
@@ -546,7 +535,9 @@ function FeedbackDetail() {
                       </span>
                     )}
                   </div>
-                  {a.comment && <div className="mt-0.5 text-muted-foreground whitespace-pre-wrap">{a.comment}</div>}
+                  {a.comment && !/provider|message\s?id|smtp|queue\s?id|accepted|delivered to/i.test(String(a.comment)) && (
+                    <div className="mt-0.5 text-muted-foreground whitespace-pre-wrap">{a.comment}</div>
+                  )}
                   <div className="mt-0.5 text-[10px] text-muted-foreground/70">
                     {(safeTimeAgo(a.created_at) ?? "—")}
                   </div>
@@ -830,7 +821,7 @@ function computeStages(
           ? "failed"
           : "pending",
     at: queue.sent_at,
-    detail: queue.provider_message_id ? `id ${queue.provider_message_id.slice(0, 20)}…` : null,
+    detail: null,
   };
   const deliveredStage: Stage = {
     key: "delivered",
@@ -940,18 +931,9 @@ function DeliveryPipeline({
         })}
       </ol>
 
-      {queue && (
+      {queue && queue.attempts != null && queue.max_attempts != null && queue.attempts > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border/60 pt-3 text-[11px] text-muted-foreground">
-          {queue.provider && <span className="capitalize">{queue.provider}</span>}
-          <span>→ <span className="font-mono text-foreground/80">{queue.to_email}</span></span>
-          {queue.to_email_intended && queue.to_email_intended !== queue.to_email && (
-            <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-amber-600 dark:text-amber-400">
-              override · intended {queue.to_email_intended}
-            </span>
-          )}
-          {queue.attempts != null && queue.max_attempts != null && (
-            <span>· {queue.attempts}/{queue.max_attempts} attempts</span>
-          )}
+          <span>{queue.attempts}/{queue.max_attempts} attempts</span>
         </div>
       )}
 
