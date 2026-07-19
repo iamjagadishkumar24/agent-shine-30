@@ -36,7 +36,8 @@ import {
 import { FEEDBACK_TEMPLATE_VARIABLES } from "@/lib/feedback-email.variables";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import { AlertCircle, CheckCircle2, RefreshCw, PauseCircle, PlayCircle, Send, Zap, Ban, Loader2, Clock, Eye, Code2, ShieldCheck, Stethoscope, ChevronDown } from "lucide-react";
+import { AlertCircle, CheckCircle2, RefreshCw, PauseCircle, PlayCircle, Send, Zap, Ban, Loader2, Clock, Eye, Code2, ShieldCheck, Stethoscope, ChevronDown, Inbox } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useEffect, useRef } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
