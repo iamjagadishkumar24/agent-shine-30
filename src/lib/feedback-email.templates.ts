@@ -494,6 +494,20 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
           <div style="margin-top:18px;font:600 15px/1.5 ${FONT};color:${BRAND.ink};">Kind Regards,</div>
           <div style="margin-top:2px;font:700 15px/1.5 ${FONT};color:${BRAND.ink};">${escape(BRAND.name)} Team</div>
           <div style="margin-top:4px;font:500 12.5px/1.5 ${FONT};color:${BRAND.mute};font-style:italic;">${escape(BRAND.tagline)}.</div>
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:12px;border-collapse:collapse;">
+            <tr>
+              <td style="padding:2px 0;font:600 13px/1.6 ${FONT};color:${BRAND.inkSoft};">
+                <span style="display:inline-block;width:18px;color:${BRAND.accent};">📧</span>
+                <a href="mailto:${escape(BRAND.supportEmail)}" style="color:${BRAND.accent};text-decoration:none;">${escape(BRAND.supportEmail)}</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:2px 0;font:600 13px/1.6 ${FONT};color:${BRAND.inkSoft};">
+                <span style="display:inline-block;width:18px;color:${BRAND.accent};">🌐</span>
+                <a href="${escape(BRAND.website)}" style="color:${BRAND.accent};text-decoration:none;">${escape(BRAND.websiteLabel)}</a>
+              </td>
+            </tr>
+          </table>
         </td></tr>
 
         <!-- Automated notice -->
