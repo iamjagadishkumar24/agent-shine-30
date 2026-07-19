@@ -182,17 +182,18 @@ function AuthPage() {
   const nameError = touched.name && mode === "signup" && name.length > 0 && !nameValid;
 
   return (
-    <div className="relative min-h-dvh bg-[#0B1220] text-slate-100 lg:grid lg:grid-cols-2">
-      {/* Ambient background */}
+    <div className="relative min-h-dvh bg-[#F4F7FC] text-slate-900 lg:grid lg:grid-cols-2">
+      {/* Ambient light background */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full bg-indigo-600/25 blur-[120px]" />
-        <div className="absolute top-1/3 -right-24 h-[520px] w-[520px] rounded-full bg-purple-600/20 blur-[120px]" />
-        <div className="absolute bottom-[-160px] left-1/4 h-[420px] w-[420px] rounded-full bg-cyan-500/15 blur-[120px]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#EEF3FF] via-[#F4F7FC] to-[#F5F0FF]" />
+        <div className="absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full bg-indigo-300/40 blur-[120px]" />
+        <div className="absolute top-1/3 -right-24 h-[520px] w-[520px] rounded-full bg-purple-300/35 blur-[120px]" />
+        <div className="absolute bottom-[-160px] left-1/4 h-[420px] w-[420px] rounded-full bg-cyan-200/40 blur-[120px]" />
         <div
-          className="absolute inset-0 opacity-[0.05]"
+          className="absolute inset-0 opacity-[0.04]"
           style={{
             backgroundImage:
-              "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
+              "linear-gradient(to right, #1E293B 1px, transparent 1px), linear-gradient(to bottom, #1E293B 1px, transparent 1px)",
             backgroundSize: "56px 56px",
           }}
         />
@@ -201,20 +202,20 @@ function AuthPage() {
       {/* ============ LEFT — Auth panel ============ */}
       <main className="relative flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10 lg:px-16 xl:px-24">
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
-          {/* Brand — top-center, understated */}
+          {/* Brand — professional product mark, top-center */}
           <div className="flex flex-col items-center pt-2 text-center animate-fade-in">
             <Link
               to="/"
               aria-label="Zenwork Performance Manager — go to home"
-              className="group inline-flex items-center gap-2.5 rounded-lg outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-indigo-400/60 focus-visible:ring-offset-4 focus-visible:ring-offset-[#0B1220]"
+              className="group inline-flex items-center gap-3 rounded-lg outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:ring-offset-4 focus-visible:ring-offset-[#F4F7FC]"
             >
               <img
                 src={zenworkLogo.url}
                 alt=""
                 aria-hidden="true"
-                className="h-7 w-7 object-contain sm:h-8 sm:w-8"
+                className="h-10 w-10 object-contain sm:h-11 sm:w-11 lg:h-12 lg:w-12"
               />
-              <span className="font-display font-semibold tracking-tight text-[18px] sm:text-[22px] lg:text-[24px] xl:text-[26px] bg-gradient-to-r from-indigo-300 to-fuchsia-300 bg-clip-text text-transparent">
+              <span className="font-display font-bold tracking-tight text-[22px] sm:text-[26px] lg:text-[28px] xl:text-[30px] bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
                 Zenwork Performance Manager
               </span>
             </Link>
@@ -223,7 +224,7 @@ function AuthPage() {
 
           {/* Auth card */}
           <div className="mt-10 flex flex-1 flex-col justify-center">
-          <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-6 sm:p-8 shadow-[0_30px_80px_-30px_rgba(2,6,23,0.9),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl transition-shadow hover:shadow-[0_40px_100px_-30px_rgba(79,70,229,0.35)]">
+          <div className="rounded-[20px] border border-slate-200 bg-white p-6 sm:p-8 shadow-[0_20px_50px_-20px_rgba(79,70,229,0.22),0_2px_6px_-2px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_30px_70px_-24px_rgba(124,58,237,0.30)]">
           <div className="text-center">
             {mode === "forgot" && (
               <button
