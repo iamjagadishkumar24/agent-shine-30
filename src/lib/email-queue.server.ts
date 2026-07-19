@@ -79,6 +79,10 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
   const provider = getProvider(settings.provider);
   const results: any[] = [];
 
+  const overrideEnabled = !!settings.dev_override_enabled;
+  const overrideRecipient = (settings.dev_override_recipient ?? "").trim();
+  const applyOverride = overrideEnabled && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(overrideRecipient);
+
   for (const job of claimed ?? []) {
     const attempt = (job.attempts ?? 0) + 1;
     const atts = Array.isArray(job.attachments) ? (job.attachments as Attachment[]) : [];
@@ -101,15 +105,20 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
       continue;
     }
 
+    const intendedTo = job.to_email_intended ?? job.to_email;
+    const actualTo = applyOverride ? overrideRecipient : intendedTo;
+    const subject = applyOverride ? `[DEV → ${intendedTo}] ${job.subject}` : job.subject;
+
     const res = await provider.send({
       from: { name: settings.sender_name, email: settings.sender_email ?? "" },
-      to: job.to_email,
+      to: actualTo,
       replyTo: settings.reply_to,
-      subject: job.subject,
+      subject,
       html: job.html,
       text: job.text_body,
       attachments: bytes.attachments,
     });
+
 
     const now2 = new Date().toISOString();
     if (res.ok) {
