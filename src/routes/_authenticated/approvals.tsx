@@ -45,6 +45,7 @@ const SEV_TONE: Record<string, string> = {
 type SevFilter = "all" | "critical" | "high" | "medium" | "low";
 
 function ApprovalsPage() {
+  useRealtimeInvalidate("feedback", [["approval-queue"], ["feedback-list"], ["dashboard"]]);
   const qc = useQueryClient();
   const transitionFn = useServerFn(transitionFeedback);
   const [openId, setOpenId] = useState<string | null>(null);
