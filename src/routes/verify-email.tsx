@@ -51,7 +51,7 @@ function VerifyEmailPage() {
   const handleResend = async () => {
     if (!email) {
       const msg = "Missing email address — return to sign up to request a new link.";
-      setFeedback({ kind: "error", message: msg });
+      setFeedback({ kind: "error", message: msg, nonce: Date.now() });
       toast.error(msg);
       return;
     }
