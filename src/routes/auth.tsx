@@ -428,7 +428,7 @@ function AuthPage() {
                     variant="outline"
                     onClick={handleGoogle}
                     disabled={loading}
-                    className="w-full h-12 rounded-xl border-white/10 bg-white/5 text-slate-100 hover:bg-slate-200 hover:text-white"
+                    className="w-full h-12 rounded-xl border-slate-200 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-900"
                   >
                     <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden>
                       <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.6 3.4 14.5 2.4 12 2.4 6.7 2.4 2.4 6.7 2.4 12S6.7 21.6 12 21.6c6.9 0 9.5-4.8 9.5-7.3 0-.5 0-.9-.1-1.3H12z"/>
