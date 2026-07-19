@@ -16,6 +16,7 @@ import { sendFeedbackEmail, previewFeedbackEmail } from "@/lib/feedback-email.fu
 import { createUploadUrl, deleteAttachment } from "@/lib/feedback-attachments.functions";
 import { transitionFeedback } from "@/lib/feedback-workflow.functions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 function safeTimeAgo(v: string | null | undefined): string | null {
   if (!v) return null;
