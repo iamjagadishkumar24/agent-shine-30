@@ -66,8 +66,8 @@ const BRAND = {
   supportUrl: "https://zenwork.com/support",
   contactUrl: "https://zenwork.com/contact",
   address: "Zenwork Inc. · Hyderabad, India",
-  gradient: "linear-gradient(135deg,#4f46e5 0%,#7c3aed 45%,#0ea5e9 100%)",
-  gradientFallback: "#4f46e5",
+  gradient: "linear-gradient(135deg,#312e81 0%,#4338ca 40%,#6d28d9 100%)",
+  gradientFallback: "#312e81",
   ink: "#0f172a",
   inkSoft: "#334155",
   mute: "#64748b",
@@ -257,9 +257,9 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
         : "—";
 
   const logoImg = d.logoUrl
-    ? `<img src="${escape(d.logoUrl)}" alt="${escape(d.senderName ?? BRAND.name)}" height="36" style="display:block;height:36px;width:auto;max-width:180px;border:0;outline:none;text-decoration:none;" />`
-    : `<div style="font:800 18px/1 ${FONT};color:${BRAND.accent};letter-spacing:.04em;">ZENWORK</div>`;
-  const logoHeader = `<a href="${escape(BRAND.website)}" target="_blank" style="display:inline-block;padding:10px 16px;background:#ffffff;border-radius:12px;text-decoration:none;box-shadow:0 4px 14px rgba(15,23,42,.12);">${logoImg}</a>`;
+    ? `<img src="${escape(d.logoUrl)}" alt="${escape(d.senderName ?? BRAND.name)}" height="44" style="display:block;height:44px;width:auto;max-width:200px;border:0;outline:none;text-decoration:none;background:transparent;" />`
+    : `<div style="font:800 20px/1 ${FONT};color:#ffffff;letter-spacing:.06em;">ZENWORK</div>`;
+  const logoHeader = `<a href="${escape(BRAND.website)}" target="_blank" style="display:inline-block;text-decoration:none;background:transparent;">${logoImg}</a>`;
 
   const reminderBanner = isReminder
     ? `<tr><td style="padding:0 24px 4px;">
@@ -341,20 +341,19 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
 
         <!-- Header -->
         <tr>
-          <td class="fallback px" style="padding:28px 28px 30px;background:${BRAND.gradient};background-color:${BRAND.gradientFallback};">
+          <td class="fallback px" style="padding:32px 32px 34px;background:${BRAND.gradient};background-color:${BRAND.gradientFallback};color:#ffffff;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td valign="middle">${logoHeader}</td>
-                <td valign="middle" align="right" style="font:600 11px/1 ${FONT};letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.85);">
-                  ${escape(reviewMonth || reviewDate)}
+                <td valign="middle" align="right" style="font:600 11px/1 ${FONT};letter-spacing:.16em;text-transform:uppercase;color:#ffffff;">
+                  <span style="color:#ffffff;">${escape(reviewMonth || reviewDate)}</span>
                 </td>
               </tr>
             </table>
-            <div style="margin-top:22px;font:700 12px/1 ${FONT};letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.85);">${escape(BRAND.name)}</div>
-            <div class="hero-title" style="margin-top:10px;font:700 26px/1.25 ${FONT};color:#ffffff;letter-spacing:-.01em;">Performance Feedback Review</div>
-            <div style="margin-top:8px;font:400 14px/1.55 ${FONT};color:rgba(255,255,255,.9);max-width:520px;">${escape(BRAND.tagline)}</div>
-          </td>
-        </tr>
+            <div style="margin-top:24px;font:700 12px/1 ${FONT};letter-spacing:.2em;text-transform:uppercase;color:#ffffff;opacity:.92;">${escape(BRAND.name)}</div>
+            <div class="hero-title" style="margin-top:10px;font:700 28px/1.25 ${FONT};color:#ffffff;letter-spacing:-.01em;">Performance Feedback Review</div>
+            <div style="margin-top:10px;font:400 14px/1.6 ${FONT};color:#ffffff;opacity:.92;max-width:520px;">${escape(BRAND.tagline)}</div>
+          </td></tr>
 
         ${reminderBanner}
 
