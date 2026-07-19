@@ -341,20 +341,19 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
 
         <!-- Header -->
         <tr>
-          <td class="fallback px" style="padding:28px 28px 30px;background:${BRAND.gradient};background-color:${BRAND.gradientFallback};">
+          <td class="fallback px" style="padding:32px 32px 34px;background:${BRAND.gradient};background-color:${BRAND.gradientFallback};color:#ffffff;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td valign="middle">${logoHeader}</td>
-                <td valign="middle" align="right" style="font:600 11px/1 ${FONT};letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.85);">
-                  ${escape(reviewMonth || reviewDate)}
+                <td valign="middle" align="right" style="font:600 11px/1 ${FONT};letter-spacing:.16em;text-transform:uppercase;color:#ffffff;">
+                  <span style="color:#ffffff;">${escape(reviewMonth || reviewDate)}</span>
                 </td>
               </tr>
             </table>
-            <div style="margin-top:22px;font:700 12px/1 ${FONT};letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.85);">${escape(BRAND.name)}</div>
-            <div class="hero-title" style="margin-top:10px;font:700 26px/1.25 ${FONT};color:#ffffff;letter-spacing:-.01em;">Performance Feedback Review</div>
-            <div style="margin-top:8px;font:400 14px/1.55 ${FONT};color:rgba(255,255,255,.9);max-width:520px;">${escape(BRAND.tagline)}</div>
-          </td>
-        </tr>
+            <div style="margin-top:24px;font:700 12px/1 ${FONT};letter-spacing:.2em;text-transform:uppercase;color:#ffffff;opacity:.92;">${escape(BRAND.name)}</div>
+            <div class="hero-title" style="margin-top:10px;font:700 28px/1.25 ${FONT};color:#ffffff;letter-spacing:-.01em;">Performance Feedback Review</div>
+            <div style="margin-top:10px;font:400 14px/1.6 ${FONT};color:#ffffff;opacity:.92;max-width:520px;">${escape(BRAND.tagline)}</div>
+          </td></tr>
 
         ${reminderBanner}
 
