@@ -130,11 +130,15 @@ function AuthedLayout() {
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-30 flex flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200",
+          "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-24 before:bg-[radial-gradient(ellipse_at_top,color-mix(in_oklab,var(--primary)_10%,transparent),transparent_70%)]",
           collapsed ? "w-[68px]" : "w-64",
         )}
       >
-        <div className={cn("flex h-16 items-center border-b border-sidebar-border", collapsed ? "justify-center px-2" : "gap-3 px-5")}>
-          <img src={zenworkMark.url} alt="Zenwork" className="h-8 w-8 shrink-0 object-contain" />
+        <div className={cn("relative flex h-16 items-center border-b border-sidebar-border/80", collapsed ? "justify-center px-2" : "gap-3 px-5")}>
+          <div className="relative shrink-0">
+            <img src={zenworkMark.url} alt="Zenwork" className="h-8 w-8 object-contain" />
+            <span className="absolute -inset-1 rounded-full bg-primary/15 blur-md" aria-hidden="true" />
+          </div>
           {!collapsed && (
             <div className="flex min-w-0 flex-col leading-tight">
               <span className="truncate text-[15px] font-semibold tracking-tight text-sidebar-foreground">Zenwork</span>
@@ -143,11 +147,10 @@ function AuthedLayout() {
           )}
         </div>
 
-
-        <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
+        <nav className="relative flex-1 space-y-0.5 overflow-y-auto p-3">
           {!collapsed && (
-            <div className="flex items-center gap-2 px-3 pb-2 pt-3 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              <span className="h-1 w-1 rounded-full bg-primary/60" />
+            <div className="flex items-center gap-2 px-3 pb-1.5 pt-2 eyebrow text-muted-foreground/80">
+              <span className="h-1 w-1 rounded-full bg-primary/70" />
               Workspace
             </div>
           )}
@@ -159,22 +162,22 @@ function AuthedLayout() {
                 to={item.to}
                 title={collapsed ? item.label : undefined}
                 className={cn(
-                  "group relative flex items-center gap-3 rounded-lg text-[14px] font-medium transition-all duration-150",
-                  collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2.5",
+                  "group relative flex items-center gap-3 rounded-lg text-[13.5px] font-medium transition-all duration-150",
+                  collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2",
                   active
-                    ? "bg-primary/12 text-sidebar-foreground shadow-[0_1px_0_0_color-mix(in_oklab,var(--primary)_20%,transparent)]"
-                    : "text-sidebar-foreground/75 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground hover:translate-x-[1px]",
+                    ? "bg-[linear-gradient(90deg,color-mix(in_oklab,var(--primary)_14%,transparent),transparent)] text-sidebar-foreground"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
                 )}
               >
                 {active && (
-                  <span className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-primary" />
+                  <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_12px_color-mix(in_oklab,var(--primary)_60%,transparent)]" />
                 )}
                 <item.icon
                   className={cn(
-                    "h-[18px] w-[18px] shrink-0 transition-colors",
-                    active ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground",
+                    "h-[17px] w-[17px] shrink-0 transition-colors",
+                    active ? "text-primary" : "text-sidebar-foreground/55 group-hover:text-sidebar-foreground",
                   )}
-                  strokeWidth={active ? 2.25 : 2}
+                  strokeWidth={active ? 2.25 : 1.9}
                 />
                 {!collapsed && <span className="truncate">{item.label}</span>}
               </Link>
@@ -182,7 +185,13 @@ function AuthedLayout() {
           })}
         </nav>
 
-        <div className="p-3 space-y-1 border-t border-sidebar-border/60">
+        <div className="space-y-0.5 border-t border-sidebar-border/60 p-3">
+          {!collapsed && (
+            <div className="flex items-center gap-2 px-3 pb-1.5 eyebrow text-muted-foreground/80">
+              <span className="h-1 w-1 rounded-full bg-muted-foreground/60" />
+              Account
+            </div>
+          )}
           {BOTTOM_NAV.map((item) => {
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
@@ -191,43 +200,46 @@ function AuthedLayout() {
                 to={item.to}
                 title={collapsed ? item.label : undefined}
                 className={cn(
-                  "group flex items-center gap-3 rounded-lg text-[14px] font-medium transition-all duration-150",
-                  collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2.5",
+                  "group flex items-center gap-3 rounded-lg text-[13.5px] font-medium transition-all duration-150",
+                  collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2",
                   active
-                    ? "bg-primary/12 text-sidebar-foreground"
-                    : "text-sidebar-foreground/75 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                    ? "bg-[linear-gradient(90deg,color-mix(in_oklab,var(--primary)_14%,transparent),transparent)] text-sidebar-foreground"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
                 )}
               >
                 <item.icon
                   className={cn(
-                    "h-[18px] w-[18px] shrink-0 transition-colors",
-                    active ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground",
+                    "h-[17px] w-[17px] shrink-0 transition-colors",
+                    active ? "text-primary" : "text-sidebar-foreground/55 group-hover:text-sidebar-foreground",
                   )}
-                  strokeWidth={active ? 2.25 : 2}
+                  strokeWidth={active ? 2.25 : 1.9}
                 />
                 {!collapsed && <span>{item.label}</span>}
               </Link>
             );
           })}
-        </div>
 
-        <button
-          onClick={() => update({ sidebarCollapsed: !collapsed })}
-          className="mx-3 mb-3 flex items-center justify-center gap-1.5 rounded-md border border-sidebar-border bg-sidebar-accent/30 px-2 py-1.5 text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground transition-colors"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          <ChevronLeft className={cn("h-3.5 w-3.5 transition-transform duration-200", collapsed && "rotate-180")} />
-          {!collapsed && <span>Collapse</span>}
-        </button>
+          <button
+            onClick={() => update({ sidebarCollapsed: !collapsed })}
+            className={cn(
+              "mt-2 flex w-full items-center gap-2 rounded-lg border border-sidebar-border/70 bg-sidebar-accent/20 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+              collapsed ? "justify-center px-2 py-2" : "justify-center px-2 py-1.5",
+            )}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            <ChevronLeft className={cn("h-3.5 w-3.5 transition-transform duration-200", collapsed && "rotate-180")} />
+            {!collapsed && <span>Collapse</span>}
+          </button>
+        </div>
       </aside>
 
       <div className={cn("flex-1 transition-[margin] duration-200", collapsed ? "ml-[68px]" : "ml-64")}>
         {/* Top header */}
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border/60 bg-background/75 px-4 backdrop-blur-xl sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <img src={zenworkMark.url} alt="" aria-hidden="true" className="hidden h-8 w-8 shrink-0 object-contain sm:block" />
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border/60 bg-background/70 px-4 backdrop-blur-xl sm:px-6">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="hidden h-1.5 w-1.5 shrink-0 rounded-full bg-primary shadow-[0_0_10px_color-mix(in_oklab,var(--primary)_70%,transparent)] sm:block" aria-hidden="true" />
             <div className="flex min-w-0 flex-col leading-tight">
-              <span className="truncate text-[15px] font-semibold text-foreground sm:text-base">
+              <span className="truncate text-[15px] font-semibold tracking-tight text-foreground">
                 {current ? current.label : "Dashboard"}
               </span>
               <span className="hidden truncate text-[10.5px] font-medium uppercase tracking-[0.14em] text-muted-foreground md:block">
@@ -237,20 +249,20 @@ function AuthedLayout() {
           </div>
 
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1.5">
             <button
               onClick={() => setCmdOpen(true)}
-              className="hidden md:flex items-center gap-2 rounded-lg border border-border/70 bg-secondary/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/70 hover:border-border transition-all lg:min-w-[220px]"
+              className="hidden h-9 items-center gap-2 rounded-lg border border-border/70 bg-secondary/40 px-3 text-xs text-muted-foreground transition-all hover:border-border hover:bg-secondary/70 md:flex lg:min-w-[240px]"
             >
               <Search className="h-3.5 w-3.5" />
-              <span className="flex-1 text-left">Search…</span>
+              <span className="flex-1 text-left">Search agents, feedback, coaching…</span>
               <kbd className="rounded border border-border/70 bg-background/60 px-1.5 py-0.5 text-[10px] font-mono">⌘K</kbd>
             </button>
 
             <button
               onClick={() => setCmdOpen(true)}
               aria-label="Search"
-              className="md:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-secondary/40 text-muted-foreground hover:bg-secondary/70"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-secondary/40 text-muted-foreground hover:bg-secondary/70 md:hidden"
             >
               <Search className="h-4 w-4" />
             </button>
@@ -258,7 +270,7 @@ function AuthedLayout() {
             {isStaff && (
               <Button
                 size="sm"
-                className="h-9 gap-1.5 rounded-lg bg-[image:var(--gradient-brand)] text-primary-foreground shadow-sm hover:opacity-95 hover:shadow-md transition-all border-0"
+                className="h-9 gap-1.5 rounded-lg border-0 bg-[image:var(--gradient-brand)] text-primary-foreground shadow-sm transition-all hover:opacity-95 hover:shadow-md"
                 onClick={() => navigate({ to: "/feedback/new" })}
               >
                 <Plus className="h-3.5 w-3.5" />
@@ -266,12 +278,11 @@ function AuthedLayout() {
               </Button>
             )}
 
-
-
+            <span className="mx-1 hidden h-6 w-px bg-border/70 sm:block" aria-hidden="true" />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Toggle theme">
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground" aria-label="Toggle theme">
                   <ModeIcon className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -293,14 +304,14 @@ function AuthedLayout() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 rounded-md p-1 pr-2 hover:bg-secondary/50 transition-colors">
+                <button className="flex h-9 items-center gap-2 rounded-lg border border-border/60 bg-secondary/30 pl-1 pr-2.5 transition-colors hover:bg-secondary/60">
                   <Avatar className="h-7 w-7">
                     {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={displayName} />}
-                    <AvatarFallback className="bg-primary/20 text-primary text-[10px] font-semibold">
+                    <AvatarFallback className="bg-primary/20 text-[10px] font-semibold text-primary">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden md:inline text-xs font-medium">{displayName}</span>
+                  <span className="hidden text-xs font-medium md:inline">{displayName}</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -333,3 +344,4 @@ function AuthedLayout() {
     </div>
   );
 }
+
