@@ -449,8 +449,10 @@ function AuthPage() {
               </button>
             </p>
           )}
+          </div>
         </div>
       </main>
+
 
       {/* ============ RIGHT — Hero panel ============ */}
       <aside className="relative hidden lg:block p-6 xl:p-10">
