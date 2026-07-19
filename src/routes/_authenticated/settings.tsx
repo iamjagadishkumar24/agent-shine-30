@@ -163,6 +163,7 @@ function EmailConfig() {
   }
   const set = (patch: any) => setForm({ ...s, ...patch });
   const testEmailValid = EMAIL_RE.test(testTo.trim());
+  const brandingEmailValid = EMAIL_RE.test(brandingTo.trim());
 
 
   return (
