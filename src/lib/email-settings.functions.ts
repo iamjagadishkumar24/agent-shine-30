@@ -1,10 +1,23 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHost } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import {
   renderCustomTemplate,
   sampleVariableMap,
 } from "./feedback-email.variables";
+import { renderFeedbackEmail } from "./feedback-email.templates";
+import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
+
+function getAppBaseUrl(): string {
+  const envUrl = process.env.APP_BASE_URL;
+  if (envUrl) return envUrl.replace(/\/$/, "");
+  try {
+    const host = getRequestHost();
+    if (host) return `https://${host}`;
+  } catch {}
+  return "https://app.example.com";
+}
 
 const SettingsInput = z.object({
   provider: z.string().trim().min(1).max(50),
