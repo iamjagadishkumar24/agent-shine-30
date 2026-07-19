@@ -215,9 +215,9 @@ function AuthPage() {
                 {mode === "forgot" && "Reset your password"}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                {mode === "signin" && "Sign in to Zenwork Performance Manager"}
-                {mode === "signup" && "Get started in less than a minute"}
-                {mode === "forgot" && "We'll email you a secure link to set a new password"}
+                {mode === "signin" && "Sign in to access your quality management workspace."}
+                {mode === "signup" && "Start improving customer support quality with AI-powered feedback and coaching."}
+                {mode === "forgot" && "Enter your email and we'll send you a secure reset link."}
               </p>
             </div>
 
