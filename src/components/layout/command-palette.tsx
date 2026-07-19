@@ -22,7 +22,6 @@ import {
   Bell,
   Inbox,
   ShieldCheck,
-  Activity,
 } from "lucide-react";
 
 const NAV = [
@@ -36,7 +35,6 @@ const NAV = [
   { to: "/reports", label: "Reports", icon: FileBarChart, keywords: "pdf csv export" },
   { to: "/notifications", label: "Notifications", icon: Bell, keywords: "inbox alerts" },
   { to: "/portal", label: "Agent portal", icon: Inbox, keywords: "self service my feedback" },
-  { to: "/health", label: "System health", icon: Activity, keywords: "status monitoring diagnostics" },
   { to: "/settings", label: "Settings", icon: Settings, keywords: "smtp email config admin" },
   { to: "/account", label: "Account", icon: UserCog, keywords: "profile password theme" },
 ] as const;
