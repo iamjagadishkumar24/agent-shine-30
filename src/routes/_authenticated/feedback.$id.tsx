@@ -259,9 +259,14 @@ function FeedbackDetail() {
               </Button>
             )}
             {data.status === "approved" && (
-              <Button size="sm" onClick={send} disabled={sendMutation.isPending}>
-                <Send className="mr-1.5 h-3.5 w-3.5" /> Send
-              </Button>
+              <>
+                <Button size="sm" variant="outline" onClick={() => setPreviewOpen(true)}>
+                  <Eye className="mr-1.5 h-3.5 w-3.5" /> Preview email
+                </Button>
+                <Button size="sm" onClick={send} disabled={sendMutation.isPending}>
+                  <Send className="mr-1.5 h-3.5 w-3.5" /> Send
+                </Button>
+              </>
             )}
             {data.status === "acknowledged" && (
               <Button size="sm" variant="outline" onClick={complete}>
