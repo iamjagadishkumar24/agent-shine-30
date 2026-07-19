@@ -60,7 +60,7 @@ const ALLOWED_STATUS = new Set([
 const ALLOWED_SEV = new Set(["low", "medium", "high", "critical"]);
 const ALLOWED_RANGE = new Set(["7d", "30d", "90d", "all"]);
 
-export const Route = createFileRoute("/_authenticated/feedback")({
+export const Route = createFileRoute("/_authenticated/feedback/")({
   validateSearch: (raw: Record<string, unknown>): FeedbackSearch => {
     const s = raw as any;
     return {
