@@ -83,6 +83,7 @@ function AuthPage() {
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorField, setErrorField] = useState<"name" | "email" | "password" | "confirm" | null>(null);
   const [resetSent, setResetSent] = useState(false);
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean; name?: boolean; confirm?: boolean }>({});
 
