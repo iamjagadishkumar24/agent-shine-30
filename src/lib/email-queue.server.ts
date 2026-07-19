@@ -235,7 +235,7 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
         if (done && job.kind !== "reminder") patch.status = "failed";
         await supabaseAdmin
           .from("feedback")
-          .update(patch)
+          .update(patch as any)
           .eq("id", job.feedback_id);
         await supabaseAdmin.from("feedback_email_events").insert({
           feedback_id: job.feedback_id,
