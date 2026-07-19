@@ -423,6 +423,7 @@ function AuthPage() {
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="confirm-password"
+                        ref={confirmRef}
                         type={showPassword ? "text" : "password"}
                         autoComplete="new-password"
                         value={confirmPassword}
@@ -431,6 +432,7 @@ function AuthPage() {
                         required
                         placeholder="Re-enter your password"
                         aria-invalid={confirmError || undefined}
+                        aria-describedby={confirmError ? "confirm-error" : undefined}
                         className={cn(
                           "h-11 rounded-lg pl-10",
                           confirmError && "border-destructive focus-visible:ring-destructive/40",
@@ -438,8 +440,8 @@ function AuthPage() {
                       />
                     </div>
                     {confirmError && (
-                      <p className="flex items-center gap-1 text-xs text-destructive">
-                        <AlertCircle className="h-3 w-3" /> Passwords do not match
+                      <p id="confirm-error" className="flex items-center gap-1 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" aria-hidden /> Passwords do not match
                       </p>
                     )}
                   </div>
