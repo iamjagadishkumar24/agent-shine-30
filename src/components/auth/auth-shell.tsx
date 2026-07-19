@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  AlertCircle,
   BarChart3,
   Lock as LockIcon,
   Mails,
@@ -26,6 +27,7 @@ import {
   Sun,
   Zap,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { useTheme, type ThemeMode } from "@/lib/theme";
 
