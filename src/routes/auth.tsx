@@ -118,12 +118,13 @@ function AuthPage() {
 
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTouched({ email: true, password: true, name: true });
+    setTouched({ email: true, password: true, name: true, confirm: true });
     if (!canSubmit) {
       if (!emailValid) toast.error("Enter a valid email address");
       else if (mode !== "forgot" && !passwordValid)
         toast.error(mode === "signup" ? "Password must be at least 8 characters" : "Enter your password");
       else if (!nameValid) toast.error("Enter your full name");
+      else if (!confirmValid) toast.error("Passwords do not match");
       return;
     }
     setLoading(true);
