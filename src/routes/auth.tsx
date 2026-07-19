@@ -202,27 +202,13 @@ function AuthPage() {
       {/* ============ LEFT — Auth panel ============ */}
       <main className="relative flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10 lg:px-16 xl:px-24">
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
-          {/* Brand — unified logo + wordmark lockup, top-center */}
-          <div className="flex flex-col items-center pt-6 sm:pt-10 lg:pt-12 animate-fade-in">
-            <Link
-              to="/"
-              aria-label="Zenwork Performance Manager — go to home"
-              className="group inline-flex flex-col items-center gap-3 rounded-xl px-2 py-1 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:ring-offset-4 focus-visible:ring-offset-[#F4F7FC] sm:flex-row sm:gap-4"
-            >
-              <img
-                src={zenworkLogo.url}
-                alt=""
-                aria-hidden="true"
-                className="h-10 w-10 shrink-0 object-contain sm:h-12 sm:w-12 lg:h-14 lg:w-14"
-              />
-              <span className="font-display font-bold leading-none tracking-tight text-[22px] sm:text-[26px] md:text-[28px] lg:text-[30px] bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
-                Zenwork Performance Manager
-              </span>
-            </Link>
-            <p className="mt-3 max-w-xs text-center text-[12.5px] leading-relaxed text-slate-500 sm:max-w-sm sm:text-[13px]">
-              Driving Customer Success Through Quality, Performance &amp; Continuous Improvement
-            </p>
-          </div>
+          {/* Brand — unified logo + wordmark + tagline lockup */}
+          <BrandLockup
+            size="lg"
+            className="pt-6 sm:pt-10 lg:pt-12 animate-fade-in"
+            focusOffsetClass="focus-visible:ring-offset-[#F4F7FC]"
+          />
+
 
           {/* Auth card */}
           <div className="mt-8 sm:mt-10 flex flex-1 flex-col justify-center">
