@@ -504,8 +504,9 @@ function AuthPage() {
 
                 <Button
                   type="submit"
-                  disabled={!canSubmit}
-                  className="h-11 w-full rounded-lg text-sm font-semibold"
+                  aria-disabled={!canSubmit}
+                  data-inert={!canSubmit ? "true" : undefined}
+                  className="h-11 w-full rounded-lg text-sm font-semibold data-[inert=true]:opacity-50 data-[inert=true]:cursor-not-allowed"
                 >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   <span className="inline-flex items-center gap-2">
