@@ -142,6 +142,78 @@ export function AuthShell({
   );
 }
 
+function AuthCard({
+  children,
+  loading,
+  loadingLabel,
+  error,
+  onDismissError,
+}: {
+  children: ReactNode;
+  loading?: boolean;
+  loadingLabel?: string;
+  error?: string | null;
+  onDismissError?: () => void;
+}) {
+  return (
+    <div
+      className="auth-card relative overflow-hidden rounded-[20px] p-7 pt-8 sm:p-9 sm:pt-10 lg:p-8 lg:pt-8"
+      aria-busy={loading || undefined}
+    >
+      {loading && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-0.5 overflow-hidden"
+        >
+          <div className="h-full w-1/3 animate-[authshimmer_1.2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-primary to-transparent" />
+        </div>
+      )}
+
+      {error && (
+        <div
+          role="alert"
+          aria-live="polite"
+          className="mb-4 flex items-start gap-2.5 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-[13px] text-destructive motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1 motion-safe:duration-300"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          <span className="min-w-0 flex-1 leading-snug">{error}</span>
+          {onDismissError && (
+            <button
+              type="button"
+              onClick={onDismissError}
+              className="ml-1 shrink-0 rounded p-0.5 text-destructive/70 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40"
+              aria-label="Dismiss error"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className={cn("relative transition-opacity duration-200", loading && "opacity-70")}>
+        {children}
+      </div>
+
+      {loading && (
+        <div
+          aria-live="polite"
+          className="pointer-events-none absolute inset-0 flex items-end justify-center pb-3"
+        >
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/85 px-3 py-1.5 text-xs font-medium text-foreground shadow-sm backdrop-blur">
+            <span
+              className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"
+              aria-hidden
+            />
+            {loadingLabel}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
 function ThemeToggle() {
   const { prefs, update } = useTheme();
   const Icon = prefs.mode === "light" ? Sun : prefs.mode === "dark" ? Moon : Monitor;
