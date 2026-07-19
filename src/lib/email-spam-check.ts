@@ -115,6 +115,7 @@ export function analyzeEmailForSpamRisk(input: {
   html: string;
   subject?: string;
   text?: string;
+  provider?: ProviderContext;
 }): SpamCheckResult {
   const issues: SpamIssue[] = [];
   const html = input.html ?? "";
