@@ -52,6 +52,12 @@ const BRAND = {
   tagline: "Driving Customer Success Through Quality, Performance & Continuous Improvement",
   supportEmail: "support@zenwork.com",
   website: "https://zenwork.com",
+  websiteLabel: "zenwork.com",
+  privacyUrl: "https://zenwork.com/privacy",
+  termsUrl: "https://zenwork.com/terms",
+  supportUrl: "https://zenwork.com/support",
+  contactUrl: "https://zenwork.com/contact",
+  address: "Zenwork Inc. · Hyderabad, India",
   gradient: "linear-gradient(135deg,#4f46e5 0%,#7c3aed 45%,#0ea5e9 100%)",
   gradientFallback: "#4f46e5",
   ink: "#0f172a",
@@ -207,9 +213,13 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
   const sevTone = severityTone(d.severity);
   const sTone = scoreTone(d.score ?? null);
 
-  const logoBlock = d.logoUrl
-    ? `<img src="${escape(d.logoUrl)}" alt="${escape(d.senderName ?? BRAND.name)}" height="40" style="display:block;height:40px;width:auto;border:0;outline:none;text-decoration:none;" />`
-    : `<div style="display:inline-block;padding:8px 14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:10px;font:700 14px/1 ${FONT};color:#ffffff;letter-spacing:.02em;">Zenwork</div>`;
+  const logoImg = d.logoUrl
+    ? `<img src="${escape(d.logoUrl)}" alt="${escape(d.senderName ?? BRAND.name)}" height="36" style="display:block;height:36px;width:auto;max-width:180px;border:0;outline:none;text-decoration:none;" />`
+    : `<div style="font:800 18px/1 ${FONT};color:${BRAND.accent};letter-spacing:.04em;">ZENWORK</div>`;
+  const logoHeader = `<a href="${escape(BRAND.website)}" target="_blank" style="display:inline-block;padding:10px 16px;background:#ffffff;border-radius:12px;text-decoration:none;box-shadow:0 4px 14px rgba(15,23,42,.12);">${logoImg}</a>`;
+  const logoSignature = d.logoUrl
+    ? `<a href="${escape(BRAND.website)}" target="_blank" style="display:inline-block;text-decoration:none;"><img src="${escape(d.logoUrl)}" alt="${escape(BRAND.name)}" height="40" style="display:block;height:40px;width:auto;max-width:200px;border:0;outline:none;text-decoration:none;" /></a>`
+    : `<div style="width:48px;height:48px;border-radius:12px;background:${BRAND.gradient};background-color:${BRAND.gradientFallback};text-align:center;line-height:48px;font:700 18px/48px ${FONT};color:#ffffff;">Z</div>`;
 
   const reminderBanner = isReminder
     ? `<tr><td style="padding:0 24px;">
@@ -286,7 +296,7 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
           <td class="fallback px" style="padding:28px 28px 30px;background:${BRAND.gradient};background-color:${BRAND.gradientFallback};">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
               <tr>
-                <td valign="middle">${logoBlock}</td>
+                <td valign="middle">${logoHeader}</td>
                 <td valign="middle" align="right" style="font:600 11px/1 ${FONT};letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.85);">
                   ${escape(feedbackTypeLabel)} · ${escape(reviewDate)}
                 </td>
@@ -400,23 +410,26 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
         </td></tr>
 
         <!-- Signature -->
-        <tr><td class="px" style="padding:16px 28px 28px;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${BRAND.line};padding-top:20px;">
+        <tr><td class="px" style="padding:8px 28px 28px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${BRAND.line};padding-top:22px;">
             <tr>
-              <td valign="top" width="56" style="padding-right:14px;">
-                <div style="width:48px;height:48px;border-radius:12px;background:${BRAND.gradient};background-color:${BRAND.gradientFallback};text-align:center;line-height:48px;font:700 18px/48px ${FONT};color:#ffffff;">Z</div>
+              <td align="left" style="padding-bottom:14px;">
+                ${logoSignature}
               </td>
-              <td valign="top">
-                <div style="font:700 15px/1.3 ${FONT};color:${BRAND.ink};">Customer Success Team</div>
-                <div style="margin-top:2px;font:600 13px/1.4 ${FONT};color:${BRAND.accent};">${escape(BRAND.name)}</div>
-                <div style="margin-top:4px;font:12px/1.55 ${FONT};color:${BRAND.mute};font-style:italic;">${escape(BRAND.tagline)}</div>
-                <div style="margin-top:10px;font:13px/1.6 ${FONT};color:${BRAND.inkSoft};">
+            </tr>
+            <tr>
+              <td>
+                <div style="font:700 15px/1.3 ${FONT};color:${BRAND.ink};">Warm regards,</div>
+                <div style="margin-top:6px;font:700 15px/1.3 ${FONT};color:${BRAND.ink};">${escape(BRAND.name)} Team</div>
+                <div style="margin-top:4px;font:500 12px/1.5 ${FONT};color:${BRAND.mute};">Customer Success · Quality Management · Performance Analytics · Coaching Excellence</div>
+                <div style="margin-top:12px;font:13px/1.6 ${FONT};color:${BRAND.inkSoft};">
                   📧 <a href="mailto:${escape(BRAND.supportEmail)}" style="color:${BRAND.accent};text-decoration:none;">${escape(BRAND.supportEmail)}</a>
-                  &nbsp;·&nbsp; 🌐 <a href="${escape(BRAND.website)}" style="color:${BRAND.accent};text-decoration:none;">${escape(BRAND.website.replace(/^https?:\/\//, ""))}</a>
+                  &nbsp;·&nbsp; 🌐 <a href="${escape(BRAND.website)}" target="_blank" style="color:${BRAND.accent};text-decoration:none;">${escape(BRAND.websiteLabel)}</a>
                 </div>
                 ${signatureBlock}
-                <div style="margin-top:14px;padding:10px 12px;background:#f8fafc;border:1px dashed ${BRAND.line};border-radius:8px;font:500 12px/1.5 ${FONT};color:${BRAND.mute};">
-                  This email was generated by the <strong style="color:${BRAND.ink};">${escape(BRAND.name)}</strong> Team.
+                <div style="margin-top:16px;padding:12px 14px;background:#f8fafc;border:1px dashed ${BRAND.line};border-radius:10px;font:500 12px/1.6 ${FONT};color:${BRAND.mute};">
+                  <div style="color:${BRAND.ink};font-weight:600;margin-bottom:2px;">This email was automatically generated by the ${escape(BRAND.name)} Team.</div>
+                  Please do not reply directly to this email. If you require assistance, contact our Customer Success team through the <a href="${escape(BRAND.supportUrl)}" style="color:${BRAND.accent};text-decoration:none;">Support Portal</a> or reply using the official support channels.
                 </div>
               </td>
             </tr>
@@ -424,19 +437,47 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
         </td></tr>
 
         <!-- Footer -->
-        <tr><td style="padding:18px 28px;background:#0f172a;color:#94a3b8;font:12px/1.55 ${FONT};">
+        <tr><td style="padding:24px 28px;background:#0f172a;color:#94a3b8;font:12px/1.6 ${FONT};">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
-              <td>
-                <div style="font:700 12px/1 ${FONT};color:#e2e8f0;letter-spacing:.14em;text-transform:uppercase;">${escape(BRAND.name)}</div>
-                <div style="margin-top:6px;">© ${new Date().getFullYear()} Zenwork. All rights reserved.</div>
+              <td align="center" style="padding-bottom:14px;">
+                <a href="${escape(BRAND.website)}" target="_blank" style="display:inline-block;padding:8px 14px;background:#ffffff;border-radius:10px;text-decoration:none;">
+                  ${d.logoUrl
+                    ? `<img src="${escape(d.logoUrl)}" alt="${escape(BRAND.name)}" height="28" style="display:block;height:28px;width:auto;max-width:160px;border:0;outline:none;" />`
+                    : `<span style="font:800 15px/1 ${FONT};color:${BRAND.accent};letter-spacing:.04em;">ZENWORK</span>`}
+                </a>
               </td>
-              <td align="right" style="color:#64748b;">Feedback ID · ${escape(d.feedbackId.slice(0, 8).toUpperCase())}</td>
+            </tr>
+            <tr>
+              <td align="center" style="font:700 13px/1.3 ${FONT};color:#e2e8f0;">${escape(BRAND.name)}</td>
+            </tr>
+            <tr>
+              <td align="center" style="padding-top:4px;font:500 11px/1.5 ${FONT};color:#94a3b8;font-style:italic;">${escape(BRAND.tagline)}</td>
+            </tr>
+            <tr>
+              <td align="center" style="padding-top:14px;">
+                <a href="${escape(BRAND.privacyUrl)}" style="color:#cbd5e1;text-decoration:none;font:600 12px/1 ${FONT};margin:0 8px;">Privacy Policy</a>
+                <span style="color:#334155;">·</span>
+                <a href="${escape(BRAND.termsUrl)}" style="color:#cbd5e1;text-decoration:none;font:600 12px/1 ${FONT};margin:0 8px;">Terms of Service</a>
+                <span style="color:#334155;">·</span>
+                <a href="${escape(BRAND.supportUrl)}" style="color:#cbd5e1;text-decoration:none;font:600 12px/1 ${FONT};margin:0 8px;">Support Center</a>
+                <span style="color:#334155;">·</span>
+                <a href="${escape(BRAND.contactUrl)}" style="color:#cbd5e1;text-decoration:none;font:600 12px/1 ${FONT};margin:0 8px;">Contact Us</a>
+                <span style="color:#334155;">·</span>
+                <a href="${escape(BRAND.website)}" target="_blank" style="color:#cbd5e1;text-decoration:none;font:600 12px/1 ${FONT};margin:0 8px;">${escape(BRAND.websiteLabel)}</a>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding-top:14px;border-top:1px solid #1e293b;margin-top:14px;">
+                <div style="padding-top:12px;color:#94a3b8;">© ${new Date().getFullYear()} ${escape(BRAND.name)}. All rights reserved.</div>
+                <div style="margin-top:4px;color:#64748b;">${escape(BRAND.address)}</div>
+                <div style="margin-top:6px;color:#475569;font-size:11px;">Feedback ID · ${escape(d.feedbackId.slice(0, 8).toUpperCase())}</div>
+              </td>
             </tr>
           </table>
           ${
             d.confidentialityNotice
-              ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #1e293b;font-style:italic;color:#64748b;">${escape(d.confidentialityNotice)}</div>`
+              ? `<div style="margin-top:14px;padding-top:12px;border-top:1px solid #1e293b;font-style:italic;color:#64748b;text-align:center;">${escape(d.confidentialityNotice)}</div>`
               : ""
           }
         </td></tr>
