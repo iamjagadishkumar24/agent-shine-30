@@ -55,8 +55,8 @@ type FeedbackSearch = {
 };
 
 const ALLOWED_STATUS = new Set([
-  "draft", "review", "approved", "rejected", "revision_required",
-  "sent", "acknowledged", "completed", "pending", "high_priority",
+  "draft", "ready_to_send", "sent", "acknowledged", "completed", "failed",
+  "pending", "high_priority",
 ]);
 const ALLOWED_SEV = new Set(["low", "medium", "high", "critical"]);
 const ALLOWED_RANGE = new Set(["7d", "30d", "90d", "all"]);
@@ -78,14 +78,13 @@ export const Route = createFileRoute("/_authenticated/feedback/")({
 
 const STATUS_TONE: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
-  review: "bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.78_0.16_75)]",
-  approved: "bg-primary/15 text-primary",
-  rejected: "bg-destructive/15 text-destructive",
-  revision_required: "bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.78_0.16_75)]",
+  ready_to_send: "bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.78_0.16_75)]",
   sent: "bg-primary/15 text-primary",
+  failed: "bg-destructive/15 text-destructive",
   acknowledged: "bg-[oklch(0.72_0.16_160)]/15 text-[oklch(0.72_0.16_160)]",
   completed: "bg-[oklch(0.72_0.16_160)]/15 text-[oklch(0.72_0.16_160)]",
 };
+
 
 const SEV_TONE: Record<string, string> = {
   low: "text-muted-foreground",
