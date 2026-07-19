@@ -46,6 +46,7 @@ function FeedbackDetail() {
   const { id } = Route.useParams();
   useRealtimeInvalidate("feedback", [["feedback", id]], { filter: `id=eq.${id}` });
   useRealtimeInvalidate("feedback_audit_log", [["feedback", id]], { filter: `feedback_id=eq.${id}` });
+  useRealtimeInvalidate("email_queue", [["feedback-queue", id]], { filter: `feedback_id=eq.${id}` });
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [ackNote, setAckNote] = useState("");
@@ -165,6 +166,21 @@ function FeedbackDetail() {
     },
   });
 
+  const { data: latestQueue } = useQuery({
+    queryKey: ["feedback-queue", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("email_queue")
+        .select("id, status, attempts, max_attempts, provider, provider_message_id, provider_status, sent_at, delivered_at, bounced_at, bounce_reason, deferred_until, defer_reason, last_error, last_event_at, created_at, to_email, to_email_intended, next_attempt_at")
+        .eq("feedback_id", id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const update = useMutation({
     mutationFn: async (patch: import("@/integrations/supabase/types").TablesUpdate<"feedback">) => {
       const { error } = await supabase.from("feedback").update(patch).eq("id", id);
@@ -222,6 +238,7 @@ function FeedbackDetail() {
       qc.invalidateQueries({ queryKey: ["feedback-events", id] });
       qc.invalidateQueries({ queryKey: ["email-queue"] });
       qc.invalidateQueries({ queryKey: ["email-queue-summary"] });
+      qc.invalidateQueries({ queryKey: ["feedback-queue", id] });
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -522,6 +539,12 @@ function FeedbackDetail() {
             </dl>
           </Card>
 
+          <DeliveryPipeline
+            feedbackStatus={data.status}
+            queue={latestQueue ?? null}
+            sending={sendMutation.isPending}
+          />
+
           <Card className="rounded-xl border-border/60 bg-card/60 p-5">
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email delivery</div>
             <ul className="mt-3 space-y-2.5 text-xs">
@@ -783,5 +806,226 @@ function DeliveryRow({ icon, label, at, extra }: { icon: React.ReactNode; label:
         {extra ? ` · ${extra}` : ""}
       </span>
     </li>
+  );
+}
+
+type QueueRow = {
+  id: string;
+  status: string;
+  attempts: number | null;
+  max_attempts: number | null;
+  provider: string | null;
+  provider_message_id: string | null;
+  provider_status: string | null;
+  sent_at: string | null;
+  delivered_at: string | null;
+  bounced_at: string | null;
+  bounce_reason: string | null;
+  deferred_until: string | null;
+  defer_reason: string | null;
+  last_error: string | null;
+  last_event_at: string | null;
+  created_at: string;
+  to_email: string;
+  to_email_intended: string | null;
+  next_attempt_at: string | null;
+};
+
+type StageState = "done" | "active" | "pending" | "failed" | "skipped";
+type Stage = {
+  key: "preparing" | "sending" | "accepted" | "delivered";
+  label: string;
+  state: StageState;
+  at?: string | null;
+  detail?: string | null;
+};
+
+function computeStages(
+  feedbackStatus: string,
+  queue: QueueRow | null,
+  sending: boolean,
+): { stages: Stage[]; finalState: "delivered" | "failed" | "in_progress" | "idle"; failReason?: string | null } {
+  // No queue row yet — feedback hasn't been sent.
+  if (!queue) {
+    const isPre = ["draft", "review", "approved", "revision_required", "rejected"].includes(feedbackStatus);
+    return {
+      stages: [
+        { key: "preparing", label: "Preparing", state: sending ? "active" : isPre ? "active" : "pending" },
+        { key: "sending", label: "Sending", state: sending ? "active" : "pending" },
+        { key: "accepted", label: "Accepted", state: "pending" },
+        { key: "delivered", label: "Delivered", state: "pending" },
+      ],
+      finalState: sending ? "in_progress" : "idle",
+    };
+  }
+
+  const s = queue.status;
+  const attempts = queue.attempts ?? 0;
+  const isFailed = s === "failed" || !!queue.bounced_at;
+  const isDelivered = !!queue.delivered_at;
+  const isAccepted = !!queue.sent_at || !!queue.provider_message_id;
+  const isSendingNow = sending || (s === "queued" && !isAccepted);
+
+  const preparing: Stage = { key: "preparing", label: "Preparing", state: "done", at: queue.created_at };
+  const sendingStage: Stage = {
+    key: "sending",
+    label: attempts > 1 ? `Sending · retry ${attempts}` : "Sending",
+    state: isAccepted || isDelivered
+      ? "done"
+      : isFailed
+        ? "failed"
+        : isSendingNow
+          ? "active"
+          : "pending",
+    at: queue.last_event_at,
+    detail: queue.deferred_until && s === "queued"
+      ? `Retry after ${new Date(queue.deferred_until).toLocaleString()}${queue.defer_reason ? ` · ${queue.defer_reason}` : ""}`
+      : queue.last_error && !isAccepted
+        ? queue.last_error
+        : null,
+  };
+  const acceptedStage: Stage = {
+    key: "accepted",
+    label: "Accepted",
+    state: isDelivered
+      ? "done"
+      : isAccepted
+        ? "done"
+        : isFailed
+          ? "failed"
+          : "pending",
+    at: queue.sent_at,
+    detail: queue.provider_message_id ? `id ${queue.provider_message_id.slice(0, 20)}…` : null,
+  };
+  const deliveredStage: Stage = {
+    key: "delivered",
+    label: isFailed ? "Failed" : "Delivered",
+    state: isDelivered
+      ? "done"
+      : isFailed
+        ? "failed"
+        : isAccepted
+          ? "active"
+          : "pending",
+    at: queue.delivered_at ?? queue.bounced_at,
+    detail: isFailed ? (queue.bounce_reason ?? queue.last_error ?? "Provider rejected") : null,
+  };
+
+  return {
+    stages: [preparing, sendingStage, acceptedStage, deliveredStage],
+    finalState: isFailed ? "failed" : isDelivered ? "delivered" : isAccepted ? "in_progress" : isSendingNow ? "in_progress" : "idle",
+    failReason: isFailed ? (queue.bounce_reason ?? queue.last_error ?? null) : null,
+  };
+}
+
+function DeliveryPipeline({
+  feedbackStatus,
+  queue,
+  sending,
+}: {
+  feedbackStatus: string;
+  queue: QueueRow | null;
+  sending: boolean;
+}) {
+  const { stages, finalState, failReason } = computeStages(feedbackStatus, queue, sending);
+  const summaryTone =
+    finalState === "delivered"
+      ? "bg-emerald-500/15 text-emerald-500 dark:text-emerald-300"
+      : finalState === "failed"
+        ? "bg-destructive/15 text-destructive"
+        : finalState === "in_progress"
+          ? "bg-primary/15 text-primary"
+          : "bg-muted text-muted-foreground";
+  const summaryLabel =
+    finalState === "delivered"
+      ? "Delivered"
+      : finalState === "failed"
+        ? "Failed"
+        : finalState === "in_progress"
+          ? "In progress"
+          : "Not sent";
+
+  return (
+    <Card className="rounded-xl border-border/60 bg-card/60 p-5">
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Delivery status</div>
+        <span className={cn("rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide", summaryTone)}>
+          {summaryLabel}
+        </span>
+      </div>
+
+      <ol className="mt-4 space-y-3">
+        {stages.map((stage, idx) => {
+          const isLast = idx === stages.length - 1;
+          const dotClass =
+            stage.state === "done"
+              ? "bg-emerald-500 text-white"
+              : stage.state === "active"
+                ? "bg-primary text-primary-foreground animate-pulse"
+                : stage.state === "failed"
+                  ? "bg-destructive text-destructive-foreground"
+                  : "bg-muted text-muted-foreground";
+          const barClass =
+            stage.state === "done"
+              ? "bg-emerald-500/60"
+              : stage.state === "active"
+                ? "bg-primary/50"
+                : stage.state === "failed"
+                  ? "bg-destructive/50"
+                  : "bg-border";
+          const labelClass =
+            stage.state === "pending"
+              ? "text-muted-foreground/70"
+              : stage.state === "failed"
+                ? "text-destructive"
+                : "text-foreground";
+          return (
+            <li key={stage.key} className="relative flex gap-3">
+              <div className="flex flex-col items-center">
+                <span className={cn("grid h-6 w-6 place-items-center rounded-full text-[10px] font-bold", dotClass)}>
+                  {stage.state === "done" ? "✓" : stage.state === "failed" ? "!" : idx + 1}
+                </span>
+                {!isLast && <span className={cn("mt-1 w-0.5 flex-1", barClass)} />}
+              </div>
+              <div className="flex-1 pb-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={cn("text-sm font-medium", labelClass)}>{stage.label}</span>
+                  <span className="text-[11px] tabular-nums text-muted-foreground">
+                    {stage.at ? (safeTimeAgo(stage.at) ?? "—") : ""}
+                  </span>
+                </div>
+                {stage.detail && (
+                  <p className={cn("mt-0.5 text-[11px] break-all", stage.state === "failed" ? "text-destructive/90" : "text-muted-foreground")}>
+                    {stage.detail}
+                  </p>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+
+      {queue && (
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border/60 pt-3 text-[11px] text-muted-foreground">
+          {queue.provider && <span className="capitalize">{queue.provider}</span>}
+          <span>→ <span className="font-mono text-foreground/80">{queue.to_email}</span></span>
+          {queue.to_email_intended && queue.to_email_intended !== queue.to_email && (
+            <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-amber-600 dark:text-amber-400">
+              override · intended {queue.to_email_intended}
+            </span>
+          )}
+          {queue.attempts != null && queue.max_attempts != null && (
+            <span>· {queue.attempts}/{queue.max_attempts} attempts</span>
+          )}
+        </div>
+      )}
+
+      {finalState === "failed" && failReason && (
+        <div className="mt-3 flex items-start gap-2 rounded-md bg-destructive/10 p-2 text-[11px] text-destructive">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span className="break-all">{failReason}</span>
+        </div>
+      )}
+    </Card>
   );
 }
