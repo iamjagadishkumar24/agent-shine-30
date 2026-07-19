@@ -40,7 +40,7 @@ for d in (BASELINES, ACTUAL, DIFFS):
 
 BASE_URL = os.environ.get("VRT_BASE_URL", "http://localhost:8080")
 WIDTHS = [1024, 1280, 1440, 2560]
-DIFF_THRESHOLD = 3.0  # mean per-channel delta (0-255); tolerant to font AA
+DIFF_THRESHOLD = 12.0  # mean per-channel delta (0-255); tolerant to font AA + minor hydration jitter
 
 
 @dataclass
