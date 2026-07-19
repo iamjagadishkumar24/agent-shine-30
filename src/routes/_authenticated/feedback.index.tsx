@@ -242,12 +242,10 @@ function FeedbackPage() {
           <div className="mb-3 flex items-center justify-between rounded-lg border border-primary/40 bg-primary/5 px-4 py-2.5 text-sm animate-in fade-in slide-in-from-top-1">
             <div className="font-medium">{selected.size} selected</div>
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={() => approveMut.mutate()} disabled={approveMut.isPending}>
-                <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Approve
+              <Button size="sm" variant="outline" onClick={exportCsv}>
+                <Download className="mr-1.5 h-3.5 w-3.5" /> Export
               </Button>
-              <Button size="sm" variant="outline" onClick={() => rejectMut.mutate()} disabled={rejectMut.isPending}>
-                <XCircle className="mr-1.5 h-3.5 w-3.5" /> Reject
-              </Button>
+
               <Button size="sm" variant="outline" onClick={exportCsv}>
                 <Download className="mr-1.5 h-3.5 w-3.5" /> Export
               </Button>
