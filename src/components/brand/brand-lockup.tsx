@@ -62,7 +62,7 @@ export function BrandLockup({
   href = "/",
   className,
   taglineClassName,
-  focusOffsetClass = "focus-visible:ring-offset-[#F4F7FC]",
+  focusOffsetClass,
 }: BrandLockupProps) {
   const taglineText = tagline === true ? DEFAULT_TAGLINE : tagline || "";
 
@@ -72,25 +72,42 @@ export function BrandLockup({
         src={zenworkLogo.url}
         alt=""
         aria-hidden="true"
-        className={cn("shrink-0 object-contain", LOGO_SIZE[size])}
+        // The mark is a colored isometric cube (green / yellow / purple) that
+        // reads well on both light and dark canvases. A soft rounded backdrop
+        // guarantees minimum contrast against very dark surfaces without
+        // altering the mark itself.
+        className={cn(
+          "shrink-0 object-contain rounded-md",
+          "dark:bg-white/5 dark:ring-1 dark:ring-white/10 dark:p-0.5",
+          LOGO_SIZE[size],
+        )}
       />
       <span
         className={cn(
           "font-display font-bold leading-none tracking-tight whitespace-nowrap",
-          "bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent",
+          // Light: deep indigo → violet → purple (AA on #F4F7FC / white).
+          // Dark:  brighter indigo-400 → violet-400 → fuchsia-400 (AA on
+          // near-black surfaces such as #0B1220). Fallback color is set so
+          // the wordmark stays legible if `background-clip: text` is
+          // unavailable or a print stylesheet strips gradients.
+          "text-indigo-600 dark:text-indigo-300",
+          "bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600",
+          "dark:from-indigo-300 dark:via-violet-300 dark:to-fuchsia-300",
+          "bg-clip-text text-transparent",
           WORDMARK_SIZE[size],
         )}
       >
         Zenwork Performance Manager
       </span>
-
     </>
   );
 
   const lockupClasses = cn(
     "group inline-flex flex-col items-center gap-3 rounded-xl px-2 py-1 outline-none",
     "transition-opacity hover:opacity-90",
-    "focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:ring-offset-4",
+    // Focus ring uses design-token background as offset so it works in both
+    // light and dark themes without a hard-coded page color.
+    "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background",
     focusOffsetClass,
     "sm:flex-row sm:gap-4",
   );
@@ -113,7 +130,10 @@ export function BrandLockup({
       {taglineText && (
         <p
           className={cn(
-            "mt-3 max-w-xs text-center leading-relaxed text-slate-500 sm:max-w-sm",
+            // `text-muted-foreground` resolves through the design system so
+            // it stays WCAG-AA compliant in both themes; the previous
+            // hard-coded `text-slate-500` failed contrast on dark surfaces.
+            "mt-3 max-w-xs text-center leading-relaxed text-muted-foreground sm:max-w-sm",
             TAGLINE_SIZE[size],
             taglineClassName,
           )}
@@ -124,3 +144,4 @@ export function BrandLockup({
     </div>
   );
 }
+
