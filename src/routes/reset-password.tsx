@@ -82,10 +82,13 @@ function ResetPasswordPage() {
       </div>
       <div className="relative flex min-h-screen items-center justify-center p-6">
         <div className="w-full max-w-md">
-          <Link to="/" className="mb-6 flex items-center justify-center gap-2.5">
-            <img src={zenworkLogo.url} alt="Zenwork" className="h-10 w-10 object-contain" />
-            <span className="text-base font-semibold tracking-tight">Zenwork <span className="text-muted-foreground font-medium">Performance Manager</span></span>
-          </Link>
+          <BrandLockup
+            size="md"
+            tagline={false}
+            className="mb-6"
+            focusOffsetClass="focus-visible:ring-offset-background"
+          />
+
 
           <div className="rounded-2xl border border-border/60 bg-background/50 p-7 sm:p-8 shadow-2xl shadow-black/20 backdrop-blur-2xl">
             {done ? (
