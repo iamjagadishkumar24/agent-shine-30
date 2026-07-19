@@ -146,6 +146,35 @@ function AuthPage() {
     if (mode === "signup" && !confirmValid) return confirmRef.current?.focus();
   };
 
+  const fieldRefFor = (field: typeof errorField) => {
+    switch (field) {
+      case "name": return nameRef;
+      case "email": return emailRef;
+      case "password": return passwordRef;
+      case "confirm": return confirmRef;
+      default: return null;
+    }
+  };
+
+  // Best-effort mapping from a provider error message to the input that triggered it.
+  const inferErrorField = (msg: string): typeof errorField => {
+    const m = msg.toLowerCase();
+    if (m.includes("confirm")) return "confirm";
+    if (m.includes("password") || m.includes("credentials")) return mode === "forgot" ? "email" : "password";
+    if (m.includes("email") || m.includes("user") || m.includes("account")) return "email";
+    if (m.includes("name")) return "name";
+    return mode === "forgot" ? "email" : "password";
+  };
+
+  const dismissError = () => {
+    const target = fieldRefFor(errorField)?.current;
+    setErrorMsg(null);
+    setErrorField(null);
+    // Wait for the banner to unmount so focus lands on the field, not the button.
+    requestAnimationFrame(() => target?.focus());
+  };
+
+
 
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
