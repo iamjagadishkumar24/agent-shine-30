@@ -1,16 +1,32 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BrandLockup } from "@/components/brand/brand-lockup";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Sparkles, Loader2, Eye, EyeOff, Lock, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  Loader2,
+  Eye,
+  EyeOff,
+  Lock,
+  CheckCircle2,
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/reset-password")({
   component: ResetPasswordPage,
+  head: () => ({
+    meta: [
+      { title: "Reset password — Zenwork Performance Manager" },
+      { name: "description", content: "Set a new password for your Zenwork account." },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
 });
 
 function strengthOf(pw: string) {
@@ -36,8 +52,6 @@ function ResetPasswordPage() {
   const strength = useMemo(() => strengthOf(password), [password]);
 
   useEffect(() => {
-    // Supabase recovery links land here with a `type=recovery` hash and the SDK
-    // hydrates a temporary session automatically. Wait for it before showing the form.
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
     });
@@ -75,128 +89,127 @@ function ResetPasswordPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-40 -left-40 h-[520px] w-[520px] rounded-full bg-primary/25 blur-[120px]" />
-        <div className="absolute bottom-[-160px] right-[-100px] h-[480px] w-[480px] rounded-full bg-fuchsia-500/20 blur-[130px]" />
-      </div>
-      <div className="relative flex min-h-screen items-center justify-center p-6">
-        <div className="w-full max-w-md">
-          <BrandLockup
-            size="md"
-            tagline={false}
-            className="mb-6"
-            focusOffsetClass="focus-visible:ring-offset-background"
-          />
+    <AuthShell>
+      {done ? (
+        <div className="text-center">
+          <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-emerald-500/15 text-emerald-500">
+            <CheckCircle2 className="h-6 w-6" />
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight">Password updated</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Redirecting you to sign in…</p>
+        </div>
+      ) : (
+        <>
+          <div className="text-center">
+            <Link
+              to="/auth"
+              className="mb-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> Back to sign in
+            </Link>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-[26px]">
+              Set a new password
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Choose a strong password you haven't used before.
+            </p>
+          </div>
 
-
-          <div className="rounded-2xl border border-border/60 bg-background/50 p-7 sm:p-8 shadow-2xl shadow-black/20 backdrop-blur-2xl">
-            {done ? (
-              <div className="text-center">
-                <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-emerald-500/15 text-emerald-500">
-                  <CheckCircle2 className="h-6 w-6" />
+          {!ready ? (
+            <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Verifying reset link…
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-[13px] font-medium">
+                  New password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={show ? "text" : "password"}
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    placeholder="At least 8 characters"
+                    className="h-11 rounded-lg pl-10 pr-11"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShow((s) => !s)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    aria-label={show ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
-                <h1 className="text-xl font-semibold tracking-tight">Password updated</h1>
-                <p className="mt-1.5 text-sm text-muted-foreground">Redirecting you to sign in…</p>
-              </div>
-            ) : (
-              <>
-                <h1 className="text-2xl font-semibold tracking-tight">Set a new password</h1>
-                <p className="mt-1.5 text-sm text-muted-foreground">
-                  Choose a strong password you haven't used before.
-                </p>
-
-                {!ready ? (
-                  <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Verifying reset link…
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="password">New password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="password"
-                          type={show ? "text" : "password"}
-                          autoComplete="new-password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          required
-                          minLength={8}
-                          placeholder="At least 8 characters"
-                          className="pl-9 pr-10 h-11"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShow((s) => !s)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted"
-                          aria-label={show ? "Hide password" : "Show password"}
-                          tabIndex={-1}
-                        >
-                          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                      {password.length > 0 && (
-                        <div className="pt-1">
-                          <div className="flex gap-1">
-                            {[0, 1, 2, 3].map((i) => (
-                              <div
-                                key={i}
-                                className={cn(
-                                  "h-1 flex-1 rounded-full transition-colors",
-                                  i < strength.score ? strength.tone : "bg-muted",
-                                )}
-                              />
-                            ))}
-                          </div>
-                          <p className="mt-1.5 text-xs text-muted-foreground">
-                            Strength: <span className="text-foreground">{strength.label}</span>
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="confirm">Confirm password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="confirm"
-                          type={show ? "text" : "password"}
-                          value={confirm}
-                          onChange={(e) => setConfirm(e.target.value)}
-                          required
-                          placeholder="Re-enter password"
+                {password.length > 0 && (
+                  <div className="pt-1">
+                    <div className="flex gap-1">
+                      {[0, 1, 2, 3].map((i) => (
+                        <div
+                          key={i}
                           className={cn(
-                            "pl-9 h-11",
-                            confirm.length > 0 && !match && "border-destructive focus-visible:ring-destructive",
+                            "h-1 flex-1 rounded-full transition-colors",
+                            i < strength.score ? strength.tone : "bg-muted",
                           )}
                         />
-                      </div>
-                      {confirm.length > 0 && !match && (
-                        <p className="flex items-center gap-1 text-xs text-destructive">
-                          <AlertCircle className="h-3 w-3" /> Passwords do not match
-                        </p>
-                      )}
+                      ))}
                     </div>
-
-                    <Button
-                      type="submit"
-                      className="w-full h-11 bg-gradient-to-r from-primary to-fuchsia-500 hover:opacity-95 shadow-lg shadow-primary/20"
-                      disabled={!canSubmit}
-                    >
-                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {loading ? "Updating…" : "Update password"}
-                    </Button>
-                  </form>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      Strength: <span className="font-medium text-foreground">{strength.label}</span>
+                    </p>
+                  </div>
                 )}
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="confirm" className="text-[13px] font-medium">
+                  Confirm password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="confirm"
+                    type={show ? "text" : "password"}
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    required
+                    placeholder="Re-enter password"
+                    className={cn(
+                      "h-11 rounded-lg pl-10",
+                      confirm.length > 0 && !match && "border-destructive focus-visible:ring-destructive/40",
+                    )}
+                  />
+                </div>
+                {confirm.length > 0 && !match && (
+                  <p className="flex items-center gap-1 text-xs text-destructive">
+                    <AlertCircle className="h-3 w-3" /> Passwords do not match
+                  </p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                disabled={!canSubmit}
+                className="h-11 w-full rounded-lg text-sm font-semibold"
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <span className="inline-flex items-center gap-2">
+                  {loading ? "Updating…" : "Update password"}
+                  {!loading && <ArrowRight className="h-4 w-4" />}
+                </span>
+              </Button>
+            </form>
+          )}
+        </>
+      )}
+    </AuthShell>
   );
 }
