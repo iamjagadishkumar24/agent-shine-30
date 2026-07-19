@@ -238,7 +238,35 @@ function EmailConfig() {
         </div>
       </Card>
 
+      <Card className="p-6 border-amber-500/40">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="text-sm font-semibold text-amber-500">Development email override</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              When enabled, every outbound email — feedback, coaching, reminders, approvals, reports —
+              is redirected to the test inbox below. The intended recipient is preserved in delivery logs
+              and shown in the subject prefix. Disable before production.
+            </div>
+          </div>
+          <Switch
+            checked={!!s.dev_override_enabled}
+            onCheckedChange={(v) => set({ dev_override_enabled: v })}
+          />
+        </div>
+        <div className="mt-4">
+          <Label>Redirect all mail to</Label>
+          <Input
+            className="mt-1.5"
+            value={s.dev_override_recipient ?? ""}
+            onChange={(e) => set({ dev_override_recipient: e.target.value })}
+            placeholder="Iamjagadishkumar@gmail.com"
+            disabled={!s.dev_override_enabled}
+          />
+        </div>
+      </Card>
+
       <Card className="p-6">
+
         <div className="text-sm font-semibold">Send test email</div>
         <div className="mt-1 text-xs text-muted-foreground">Verifies the provider connection and delivers a formatted test message.</div>
         <div className="mt-4 flex gap-2">
