@@ -201,29 +201,25 @@ function AuthPage() {
       {/* ============ LEFT — Auth panel ============ */}
       <main className="relative flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10 lg:px-16 xl:px-24">
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
-          {/* Prominent brand — top-center */}
+          {/* Brand — top-center, understated */}
           <div className="flex flex-col items-center pt-2 text-center animate-fade-in">
             <Link
               to="/"
               aria-label="Zenwork Performance Manager — go to home"
-              className="group flex flex-col items-center gap-4 rounded-2xl outline-none transition-opacity hover:opacity-95 focus-visible:ring-2 focus-visible:ring-indigo-400/60 focus-visible:ring-offset-4 focus-visible:ring-offset-[#0B1220]"
+              className="group inline-flex items-center gap-2.5 rounded-lg outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-indigo-400/60 focus-visible:ring-offset-4 focus-visible:ring-offset-[#0B1220]"
             >
-              <h1
-                className="font-display font-extrabold leading-[1.05] tracking-tight text-[clamp(1.75rem,5.5vw,3rem)] bg-gradient-to-r from-indigo-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent drop-shadow-[0_1px_24px_rgba(139,92,246,0.35)]"
-              >
-                Zenwork Performance Manager
-              </h1>
               <img
                 src={zenworkLogo.url}
                 alt=""
                 aria-hidden="true"
-                className="h-14 w-14 object-contain transition-transform duration-300 group-hover:scale-105 sm:h-16 sm:w-16 drop-shadow-[0_4px_20px_rgba(99,102,241,0.5)]"
+                className="h-7 w-7 object-contain sm:h-8 sm:w-8"
               />
+              <span className="font-display font-semibold tracking-tight text-[18px] sm:text-[22px] lg:text-[24px] xl:text-[26px] bg-gradient-to-r from-indigo-300 to-fuchsia-300 bg-clip-text text-transparent">
+                Zenwork Performance Manager
+              </span>
             </Link>
-            <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-              Driving Customer Success
-            </p>
           </div>
+
 
           {/* Auth card */}
           <div className="mt-10 flex flex-1 flex-col justify-center">
