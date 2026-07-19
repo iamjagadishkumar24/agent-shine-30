@@ -1,5 +1,8 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/coaching/new")({
-  component: () => <Navigate to="/coaching" search={{ create: "1" } as any} replace />,
+  beforeLoad: () => {
+    throw redirect({ to: "/coaching", search: { create: "1" } as any });
+  },
+  component: () => null,
 });
