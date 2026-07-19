@@ -349,22 +349,13 @@ function FeedbackDetail() {
         actions={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild><Link to="/feedback"><ArrowLeft className="mr-1 h-3.5 w-3.5" /> Back</Link></Button>
-            {(data.status === "draft" || data.status === "revision_required") && (
-              <Button
-                size="sm"
-                onClick={() => transitionMutation.mutate({ type: "submit", feedbackId: id })}
-                disabled={transitionMutation.isPending}
-              >
-                <GitPullRequest className="mr-1.5 h-3.5 w-3.5" /> Submit for review
-              </Button>
-            )}
-            {data.status === "approved" && (
+            {(data.status === "draft" || data.status === "ready_to_send" || data.status === "failed") && (
               <>
                 <Button size="sm" variant="outline" onClick={() => setPreviewOpen(true)}>
                   <Eye className="mr-1.5 h-3.5 w-3.5" /> Preview email
                 </Button>
                 <Button size="sm" onClick={send} disabled={sendMutation.isPending}>
-                  <Send className="mr-1.5 h-3.5 w-3.5" /> Send
+                  <Send className="mr-1.5 h-3.5 w-3.5" /> {data.status === "failed" ? "Retry send" : "Send now"}
                 </Button>
               </>
             )}
@@ -373,6 +364,7 @@ function FeedbackDetail() {
                 <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Complete
               </Button>
             )}
+
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="icon" disabled={remove.isPending} className="text-muted-foreground hover:text-destructive" aria-label="Delete feedback"><Trash2 className="h-3.5 w-3.5" /></Button>
