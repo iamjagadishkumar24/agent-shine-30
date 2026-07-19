@@ -163,12 +163,18 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       text = rendered.text || text;
     }
 
-    // Optimistic status transition: approved → sent. If another sender won the
-    // race, the update matches 0 rows and we bail out instead of double-queueing.
+    // Recipient sanity check — never let bad addresses through to the provider.
+    const recipient = String(fb.agent.email ?? "").trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) {
+      throw new Response(`Agent email "${recipient}" is not a valid address`, { status: 400 });
+    }
+
+    // Optimistic status transition: approved → queued. The drainer flips
+    // queued → sent only after the email provider accepts the message.
     const nowIso = new Date().toISOString();
     const { data: transitioned, error: txErr } = await supabaseAdmin
       .from("feedback")
-      .update({ status: "sent", sent_at: nowIso, email_error: null })
+      .update({ status: "queued", sent_at: null, email_error: null })
       .eq("id", fb.id)
       .eq("status", "approved")
       .select("id")
@@ -183,7 +189,7 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       .insert({
         feedback_id: fb.id,
         kind: "feedback",
-        to_email: fb.agent.email,
+        to_email: recipient,
         to_name: fb.agent.full_name,
         subject,
         html,
@@ -203,23 +209,47 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
         .from("feedback")
         .update({ status: "approved", sent_at: null })
         .eq("id", fb.id)
-        .eq("status", "sent");
+        .eq("status", "queued");
       fail("Unable to enqueue email", 500, qErr);
     }
 
     await supabaseAdmin.from("feedback_email_events").insert({
       feedback_id: fb.id,
       event_type: "queued",
-      detail: { queue_id: job.id, provider: settings.provider },
+      detail: { queue_id: job.id, provider: settings.provider, to: recipient },
     });
 
-    // Trigger a drain immediately so the user doesn't wait a minute
+    // Drain synchronously so the response reflects the real provider outcome.
+    let providerAccepted = false;
+    let providerError: string | null = null;
+    let providerMessageId: string | null = null;
     try {
       const { drainQueue } = await import("@/lib/email-queue.server");
-      await drainQueue();
+      const drain = await drainQueue();
+      const result = (drain.results ?? []).find((r: any) => r?.id === job.id);
+      if (result?.ok) {
+        providerAccepted = true;
+        providerMessageId = result.messageId ?? null;
+      } else if (result) {
+        providerError = String(result.error ?? "Send failed");
+      }
     } catch (drainErr) {
+      providerError = (drainErr as Error).message;
       console.error("[feedback-email] immediate drain failed", drainErr);
     }
 
-    return { ok: true as const, queueId: job.id };
+    if (providerAccepted) {
+      // Drainer already set feedback.status = "sent" and stamped sent_at.
+      return { ok: true as const, queueId: job.id, providerMessageId, recipient };
+    }
+
+    // Not accepted synchronously — leave in queue for background retries but
+    // surface the state honestly instead of falsely claiming "Sent".
+    return {
+      ok: false as const,
+      queued: true as const,
+      queueId: job.id,
+      recipient,
+      error: providerError,
+    };
   });
