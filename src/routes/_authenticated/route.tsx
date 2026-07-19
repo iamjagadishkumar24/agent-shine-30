@@ -210,16 +210,19 @@ function AuthedLayout() {
 
       <div className={cn("flex-1 transition-[margin] duration-200", collapsed ? "ml-16" : "ml-60")}>
         {/* Top header */}
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/60 bg-background/80 px-6 backdrop-blur-xl">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Zenwork Performance Manager</span>
-            {current && (
-              <>
-                <span className="text-muted-foreground/40">/</span>
-                <span className="font-medium text-foreground">{current.label}</span>
-              </>
-            )}
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border/60 bg-background/75 px-4 backdrop-blur-xl sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <img src={zenworkMark.url} alt="" aria-hidden="true" className="hidden h-8 w-8 shrink-0 object-contain sm:block" />
+            <div className="flex min-w-0 flex-col leading-tight">
+              <span className="brand-wordmark truncate text-[15px] sm:text-[17px] lg:text-lg">
+                Zenwork Performance Manager
+              </span>
+              <span className="hidden truncate text-[10.5px] font-medium uppercase tracking-[0.14em] text-muted-foreground md:block">
+                {current ? current.label : "Driving Customer Success"}
+              </span>
+            </div>
           </div>
+
 
           <div className="ml-auto flex items-center gap-1.5">
             <button
