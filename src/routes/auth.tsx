@@ -182,19 +182,34 @@ function AuthPage() {
   const nameError = touched.name && mode === "signup" && name.length > 0 && !nameValid;
 
   return (
-    <div className="min-h-dvh bg-white text-slate-900 lg:grid lg:grid-cols-2">
+    <div className="relative min-h-dvh bg-[#0B1220] text-slate-100 lg:grid lg:grid-cols-2">
+      {/* Ambient background */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full bg-indigo-600/25 blur-[120px]" />
+        <div className="absolute top-1/3 -right-24 h-[520px] w-[520px] rounded-full bg-purple-600/20 blur-[120px]" />
+        <div className="absolute bottom-[-160px] left-1/4 h-[420px] w-[420px] rounded-full bg-cyan-500/15 blur-[120px]" />
+        <div
+          className="absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
+            backgroundSize: "56px 56px",
+          }}
+        />
+      </div>
+
       {/* ============ LEFT — Auth panel ============ */}
-      <main className="flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10 lg:px-16 xl:px-24">
+      <main className="relative flex min-h-dvh flex-col px-6 py-8 sm:px-10 sm:py-10 lg:px-16 xl:px-24">
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
           {/* Prominent brand — top-center */}
           <div className="flex flex-col items-center pt-2 text-center animate-fade-in">
             <Link
               to="/"
               aria-label="Zenwork Performance Manager — go to home"
-              className="group flex flex-col items-center gap-4 rounded-2xl outline-none transition-opacity hover:opacity-95 focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:ring-offset-4 focus-visible:ring-offset-white"
+              className="group flex flex-col items-center gap-4 rounded-2xl outline-none transition-opacity hover:opacity-95 focus-visible:ring-2 focus-visible:ring-indigo-400/60 focus-visible:ring-offset-4 focus-visible:ring-offset-[#0B1220]"
             >
               <h1
-                className="brand-wordmark font-display font-extrabold leading-[1.05] tracking-tight text-[clamp(1.75rem,5.5vw,3rem)] drop-shadow-[0_1px_16px_rgba(99,102,241,0.18)]"
+                className="font-display font-extrabold leading-[1.05] tracking-tight text-[clamp(1.75rem,5.5vw,3rem)] bg-gradient-to-r from-indigo-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent drop-shadow-[0_1px_24px_rgba(139,92,246,0.35)]"
               >
                 Zenwork Performance Manager
               </h1>
@@ -202,10 +217,10 @@ function AuthPage() {
                 src={zenworkLogo.url}
                 alt=""
                 aria-hidden="true"
-                className="h-14 w-14 object-contain transition-transform duration-300 group-hover:scale-105 sm:h-16 sm:w-16"
+                className="h-14 w-14 object-contain transition-transform duration-300 group-hover:scale-105 sm:h-16 sm:w-16 drop-shadow-[0_4px_20px_rgba(99,102,241,0.5)]"
               />
             </Link>
-            <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+            <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
               Driving Customer Success
             </p>
           </div>
