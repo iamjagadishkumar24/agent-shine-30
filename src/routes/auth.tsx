@@ -130,7 +130,7 @@ function AuthPage() {
         setResetSent(true);
         toast.success("Reset link sent — check your inbox");
       } else if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: trimmedEmail,
           password,
           options: {
@@ -140,8 +140,15 @@ function AuthPage() {
         });
         if (error) throw error;
         persistRemember();
-        toast.success("Account created — welcome aboard");
-        window.location.href = destination;
+        // If the project requires email confirmation, Supabase returns a user
+        // without an active session. Send them to the verify-email screen.
+        if (data.session) {
+          toast.success("Account created — welcome aboard");
+          window.location.href = destination;
+        } else {
+          toast.success("Check your inbox to verify your email");
+          window.location.href = `/verify-email?email=${encodeURIComponent(trimmedEmail)}`;
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: trimmedEmail,
