@@ -19,6 +19,7 @@ export const Route = createFileRoute("/api/public/track/open/$id")({
             .eq("id", params.id)
             .maybeSingle();
           if (fb) {
+            const isFirstOpen = !fb.first_opened_at;
             await supabaseAdmin
               .from("feedback")
               .update({
@@ -30,8 +31,17 @@ export const Route = createFileRoute("/api/public/track/open/$id")({
             await supabaseAdmin.from("feedback_email_events").insert({
               feedback_id: params.id,
               event_type: "opened",
-              detail: {},
+              detail: { first_open: isFirstOpen, open_count: (fb.open_count ?? 0) + 1 },
             });
+            if (isFirstOpen) {
+              await supabaseAdmin.from("feedback_audit_log").insert({
+                feedback_id: params.id,
+                actor_id: null,
+                action: "email_opened",
+                comment: "Recipient opened the email",
+                metadata: { source: "open_pixel" },
+              });
+            }
           }
         } catch (e) {
           console.error("open pixel error", e);

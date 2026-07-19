@@ -16,6 +16,7 @@ import { formatDistanceToNow } from "date-fns";
 import { sendFeedbackEmail, previewFeedbackEmail, sendFeedbackTestEmail } from "@/lib/feedback-email.functions";
 import { createUploadUrl, deleteAttachment } from "@/lib/feedback-attachments.functions";
 import { transitionFeedback } from "@/lib/feedback-workflow.functions";
+import { completeFeedback } from "@/lib/agent-portal.functions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { analyzeEmailForSpamRisk } from "@/lib/email-spam-check";
@@ -209,6 +210,19 @@ function FeedbackDetail() {
 
   // Delete confirmation is handled by AlertDialog (see actions area).
 
+  const completeFn = useServerFn(completeFeedback);
+  const completeMutation = useMutation({
+    mutationFn: () => completeFn({ data: { feedbackId: id } }),
+    onSuccess: () => {
+      toast.success("Marked complete");
+      qc.invalidateQueries({ queryKey: ["feedback", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-list"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Unable to mark complete"),
+  });
+
+
 
   const sendMutation = useMutation({
     mutationFn: () => sendEmailFn({ data: { feedbackId: id } }),
@@ -333,7 +347,7 @@ function FeedbackDetail() {
 
   const send = () => sendMutation.mutate();
   const acknowledge = () => update.mutate({ status: "acknowledged", acknowledged_at: new Date().toISOString(), acknowledgement_note: ackNote }, { onSuccess: () => toast.success("Acknowledged") });
-  const complete = () => update.mutate({ status: "completed" }, { onSuccess: () => toast.success("Marked complete") });
+  const complete = () => completeMutation.mutate();
 
   return (
     <div>

@@ -172,3 +172,56 @@ export const requestClarification = createServerFn({ method: "POST" })
 
     return { ok: true as const };
   });
+
+/**
+ * Staff / reviewer marks an acknowledged feedback as completed. Writes an
+ * audit log entry capturing the transition.
+ */
+export const completeFeedback = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ feedbackId: z.string().uuid() }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: fb, error: readErr } = await supabase
+      .from("feedback")
+      .select("id, status")
+      .eq("id", data.feedbackId)
+      .maybeSingle();
+    if (readErr) fail("Unable to load feedback", 500, readErr);
+    if (!fb) throw new Response("Feedback not found or not accessible", { status: 404 });
+    if (!["acknowledged", "completed"].includes(fb.status as string)) {
+      throw new Response(
+        `Cannot complete feedback in status "${fb.status}"`,
+        { status: 409 },
+      );
+    }
+
+    const fromStatus = fb.status as string;
+    const { data: updated, error: updErr } = await supabase
+      .from("feedback")
+      .update({ status: "completed" })
+      .eq("id", data.feedbackId)
+      .in("status", ["acknowledged", "completed"])
+      .select("id")
+      .maybeSingle();
+    if (updErr) fail("Unable to complete feedback", 500, updErr);
+    if (!updated) {
+      throw new Response("Feedback status changed — please refresh", { status: 409 });
+    }
+
+    const { error: logErr } = await supabase.from("feedback_audit_log").insert({
+      feedback_id: data.feedbackId,
+      actor_id: userId,
+      action: "complete",
+      from_status: fromStatus as any,
+      to_status: "completed" as any,
+      comment: "Marked complete",
+      metadata: { source: "feedback_detail" },
+    });
+    if (logErr) console.error("[agent-portal] audit log insert failed", logErr);
+
+    return { ok: true as const };
+  });
