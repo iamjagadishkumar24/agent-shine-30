@@ -34,7 +34,7 @@ function AgentsPage() {
   const { data = [], isLoading } = useQuery({
     queryKey: ["agents"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("agents").select("*").order("qa_score", { ascending: false });
+      const { data, error } = await supabase.from("agents").select("*").order("full_name", { ascending: true });
       if (error) throw error;
       return data;
     },
