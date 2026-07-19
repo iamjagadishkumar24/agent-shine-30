@@ -44,7 +44,7 @@ function safeNext(next: string | undefined): string {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REMEMBER_KEY = "signal.auth.remember-email";
-const APP_VERSION = "v1.0.0";
+
 
 type Mode = "signin" | "signup" | "forgot";
 
