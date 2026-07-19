@@ -167,7 +167,14 @@ export async function drainQueue(): Promise<{ processed: number; results: any[] 
         });
       }
 
-      results.push({ id: job.id, ok: true });
+      results.push({
+        id: job.id,
+        ok: true,
+        messageId: res.messageId ?? null,
+        intendedTo,
+        actualTo,
+        devOverride: applyOverride,
+      });
     } else {
       const done = attempt >= (job.max_attempts ?? 5);
       await supabaseAdmin
