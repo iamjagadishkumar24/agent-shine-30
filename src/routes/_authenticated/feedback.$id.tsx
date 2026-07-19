@@ -83,8 +83,18 @@ function FeedbackDetail() {
       html: preview.data.html,
       subject: preview.data.subject,
       text: preview.data.text,
+      provider: preview.data.provider
+        ? {
+            provider: preview.data.provider.id,
+            senderEmail: preview.data.provider.senderEmail,
+            replyTo: preview.data.provider.replyTo,
+            hasListUnsubscribe: preview.data.provider.hasListUnsubscribe,
+            hasOneClickUnsubscribe: preview.data.provider.hasOneClickUnsubscribe,
+            isBulk: preview.data.provider.isBulk,
+          }
+        : undefined,
     });
-  }, [preview.data?.html, preview.data?.subject, preview.data?.text]);
+  }, [preview.data]);
 
   const testSend = useMutation({
     mutationFn: async (to: string) => testSendFn({ data: { feedbackId: id, to } }),
@@ -629,6 +639,11 @@ function FeedbackDetail() {
                   <div className="text-sm font-semibold">
                     Deliverability risk: {spamRisk.level.toUpperCase()}
                     <span className="ml-2 font-mono text-xs opacity-80">{spamRisk.score}/100</span>
+                    {preview.data?.provider?.id && (
+                      <span className="ml-2 rounded-full border border-current/20 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide opacity-80">
+                        {preview.data.provider.id}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="hidden gap-3 text-[11px] text-muted-foreground sm:flex">

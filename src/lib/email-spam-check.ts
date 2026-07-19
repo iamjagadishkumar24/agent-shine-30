@@ -8,6 +8,33 @@
 
 export type SpamIssueSeverity = "info" | "warn" | "high";
 
+export type EmailProviderId =
+  | "gmail"
+  | "sendgrid"
+  | "resend"
+  | "postmark"
+  | "mailgun"
+  | "ses"
+  | (string & {});
+
+export interface ProviderContext {
+  /** Selected outbound provider (from email_settings.provider). */
+  provider?: EmailProviderId | null;
+  /** From: address the message will use. */
+  senderEmail?: string | null;
+  /** Reply-To header value (or null when unset). */
+  replyTo?: string | null;
+  /** Whether the outgoing MIME sets a List-Unsubscribe header. */
+  hasListUnsubscribe?: boolean;
+  /** Whether List-Unsubscribe-Post: List-Unsubscribe=One-Click is set. */
+  hasOneClickUnsubscribe?: boolean;
+  /**
+   * Bulk / marketing send (>5k/day per Gmail & Yahoo guidelines). Defaults to
+   * false — this app sends 1:1 transactional feedback.
+   */
+  isBulk?: boolean;
+}
+
 export interface SpamIssue {
   id: string;
   severity: SpamIssueSeverity;
@@ -20,6 +47,7 @@ export interface SpamCheckResult {
   score: number; // 0-100 (higher = riskier)
   level: "low" | "medium" | "high";
   issues: SpamIssue[];
+  providerId: EmailProviderId | null;
   stats: {
     htmlBytes: number;
     imageCount: number;
@@ -30,7 +58,22 @@ export interface SpamCheckResult {
     imageToTextRatio: number;
     capsRatio: number;
     exclamations: number;
+    scriptCount: number;
+    formCount: number;
+    iframeCount: number;
   };
+}
+
+const FREEMAIL_DOMAINS = new Set([
+  "gmail.com", "googlemail.com", "yahoo.com", "yahoo.co.uk", "ymail.com",
+  "hotmail.com", "outlook.com", "live.com", "aol.com", "icloud.com", "me.com",
+  "proton.me", "protonmail.com", "gmx.com", "mail.com",
+]);
+
+function domainOf(email: string | null | undefined): string | null {
+  if (!email) return null;
+  const at = email.lastIndexOf("@");
+  return at < 0 ? null : email.slice(at + 1).trim().toLowerCase();
 }
 
 const SPAM_PHRASES = [
@@ -72,6 +115,7 @@ export function analyzeEmailForSpamRisk(input: {
   html: string;
   subject?: string;
   text?: string;
+  provider?: ProviderContext;
 }): SpamCheckResult {
   const issues: SpamIssue[] = [];
   const html = input.html ?? "";
@@ -87,6 +131,9 @@ export function analyzeEmailForSpamRisk(input: {
 
   const imgs = Array.from(doc.querySelectorAll("img"));
   const anchors = Array.from(doc.querySelectorAll("a"));
+  const scripts = Array.from(doc.querySelectorAll("script"));
+  const forms = Array.from(doc.querySelectorAll("form"));
+  const iframes = Array.from(doc.querySelectorAll("iframe"));
   const text = textFromHtml(doc);
   const textLength = text.length;
 
@@ -239,12 +286,219 @@ export function analyzeEmailForSpamRisk(input: {
     });
   }
 
+  // ----- provider-agnostic HTML hygiene ----------------------------------
+  if (scripts.length > 0) {
+    issues.push({
+      id: "html-script",
+      severity: "high",
+      points: 30,
+      message: `${scripts.length} <script> tag${scripts.length === 1 ? "" : "s"} in email HTML`,
+      detail: "Every major provider strips or quarantines emails containing scripts.",
+    });
+  }
+  if (forms.length > 0) {
+    issues.push({
+      id: "html-form",
+      severity: "warn",
+      points: 12,
+      message: `${forms.length} <form> element${forms.length === 1 ? "" : "s"} in email HTML`,
+      detail: "Most clients disable forms; use a linked CTA instead.",
+    });
+  }
+  if (iframes.length > 0) {
+    issues.push({
+      id: "html-iframe",
+      severity: "warn",
+      points: 12,
+      message: `${iframes.length} <iframe> element${iframes.length === 1 ? "" : "s"} in email HTML`,
+      detail: "Iframes are blocked by Gmail, Outlook, and Apple Mail.",
+    });
+  }
+
+  // ----- provider-specific rules -----------------------------------------
+  const ctx = input.provider ?? {};
+  const providerId = (ctx.provider ?? null) as EmailProviderId | null;
+  const senderDomain = domainOf(ctx.senderEmail);
+  const senderIsFreemail = senderDomain ? FREEMAIL_DOMAINS.has(senderDomain) : false;
+  const bulk = !!ctx.isBulk;
+  const hasListUnsub = !!ctx.hasListUnsubscribe;
+  const hasOneClick = !!ctx.hasOneClickUnsubscribe;
+
+  const pushProviderIssue = (issue: SpamIssue) =>
+    issues.push({ ...issue, message: `[${providerLabel(providerId)}] ${issue.message}` });
+
+  switch (providerId) {
+    case "gmail": {
+      // Gmail bulk-sender guidelines (Feb 2024): SPF/DKIM/DMARC (server-side),
+      // List-Unsubscribe + one-click for bulk, and no freemail From on
+      // production sends.
+      if (senderIsFreemail) {
+        pushProviderIssue({
+          id: "gmail-freemail-from",
+          severity: "warn",
+          points: 15,
+          message: `Sending from a freemail domain (${senderDomain})`,
+          detail:
+            "Gmail requires a From address on a domain you control with SPF/DKIM/DMARC. Freemail senders are rate-limited and often marked spam.",
+        });
+      }
+      if (bulk && !hasListUnsub) {
+        pushProviderIssue({
+          id: "gmail-list-unsub",
+          severity: "high",
+          points: 25,
+          message: "Missing List-Unsubscribe header (required for bulk on Gmail)",
+          detail: "Gmail's bulk-sender rules require List-Unsubscribe + List-Unsubscribe-Post one-click.",
+        });
+      } else if (bulk && !hasOneClick) {
+        pushProviderIssue({
+          id: "gmail-one-click",
+          severity: "warn",
+          points: 12,
+          message: "List-Unsubscribe present but one-click POST not enabled",
+          detail: 'Add "List-Unsubscribe-Post: List-Unsubscribe=One-Click".',
+        });
+      }
+      if (htmlBytes > 102 * 1024) {
+        pushProviderIssue({
+          id: "gmail-clip",
+          severity: "warn",
+          points: 8,
+          message: "Above Gmail's 102 KB clip threshold",
+          detail: "Gmail truncates the body and hides trackers/footers past the clip.",
+        });
+      }
+      break;
+    }
+    case "sendgrid": {
+      if (!hasText) {
+        pushProviderIssue({
+          id: "sendgrid-plaintext",
+          severity: "warn",
+          points: 10,
+          message: "SendGrid recommends a text/plain alternative for every send",
+        });
+      }
+      if (bulk && !hasListUnsub) {
+        pushProviderIssue({
+          id: "sendgrid-list-unsub",
+          severity: "warn",
+          points: 15,
+          message: "SendGrid marketing sends should include a List-Unsubscribe header",
+        });
+      }
+      if (!ctx.replyTo) {
+        pushProviderIssue({
+          id: "sendgrid-reply-to",
+          severity: "info",
+          points: 3,
+          message: "No Reply-To configured",
+          detail: "SendGrid recommends an explicit Reply-To distinct from the From address.",
+        });
+      }
+      break;
+    }
+    case "resend": {
+      if (senderIsFreemail) {
+        pushProviderIssue({
+          id: "resend-freemail",
+          severity: "high",
+          points: 25,
+          message: `Resend requires a verified domain (${senderDomain} is a freemail domain)`,
+          detail: "Verify a custom sending domain in Resend and use an address on it.",
+        });
+      }
+      if (!hasText) {
+        pushProviderIssue({
+          id: "resend-plaintext",
+          severity: "warn",
+          points: 8,
+          message: "Resend recommends a plain-text alternative for deliverability",
+        });
+      }
+      break;
+    }
+    case "postmark": {
+      // Postmark separates transactional vs broadcast streams and is strict
+      // about content matching the stream type.
+      if (phraseHits.length > 0) {
+        pushProviderIssue({
+          id: "postmark-marketing-phrases",
+          severity: "high",
+          points: 20,
+          message: "Marketing / promotional phrases in a transactional-stream provider",
+          detail:
+            "Postmark's transactional stream rejects promotional content — move bulk messaging to a Broadcast stream.",
+        });
+      }
+      if (!hasText) {
+        pushProviderIssue({
+          id: "postmark-plaintext",
+          severity: "warn",
+          points: 10,
+          message: "Postmark requires a text part on every message",
+        });
+      }
+      if (bulk && !hasListUnsub) {
+        pushProviderIssue({
+          id: "postmark-list-unsub",
+          severity: "warn",
+          points: 12,
+          message: "Broadcast sends on Postmark must include List-Unsubscribe",
+        });
+      }
+      break;
+    }
+    case "mailgun": {
+      if (bulk && !hasListUnsub) {
+        pushProviderIssue({
+          id: "mailgun-list-unsub",
+          severity: "warn",
+          points: 15,
+          message: "Mailgun bulk sends require List-Unsubscribe + one-click",
+        });
+      }
+      if (!hasText) {
+        pushProviderIssue({
+          id: "mailgun-plaintext",
+          severity: "info",
+          points: 6,
+          message: "Mailgun recommends a matching plain-text part",
+        });
+      }
+      break;
+    }
+    case "ses": {
+      if (senderIsFreemail) {
+        pushProviderIssue({
+          id: "ses-freemail",
+          severity: "high",
+          points: 20,
+          message: `Amazon SES requires a verified identity (${senderDomain} is a freemail domain)`,
+          detail: "Verify a domain in SES and send from an address on that domain.",
+        });
+      }
+      if (bulk && !hasListUnsub) {
+        pushProviderIssue({
+          id: "ses-list-unsub",
+          severity: "warn",
+          points: 12,
+          message: "SES bulk sends should include List-Unsubscribe",
+        });
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
   const score = Math.min(100, issues.reduce((s, i) => s + i.points, 0));
   const level: SpamCheckResult["level"] = score >= 55 ? "high" : score >= 25 ? "medium" : "low";
 
   return {
     score,
     level,
+    providerId,
     issues: issues.sort((a, b) => b.points - a.points),
     stats: {
       htmlBytes,
@@ -256,6 +510,21 @@ export function analyzeEmailForSpamRisk(input: {
       imageToTextRatio: Number(imageToTextRatio.toFixed(2)),
       capsRatio: Number(capsRatio.toFixed(2)),
       exclamations,
+      scriptCount: scripts.length,
+      formCount: forms.length,
+      iframeCount: iframes.length,
     },
   };
+}
+
+function providerLabel(p: EmailProviderId | null): string {
+  switch (p) {
+    case "gmail": return "Gmail";
+    case "sendgrid": return "SendGrid";
+    case "resend": return "Resend";
+    case "postmark": return "Postmark";
+    case "mailgun": return "Mailgun";
+    case "ses": return "Amazon SES";
+    default: return "Provider";
+  }
 }

@@ -304,6 +304,16 @@ export const previewFeedbackEmail = createServerFn({ method: "POST" })
       html: rendered.html,
       text: rendered.text,
       recipient: fb.agent?.email ?? null,
+      provider: {
+        id: (settings?.provider ?? "gmail") as string,
+        senderEmail: settings?.sender_email ?? null,
+        replyTo: settings?.reply_to ?? null,
+        // The current MIME builder in providers.server.ts does not emit
+        // List-Unsubscribe headers — surface that honestly to the analyzer.
+        hasListUnsubscribe: false,
+        hasOneClickUnsubscribe: false,
+        isBulk: false,
+      },
     };
   });
 
