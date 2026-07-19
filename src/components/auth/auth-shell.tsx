@@ -72,27 +72,27 @@ export function AuthShell({
   ) : null;
 
   return (
-    <div className="auth-shell relative flex min-h-dvh flex-col text-foreground">
+    <div className="auth-shell relative flex min-h-dvh flex-col text-foreground lg:h-dvh lg:min-h-0 lg:overflow-hidden">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-48 -left-40 h-[560px] w-[560px] rounded-full bg-emerald-500/10 blur-[140px] dark:bg-emerald-400/10" />
         <div className="absolute top-1/3 -right-40 h-[560px] w-[560px] rounded-full bg-indigo-500/10 blur-[140px] dark:bg-indigo-400/10" />
         <div className="absolute bottom-[-180px] left-1/3 h-[440px] w-[440px] rounded-full bg-slate-400/10 blur-[140px] dark:bg-slate-500/10" />
       </div>
 
-      <header className="relative z-10 flex items-center justify-end px-5 py-4 sm:px-8">
+      <header className="relative z-10 flex items-center justify-end px-5 py-3 sm:px-8 lg:py-2">
         <ThemeToggle />
       </header>
 
-      <main className="relative z-10 flex flex-1 items-center justify-center px-5 py-8 sm:px-8">
+      <main className="relative z-10 flex flex-1 items-center justify-center px-5 py-6 sm:px-8 lg:min-h-0 lg:py-4">
         {sidePanel ? (
           <div className="grid w-full max-w-6xl items-center gap-10 lg:grid-cols-2">
             <div className="mx-auto w-full min-w-0 max-w-[460px] lg:mx-0 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
-              <div className="auth-card rounded-[20px] p-7 pt-8 sm:p-10 sm:pt-11">
+              <div className="auth-card rounded-[20px] p-7 pt-8 sm:p-9 sm:pt-10 lg:p-8 lg:pt-8">
                 {brandBlock}
                 {children}
               </div>
               {showLearnMore && (
-                <div className="mt-5 flex justify-center lg:justify-start">
+                <div className="mt-4 flex justify-center lg:justify-start">
                   <LearnMoreDialog />
                 </div>
               )}
@@ -101,12 +101,13 @@ export function AuthShell({
           </div>
         ) : (
           <div className="w-full max-w-[460px] motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
-            <div className="auth-card rounded-[20px] p-7 pt-8 sm:p-10 sm:pt-11">
+            <div className="auth-card rounded-[20px] p-7 pt-8 sm:p-9 sm:pt-10 lg:p-8 lg:pt-8">
+
               {brandBlock}
               {children}
             </div>
             {showLearnMore && (
-              <div className="mt-5 flex justify-center">
+              <div className="mt-4 flex justify-center">
                 <LearnMoreDialog />
               </div>
             )}
@@ -117,7 +118,7 @@ export function AuthShell({
 
 
       <footer className="relative z-10 border-t border-border/50 bg-background/50 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-4 text-xs text-muted-foreground sm:flex-row sm:px-8">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:flex-row sm:px-8 lg:py-2">
           <p>&copy; {new Date().getFullYear()} Zenwork · {APP_VERSION}</p>
           <nav className="flex items-center gap-4">
             <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
