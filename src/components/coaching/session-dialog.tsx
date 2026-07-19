@@ -173,6 +173,7 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
       follow_up_date: session?.follow_up_date ?? "",
       reminder_minutes: session?.reminder_minutes != null ? String(session.reminder_minutes) : "",
     });
+    setSavedEvent(null);
   }, [open, session, startBits.date, startBits.time, endBits.time]);
 
   const parsed = Schema.safeParse(form);
