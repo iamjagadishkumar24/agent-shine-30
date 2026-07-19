@@ -87,6 +87,7 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
       "Tone: professional, empathetic, specific, action-oriented. No fluff, no clichés.",
       "Write each field as plain prose (no markdown headings). Keep each section under 120 words.",
       "Never invent facts the observer didn't mention. If a section has no basis, keep it short and honest.",
+      `Template guidance: ${TEMPLATE_GUIDANCE[data.template]}`,
     ].join(" ");
 
     const agentName = clamp(agent?.full_name, 120) || "(unknown)";
