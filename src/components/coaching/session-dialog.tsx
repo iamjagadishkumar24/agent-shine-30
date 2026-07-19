@@ -95,7 +95,7 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
   const { data: agents = [] } = useQuery({
     queryKey: ["agents-picker"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("agents").select("id, full_name, department").order("full_name");
+      const { data, error } = await supabase.from("agents").select("id, full_name, department, email").order("full_name");
       if (error) throw error;
       return data;
     },
