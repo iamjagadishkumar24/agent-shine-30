@@ -36,6 +36,7 @@ function safeTimeAgo(iso: string | null | undefined) {
 type Filter = "all" | "unread";
 
 function NotificationsPage() {
+  useRealtimeInvalidate("notifications", [["notifications"]]);
   const list = useServerFn(listMyNotifications);
   const markRead = useServerFn(markNotificationRead);
   const markAll = useServerFn(markAllNotificationsRead);
