@@ -69,15 +69,15 @@ export function AuthShell({
         src={zenworkLogo.url}
         alt=""
         aria-hidden="true"
-        className="h-12 w-12 sm:h-14 sm:w-14 lg:h-11 lg:w-11 xl:h-12 xl:w-12 object-contain rounded-xl bg-white ring-1 ring-black/5 p-1 dark:bg-white/5 dark:ring-white/10"
+        className="h-16 w-16 sm:h-20 sm:w-20 lg:h-16 lg:w-16 xl:h-20 xl:w-20 object-contain bg-transparent"
       />
       <h1
         style={{ fontWeight: 800 }}
         className={cn(
           "font-display leading-[1.05] tracking-tight text-center whitespace-nowrap",
           "text-[16px] sm:text-[20px] md:text-[22px] lg:text-[20px] xl:text-[22px]",
-          // Solid theme token: black in light mode, white in dark mode, follows system automatically.
-          "text-foreground",
+          // Brand green — accessible in both light and dark themes.
+          "text-emerald-600 dark:text-emerald-400",
         )}
       >
         Zenwork Performance Manager
