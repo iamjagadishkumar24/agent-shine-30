@@ -12,8 +12,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Trash2, Plus, ArrowLeft, Save } from "lucide-react";
+import { CheckCircle2, XCircle, Trash2, Plus, ArrowLeft, Save, Pencil, LinkIcon, MapPin, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SessionDialog } from "@/components/coaching/session-dialog";
 
 const safeDate = (v: unknown) => {
   if (!v) return "—";
