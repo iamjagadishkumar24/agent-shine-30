@@ -10,11 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, RotateCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { generateFeedbackDraft } from "@/lib/ai-feedback.functions";
+import { generateFeedbackDraft, EMAIL_TEMPLATES, type EmailTemplate } from "@/lib/ai-feedback.functions";
 
 export const Route = createFileRoute("/_authenticated/feedback/new")({
   validateSearch: (s: Record<string, unknown>): { agent?: string } =>
@@ -48,6 +48,8 @@ function NewFeedback() {
   });
   const [aiOpen, setAiOpen] = useState(false);
   const [observations, setObservations] = useState("");
+  const [template, setTemplate] = useState<EmailTemplate>("performance_feedback");
+  const [lastDraft, setLastDraft] = useState<null | { title: string; summary: string; strengths: string; improvements: string; recommended_actions: string }>(null);
   const runAi = useServerFn(generateFeedbackDraft);
   const ai = useMutation({
     mutationFn: async () => {
@@ -61,10 +63,12 @@ function NewFeedback() {
           severity: form.severity,
           observations: observations.trim(),
           score: form.score ? Number(form.score) : null,
+          template,
         },
       });
     },
     onSuccess: (draft) => {
+      setLastDraft(draft);
       setForm((f) => ({
         ...f,
         title: draft.title || f.title,
@@ -218,18 +222,38 @@ function NewFeedback() {
               Paste raw observations from your review. The AI will structure it into a professional draft you can edit before sending.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label>Observations</Label>
-            <Textarea
-              rows={8}
-              value={observations}
-              onChange={(e) => setObservations(e.target.value)}
-              placeholder="e.g. On the 10:42 billing call, agent skipped mini-Miranda, resolved the dispute in under 3 minutes, but interrupted the customer twice..."
-            />
-            <p className="text-xs text-muted-foreground">Uses agent, category, type, severity, and score from the form above.</p>
+          <div className="space-y-3">
+            <div>
+              <Label>Template</Label>
+              <Select value={template} onValueChange={(v) => setTemplate(v as EmailTemplate)}>
+                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {EMAIL_TEMPLATES.map((t) => (
+                    <SelectItem key={t} value={t} className="capitalize">
+                      {t.replace(/_/g, " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Observations</Label>
+              <Textarea
+                rows={8}
+                value={observations}
+                onChange={(e) => setObservations(e.target.value)}
+                placeholder="e.g. On the 10:42 billing call, agent skipped mini-Miranda, resolved the dispute in under 3 minutes, but interrupted the customer twice..."
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Uses agent, category, type, severity, and score from the form above.</p>
+            </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setAiOpen(false)} disabled={ai.isPending}>Cancel</Button>
+            {lastDraft ? (
+              <Button variant="secondary" onClick={() => ai.mutate()} disabled={ai.isPending}>
+                {ai.isPending ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Regenerating…</> : <><RotateCw className="mr-1.5 h-3.5 w-3.5" /> Regenerate</>}
+              </Button>
+            ) : null}
             <Button onClick={() => ai.mutate()} disabled={ai.isPending}>
               {ai.isPending ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Generating…</> : <><Sparkles className="mr-1.5 h-3.5 w-3.5" /> Generate draft</>}
             </Button>

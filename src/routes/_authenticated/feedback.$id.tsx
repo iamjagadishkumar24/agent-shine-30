@@ -7,15 +7,16 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Send, CheckCircle2, Trash2, Mail, MailOpen, MousePointerClick, AlertTriangle, Paperclip, Upload, X, CalendarPlus, GitPullRequest, ThumbsUp, ThumbsDown, RotateCcw, History } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, Trash2, Mail, MailOpen, MousePointerClick, AlertTriangle, Paperclip, Upload, X, CalendarPlus, GitPullRequest, ThumbsUp, ThumbsDown, RotateCcw, History, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { sendFeedbackEmail } from "@/lib/feedback-email.functions";
+import { sendFeedbackEmail, previewFeedbackEmail } from "@/lib/feedback-email.functions";
 import { createUploadUrl, deleteAttachment } from "@/lib/feedback-attachments.functions";
 import { transitionFeedback } from "@/lib/feedback-workflow.functions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 function safeTimeAgo(v: string | null | undefined): string | null {
   if (!v) return null;
@@ -48,11 +49,20 @@ function FeedbackDetail() {
   const [reviewNote, setReviewNote] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const sendEmailFn = useServerFn(sendFeedbackEmail);
+  const previewFn = useServerFn(previewFeedbackEmail);
   const uploadUrlFn = useServerFn(createUploadUrl);
   const deleteAttFn = useServerFn(deleteAttachment);
   const transitionFn = useServerFn(transitionFeedback);
+
+  const preview = useQuery({
+    queryKey: ["feedback-preview", id],
+    queryFn: () => previewFn({ data: { feedbackId: id } }),
+    enabled: previewOpen,
+    staleTime: 0,
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["feedback", id],
@@ -259,9 +269,14 @@ function FeedbackDetail() {
               </Button>
             )}
             {data.status === "approved" && (
-              <Button size="sm" onClick={send} disabled={sendMutation.isPending}>
-                <Send className="mr-1.5 h-3.5 w-3.5" /> Send
-              </Button>
+              <>
+                <Button size="sm" variant="outline" onClick={() => setPreviewOpen(true)}>
+                  <Eye className="mr-1.5 h-3.5 w-3.5" /> Preview email
+                </Button>
+                <Button size="sm" onClick={send} disabled={sendMutation.isPending}>
+                  <Send className="mr-1.5 h-3.5 w-3.5" /> Send
+                </Button>
+              </>
             )}
             {data.status === "acknowledged" && (
               <Button size="sm" variant="outline" onClick={complete}>
@@ -517,6 +532,46 @@ function FeedbackDetail() {
           </Card>
         </div>
       </div>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Email preview</DialogTitle>
+            <DialogDescription>
+              {preview.data?.recipient ? `Will be delivered to ${preview.data.recipient}` : "Preview of the rendered feedback email."}
+              {preview.data?.subject ? ` · Subject: ${preview.data.subject}` : null}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="h-[70vh] overflow-hidden rounded-lg border border-border/60 bg-white">
+            {preview.isLoading ? (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Rendering…</div>
+            ) : preview.isError ? (
+              <div className="flex h-full items-center justify-center text-sm text-destructive">Failed to render preview</div>
+            ) : (
+              <iframe
+                title="Email preview"
+                srcDoc={preview.data?.html ?? ""}
+                sandbox=""
+                className="h-full w-full"
+              />
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPreviewOpen(false)}>Close</Button>
+            {data?.status === "approved" && (
+              <Button
+                onClick={() => {
+                  setPreviewOpen(false);
+                  send();
+                }}
+                disabled={sendMutation.isPending}
+              >
+                <Send className="mr-1.5 h-3.5 w-3.5" /> Send now
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

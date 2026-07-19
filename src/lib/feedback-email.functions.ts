@@ -253,3 +253,56 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       error: providerError,
     };
   });
+
+// Render the feedback email as HTML for in-app preview. No side effects.
+export const previewFeedbackEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ feedbackId: z.string().uuid() }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    await assertStaff(supabase, context.userId);
+
+    const { data: fb, error } = await supabase
+      .from("feedback")
+      .select("*, agent:agents(*)")
+      .eq("id", data.feedbackId)
+      .maybeSingle();
+    if (error) fail("Unable to load feedback", 500, error);
+    if (!fb) throw new Response("Feedback not found", { status: 404 });
+
+    const { data: settings } = await supabase
+      .from("email_settings")
+      .select("*")
+      .eq("singleton", true)
+      .maybeSingle();
+
+    const appBaseUrl = getAppBaseUrl();
+    const rendered = renderFeedbackEmail({
+      feedbackId: fb.id,
+      title: fb.title,
+      agentName: fb.agent?.full_name ?? "Agent",
+      managerName: fb.agent?.manager_name ?? undefined,
+      category: fb.category,
+      feedbackType: fb.feedback_type,
+      severity: fb.severity,
+      score: fb.score as number | null,
+      summary: fb.summary,
+      strengths: fb.strengths,
+      improvements: fb.improvements,
+      recommendedActions: fb.recommended_actions,
+      dueDate: fb.due_date,
+      appBaseUrl,
+      senderName: settings?.sender_name,
+      logoUrl: settings?.logo_url ?? `${appBaseUrl}${zenworkLogo.url}`,
+      signatureHtml: settings?.signature_html,
+      confidentialityNotice: settings?.confidentiality_notice,
+    });
+    return {
+      subject: rendered.subject,
+      html: rendered.html,
+      text: rendered.text,
+      recipient: fb.agent?.email ?? null,
+    };
+  });
