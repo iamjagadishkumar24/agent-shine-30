@@ -160,6 +160,8 @@ function AuthPage() {
         toast.error(mode === "signup" ? "Password must be at least 8 characters" : "Enter your password");
       else if (!nameValid) toast.error("Enter your full name");
       else if (!confirmValid) toast.error("Passwords do not match");
+      // Move focus to the first invalid field so keyboard/AT users land on the fix point.
+      requestAnimationFrame(focusFirstInvalid);
       return;
     }
     setErrorMsg(null);
