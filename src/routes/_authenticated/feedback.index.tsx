@@ -97,6 +97,7 @@ const ROW_HEIGHT = 52;
 const GRID = "grid-cols-[32px_minmax(0,3fr)_minmax(0,2fr)_minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1.5fr)]";
 
 function FeedbackPage() {
+  useRealtimeInvalidate("feedback", [["feedback-list"], ["dashboard"]]);
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const qc = useQueryClient();
