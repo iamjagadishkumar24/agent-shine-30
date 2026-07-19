@@ -178,16 +178,8 @@ function FeedbackPage() {
     qc.invalidateQueries({ queryKey: ["feedback-list"] });
   };
 
-  const approveMut = useMutation({
-    mutationFn: () => approve({ data: { ids: [...selected] } }),
-    onSuccess: (r) => { toast.success(`Approved ${r.updated} feedback item(s)`); invalidate(); },
-    onError: (e: any) => toast.error(e.message ?? "Failed to approve"),
-  });
-  const rejectMut = useMutation({
-    mutationFn: () => reject({ data: { ids: [...selected] } }),
-    onSuccess: (r) => { toast.success(`Rejected ${r.updated} feedback item(s)`); invalidate(); },
-    onError: (e: any) => toast.error(e.message ?? "Failed to reject"),
-  });
+
+
   const delMut = useMutation({
     mutationFn: () => del({ data: { ids: [...selected] } }),
     onSuccess: (r) => { toast.success(`Deleted ${r.deleted} feedback item(s)`); invalidate(); },
