@@ -79,7 +79,7 @@ export function AuthShell({
         <div className="absolute bottom-[-180px] left-1/3 h-[440px] w-[440px] rounded-full bg-slate-400/10 blur-[140px] dark:bg-slate-500/10" />
       </div>
 
-      <header className="relative z-10 flex items-center justify-end px-5 py-4 sm:px-8">
+      <header className="relative z-10 flex items-center justify-end px-5 py-3 sm:px-8 lg:py-2">
         <ThemeToggle />
       </header>
 
