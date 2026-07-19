@@ -145,10 +145,27 @@ async def main() -> int:
                     print(f"  still present on {route}: {f}")
 
             if time.monotonic() >= deadline:
+                print(f"\n❌ Badge still detected after {TIMEOUT_SECONDS}s. Capturing artifacts...")
+                artifacts_dir = SCREENSHOTS / "timeout"
+                artifacts_dir.mkdir(parents=True, exist_ok=True)
+                for route in ROUTES:
+                    slug = route.strip("/").replace("/", "_") or "root"
+                    try:
+                        await page.goto(f"{BASE_URL}{route}", wait_until="networkidle", timeout=30_000)
+                        await page.wait_for_timeout(1000)
+                        shot = artifacts_dir / f"{slug}.png"
+                        html = artifacts_dir / f"{slug}.html"
+                        await page.screenshot(path=str(shot))
+                        content = await page.content()
+                        html.write_text(content, encoding="utf-8")
+                        marker = " ⚠ findings" if route in last_findings else ""
+                        print(f"  saved {shot.relative_to(SCREENSHOTS.parent)}{marker}")
+                    except Exception as exc:
+                        print(f"  failed to capture {route}: {exc}")
                 await browser.close()
-                print(f"\n❌ Badge still detected after {TIMEOUT_SECONDS}s.")
                 for route, findings in last_findings.items():
                     print(f"  {route}: {findings}")
+                print(f"\nArtifacts: {artifacts_dir}")
                 return 1
 
             await asyncio.sleep(POLL_INTERVAL)
