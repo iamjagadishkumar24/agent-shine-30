@@ -442,7 +442,7 @@ function AuthPage() {
                 <button
                   type="button"
                   className="font-semibold text-primary hover:underline"
-                  onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setTouched({}); }}
+                  onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setTouched({}); setConfirmPassword(""); }}
                 >
                   {mode === "signin" ? "Sign up" : "Sign in"}
                 </button>
