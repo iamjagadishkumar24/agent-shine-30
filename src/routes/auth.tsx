@@ -346,6 +346,36 @@ function AuthPage() {
                   </div>
                 )}
 
+                {mode === "signup" && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="confirm-password" className="text-[13px] font-medium">Confirm password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="confirm-password"
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
+                        required
+                        placeholder="Re-enter your password"
+                        aria-invalid={confirmError || undefined}
+                        className={cn(
+                          "h-11 rounded-lg pl-10",
+                          confirmError && "border-destructive focus-visible:ring-destructive/40",
+                        )}
+                      />
+                    </div>
+                    {confirmError && (
+                      <p className="flex items-center gap-1 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" /> Passwords do not match
+                      </p>
+                    )}
+                  </div>
+                )}
+
+
                 {mode === "signin" && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
