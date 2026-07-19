@@ -83,7 +83,7 @@ function useDashboardData() {
         supabase.from("agents").select("id, full_name, employee_id, department, avatar_url, qa_score, status"),
         supabase
           .from("feedback")
-          .select("id, status, feedback_type, severity, score, created_at, agent_id, title, delivered_at, opened_at, clicked_at, acknowledged_at, escalated_at, email_error")
+          .select("id, status, feedback_type, severity, score, created_at, agent_id, title, sent_at, delivered_at, opened_at, clicked_at, acknowledged_at, escalated_at, email_error")
           .order("created_at", { ascending: false }),
         supabase
           .from("coaching_sessions")
