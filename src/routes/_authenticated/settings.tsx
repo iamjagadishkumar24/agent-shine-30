@@ -251,6 +251,64 @@ function EmailConfig() {
           </Button>
           {form && <Button variant="ghost" onClick={() => setForm(null)}>Discard</Button>}
         </div>
+
+        <div className="mt-6 rounded-lg border border-border/60 bg-muted/30 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-semibold">Send test email</div>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                Delivers the current Zenwork feedback template with sample data and the logo above so you can preview branding in a real inbox. Save changes first if you edited anything.
+              </div>
+            </div>
+            {s.logo_url ? (
+              <img src={s.logo_url} alt="Logo preview" className="h-8 w-auto rounded bg-white p-1" />
+            ) : null}
+          </div>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <Input
+              placeholder="destination@example.com"
+              value={brandingTo}
+              onChange={(e) => setBrandingTo(e.target.value)}
+            />
+            <Button
+              onClick={() => brandingTest.mutate()}
+              disabled={brandingTest.isPending || !brandingEmailValid || !!form}
+              title={form ? "Save changes first" : undefined}
+            >
+              {brandingTest.isPending ? (
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Send className="mr-2 h-3.5 w-3.5" />
+              )}
+              Send test email
+            </Button>
+          </div>
+          {brandingResult && (
+            <div
+              className={cn(
+                "mt-3 rounded-md p-3 text-xs",
+                brandingResult.ok ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive",
+              )}
+            >
+              <div className="flex items-center gap-2">
+                {brandingResult.ok ? (
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                ) : (
+                  <AlertCircle className="h-3.5 w-3.5" />
+                )}
+                <span className="font-medium">{brandingResult.ok ? "Delivered" : "Failed"}</span>
+                <span className="text-muted-foreground">
+                  · {brandingResult.provider} · {brandingResult.latencyMs}ms
+                </span>
+              </div>
+              <div className="mt-1 break-all">
+                {brandingResult.ok
+                  ? `Message ID: ${brandingResult.messageId ?? "n/a"}`
+                  : brandingResult.error}
+              </div>
+            </div>
+          )}
+        </div>
       </Card>
 
       <Card className="p-6 border-amber-500/40">
