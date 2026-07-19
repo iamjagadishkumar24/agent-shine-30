@@ -170,7 +170,10 @@ function AuthPage() {
         window.location.href = destination;
       }
     } catch (err: any) {
-      toast.error(err?.message ?? "Something went wrong");
+      const msg = err?.message ?? "Something went wrong";
+      setErrorMsg(msg);
+      toast.error(msg);
+
     } finally {
       setLoading(false);
     }
