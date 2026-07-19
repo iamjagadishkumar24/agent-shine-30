@@ -400,70 +400,18 @@ function FeedbackDetail() {
             <Section title="Recommended actions" body={data.recommended_actions} />
           </Card>
 
-          {data.status === "review" && (
-            <Card className="rounded-xl border-border/60 bg-card/60 p-6">
-              <div className="text-sm font-medium">Review this feedback</div>
-              <div className="mt-0.5 text-xs text-muted-foreground">
-                Approve to unlock sending, request revision to send it back to the author, or reject.
+          {data.status === "failed" && (
+            <Card className="rounded-xl border-destructive/40 bg-destructive/5 p-6">
+              <div className="flex items-center gap-2 text-sm font-medium text-destructive">
+                <AlertTriangle className="h-4 w-4" /> Delivery failed
               </div>
-              <Textarea
-                rows={3}
-                className="mt-3"
-                value={reviewNote}
-                onChange={(e) => setReviewNote(e.target.value)}
-                placeholder="Reviewer note (required for reject / request revision)"
-              />
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    transitionMutation.mutate({ type: "approve", feedbackId: id, note: reviewNote || undefined })
-                  }
-                  disabled={transitionMutation.isPending}
-                >
-                  <ThumbsUp className="mr-1.5 h-3.5 w-3.5" /> Approve
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    if (!reviewNote.trim()) return toast.error("Add a note explaining what to revise");
-                    transitionMutation.mutate({ type: "request_revision", feedbackId: id, note: reviewNote });
-                  }}
-                  disabled={transitionMutation.isPending}
-                >
-                  <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> Request revision
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-destructive hover:text-destructive"
-                  onClick={() => {
-                    if (!reviewNote.trim()) return toast.error("Add a rejection reason");
-                    transitionMutation.mutate({ type: "reject", feedbackId: id, note: reviewNote });
-                  }}
-                  disabled={transitionMutation.isPending}
-                >
-                  <ThumbsDown className="mr-1.5 h-3.5 w-3.5" /> Reject
-                </Button>
-              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {data.email_error ?? "The email provider rejected this message. Retry after checking recipient and settings."}
+              </p>
             </Card>
           )}
 
-          {(data.status === "rejected" || data.status === "revision_required" || data.status === "approved") &&
-            data.review_note && (
-              <Card className="rounded-xl border-border/60 bg-card/60 p-6">
-                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Reviewer note
-                </div>
-                <p className="mt-2 whitespace-pre-wrap text-sm">{data.review_note}</p>
-                {data.reviewed_at && (
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    {(safeTimeAgo(data.reviewed_at) ?? "—")}
-                  </div>
-                )}
-              </Card>
-            )}
+
 
 
           <Card className="rounded-xl border-border/60 bg-card/60 p-6">
