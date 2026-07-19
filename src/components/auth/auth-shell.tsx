@@ -72,7 +72,7 @@ export function AuthShell({
   ) : null;
 
   return (
-    <div className="auth-shell relative flex min-h-dvh flex-col text-foreground">
+    <div className="auth-shell relative flex min-h-dvh flex-col text-foreground lg:h-dvh lg:min-h-0 lg:overflow-hidden">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-48 -left-40 h-[560px] w-[560px] rounded-full bg-emerald-500/10 blur-[140px] dark:bg-emerald-400/10" />
         <div className="absolute top-1/3 -right-40 h-[560px] w-[560px] rounded-full bg-indigo-500/10 blur-[140px] dark:bg-indigo-400/10" />
