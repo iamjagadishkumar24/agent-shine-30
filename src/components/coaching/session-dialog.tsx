@@ -25,6 +25,12 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { AddToCalendarMenu } from "@/components/coaching/add-to-calendar-menu";
+import {
+  COACHING_STATUS_VALUES,
+  COACHING_STATUS_LABELS,
+  coachingStatusSchema,
+  normalizeCoachingStatus,
+} from "@/lib/coaching-status";
 
 export type SessionRow = {
   id?: string;
@@ -54,10 +60,7 @@ const Schema = z.object({
   end_time: z.string().min(1, "Pick an end time"),
   session_type: z.enum(["coaching", "review", "one_on_one", "training", "follow_up"]),
   priority: z.enum(["low", "medium", "high", "urgent"]),
-  status: z.enum([
-    "scheduled", "pending_approval", "confirmed", "in_progress",
-    "completed", "canceled", "missed", "rescheduled",
-  ]),
+  status: coachingStatusSchema,
   meeting_link: z.string().trim().url("Invalid URL").max(500).optional().or(z.literal("")),
   meeting_location: z.string().trim().max(200).optional(),
   agenda: z.string().trim().max(2000).optional(),
