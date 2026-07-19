@@ -23,10 +23,14 @@ import {
 import { cn } from "@/lib/utils";
 
 
-type AuthSearch = { next?: string };
+type AuthSearch = { next?: string; mode?: "signin" | "signup" };
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>): AuthSearch =>
-    typeof s.next === "string" ? { next: s.next } : {},
+  validateSearch: (s: Record<string, unknown>): AuthSearch => {
+    const out: AuthSearch = {};
+    if (typeof s.next === "string") out.next = s.next;
+    if (s.mode === "signup" || s.mode === "signin") out.mode = s.mode;
+    return out;
+  },
   component: AuthPage,
   head: () => ({
     meta: [
