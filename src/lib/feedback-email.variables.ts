@@ -13,23 +13,35 @@ export type TemplateVariable = {
 // The canonical set of variables an admin can reference in a custom
 // feedback-email template. Keep in sync with buildVariableMap().
 export const FEEDBACK_TEMPLATE_VARIABLES: TemplateVariable[] = [
-  { key: "agentName", label: "Agent name", description: "Full name of the agent receiving feedback.", sample: "Priya Ramanathan" },
-  { key: "managerName", label: "Manager name", description: "Direct manager, if set.", sample: "Alex Chen" },
-  { key: "reviewerName", label: "Reviewer name", description: "QA reviewer who authored the feedback.", sample: "Jordan Miles" },
-  { key: "title", label: "Feedback title", description: "Short title of the feedback.", sample: "Customer escalation — Case 44821" },
-  { key: "category", label: "Category", description: "Feedback category.", sample: "Communication" },
-  { key: "feedbackType", label: "Feedback type", description: "positive · constructive · corrective.", sample: "constructive" },
-  { key: "severity", label: "Severity", description: "low · medium · high · critical.", sample: "high" },
-  { key: "score", label: "Score", description: "Numeric QA score, rounded to 1 decimal.", sample: "82.5" },
-  { key: "summary", label: "Summary", description: "Executive summary of the feedback.", sample: "The agent handled the escalation with empathy but missed two policy checkpoints." },
-  { key: "strengths", label: "Strengths", description: "What went well.", sample: "Strong empathy, clear ownership of the resolution timeline." },
-  { key: "improvements", label: "Areas to improve", description: "What to work on.", sample: "Confirm identity before disclosing account details." },
-  { key: "recommendedActions", label: "Coaching actions", description: "Recommended coaching next steps.", sample: "Complete the Identity Verification refresher module by Friday." },
-  { key: "dueDate", label: "Acknowledgement due date", description: "SLA deadline for acknowledgement.", sample: "2026-07-25" },
-  { key: "acknowledgeUrl", label: "Acknowledge URL", description: "Tracked click-through link for the agent.", sample: "https://app.example.com/feedback/…/ack" },
-  { key: "appBaseUrl", label: "App base URL", description: "Root URL of the QA platform.", sample: "https://app.example.com" },
-  { key: "senderName", label: "Sender name", description: "Configured email sender name.", sample: "QA Team" },
+  { key: "Customer_Name", label: "Customer name", description: "Person the email is addressed to (falls back to the agent).", sample: "Priya Ramanathan" },
+  { key: "Agent_Name", label: "Support agent", description: "Agent under review.", sample: "Priya Ramanathan" },
+  { key: "Manager_Name", label: "Reporting manager", description: "Agent's direct manager, if set.", sample: "Alex Chen" },
+  { key: "Reviewer_Name", label: "Reviewer name", description: "QA reviewer who authored the feedback.", sample: "Jordan Miles" },
+  { key: "Feedback_ID", label: "Feedback ID", description: "Short reference ID (first 8 chars).", sample: "A1B2C3D4" },
+  { key: "Title", label: "Review title", description: "Short title of the review.", sample: "Customer escalation — Case 44821" },
+  { key: "Department", label: "Department", description: "Business unit the agent belongs to.", sample: "Customer Success" },
+  { key: "Category", label: "Category", description: "Feedback category.", sample: "Communication" },
+  { key: "Feedback_Type", label: "Review type", description: "positive · constructive · corrective.", sample: "constructive" },
+  { key: "Severity", label: "Severity", description: "low · medium · high · critical.", sample: "high" },
+  { key: "Priority", label: "Priority", description: "Priority label shown on the summary card.", sample: "High" },
+  { key: "Quality_Score", label: "Quality score", description: "Numeric QA score, rounded to 1 decimal.", sample: "82.5" },
+  { key: "Overall_Score", label: "Overall score", description: "Alias of quality score.", sample: "82.5" },
+  { key: "Overall_Rating", label: "Overall rating", description: "Rating label derived from the score.", sample: "Exceeds Expectations" },
+  { key: "Review_Status", label: "Review status", description: "Current workflow status.", sample: "Ready for review" },
+  { key: "Interaction_Date", label: "Interaction date", description: "Date of the customer interaction.", sample: "2026-07-18" },
+  { key: "Review_Date", label: "Review date", description: "Date the review was completed.", sample: "2026-07-19" },
+  { key: "Summary", label: "Performance summary", description: "Executive summary of the feedback.", sample: "The agent handled the escalation with empathy but missed two policy checkpoints." },
+  { key: "Strengths", label: "Highlights", description: "What went well.", sample: "Strong empathy\nClear ownership of the resolution timeline" },
+  { key: "Improvements", label: "Opportunities", description: "What to work on.", sample: "Confirm identity before disclosing account details\nTighten call summary notes" },
+  { key: "Manager_Comments", label: "Manager's review", description: "Personalized narrative from the manager.", sample: "After carefully reviewing the interaction, we are pleased with the overall quality demonstrated." },
+  { key: "Coaching_Recommendations", label: "Coaching focus areas", description: "Recommended coaching next steps.", sample: "Active Listening\nProduct Knowledge\nCustomer Empathy" },
+  { key: "Next_Steps", label: "Next steps", description: "Clear actions for the recipient.", sample: "Acknowledge this review and complete the recommended coaching module by Friday." },
+  { key: "Due_Date", label: "Acknowledgement due date", description: "SLA deadline for acknowledgement.", sample: "2026-07-25" },
+  { key: "Acknowledge_URL", label: "Acknowledge URL", description: "Tracked click-through link for the recipient.", sample: "https://app.zenwork.com/feedback/…" },
+  { key: "App_Base_URL", label: "App base URL", description: "Root URL of Zenwork Performance Manager.", sample: "https://app.zenwork.com" },
+  { key: "Sender_Name", label: "Sender name", description: "Configured email sender name.", sample: "Zenwork Performance Manager" },
 ];
+
 
 export type FeedbackEmailVariables = Partial<FeedbackEmailData> & {
   acknowledgeUrl?: string;
@@ -41,7 +53,51 @@ export function buildVariableMap(d: FeedbackEmailVariables): Record<string, stri
   const acknowledgeUrl =
     d.acknowledgeUrl ??
     (d.feedbackId ? `${appBaseUrl}/api/public/track/click/${d.feedbackId}?to=${encodeURIComponent(`/feedback/${d.feedbackId}`)}` : "");
+  const score = d.score != null ? Number(d.score).toFixed(1) : "";
+  const feedbackId = d.feedbackId ? d.feedbackId.slice(0, 8).toUpperCase() : "";
+  const rating =
+    d.score == null
+      ? "Not scored"
+      : d.score >= 90
+        ? "Outstanding"
+        : d.score >= 80
+          ? "Exceeds Expectations"
+          : d.score >= 70
+            ? "Meets Expectations"
+            : d.score >= 60
+              ? "Developing"
+              : "Needs Improvement";
+  const priority = d.severity ? d.severity.charAt(0).toUpperCase() + d.severity.slice(1) : "";
   return {
+    // Zenwork-branded canonical keys
+    Customer_Name: d.agentName ?? "",
+    Agent_Name: d.agentName ?? "",
+    Manager_Name: d.managerName ?? "",
+    Reviewer_Name: d.reviewerName ?? "",
+    Feedback_ID: feedbackId,
+    Title: d.title ?? "",
+    Department: "Customer Success",
+    Category: d.category ?? "",
+    Feedback_Type: d.feedbackType ?? "",
+    Severity: d.severity ?? "",
+    Priority: priority,
+    Quality_Score: score,
+    Overall_Score: score,
+    Overall_Rating: rating,
+    Review_Status: "",
+    Interaction_Date: "",
+    Review_Date: new Date().toISOString().slice(0, 10),
+    Summary: d.summary ?? "",
+    Strengths: d.strengths ?? "",
+    Improvements: d.improvements ?? "",
+    Manager_Comments: "",
+    Coaching_Recommendations: d.recommendedActions ?? "",
+    Next_Steps: "",
+    Due_Date: d.dueDate ?? "",
+    Acknowledge_URL: acknowledgeUrl,
+    App_Base_URL: appBaseUrl,
+    Sender_Name: d.senderName ?? "",
+    // Legacy camelCase aliases (kept so previously-saved templates still render)
     agentName: d.agentName ?? "",
     managerName: d.managerName ?? "",
     reviewerName: d.reviewerName ?? "",
@@ -49,7 +105,7 @@ export function buildVariableMap(d: FeedbackEmailVariables): Record<string, stri
     category: d.category ?? "",
     feedbackType: d.feedbackType ?? "",
     severity: d.severity ?? "",
-    score: d.score != null ? Number(d.score).toFixed(1) : "",
+    score,
     summary: d.summary ?? "",
     strengths: d.strengths ?? "",
     improvements: d.improvements ?? "",
@@ -60,6 +116,7 @@ export function buildVariableMap(d: FeedbackEmailVariables): Record<string, stri
     senderName: d.senderName ?? "",
   };
 }
+
 
 // Build a sample variable set for the preview pane / test emails.
 export function sampleVariableMap(): Record<string, string> {
