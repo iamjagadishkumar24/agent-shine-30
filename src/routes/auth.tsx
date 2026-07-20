@@ -544,7 +544,7 @@ function AuthPage() {
                   type="submit"
                   aria-disabled={!canSubmit}
                   data-inert={!canSubmit ? "true" : undefined}
-                  className="h-11 w-full rounded-lg text-sm font-semibold data-[inert=true]:opacity-50 data-[inert=true]:cursor-not-allowed"
+                  className="h-11 w-full rounded-xl border-0 bg-gradient-to-r from-emerald-500 via-cyan-500 to-violet-500 text-sm font-semibold text-white shadow-[0_10px_30px_-10px_rgba(16,185,129,0.6)] transition-all hover:from-emerald-600 hover:via-cyan-600 hover:to-violet-600 hover:shadow-[0_14px_36px_-10px_rgba(16,185,129,0.65)] active:scale-[0.99] data-[inert=true]:opacity-60 data-[inert=true]:cursor-not-allowed data-[inert=true]:shadow-none"
                 >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   <span className="inline-flex items-center gap-2">
@@ -554,6 +554,7 @@ function AuthPage() {
                     {!loading && <ArrowRight className="h-4 w-4" />}
                   </span>
                 </Button>
+
 
                 {mode !== "forgot" && (
                   <>
