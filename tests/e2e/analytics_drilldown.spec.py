@@ -380,16 +380,78 @@ async def drill_and_verify(page, label: str) -> dict:
             f"{expected_count} but drill sheet shows {sheet_count}"
         )
 
-    # Count rows and Open links inside the dialog. Sheet renders first 500.
+    # Rendered rows in the drill sheet are capped at DRILL_RENDER_CAP (500).
+    # There is no pagination or virtualization: overflow spills into the
+    # overflow-note footer instead. Verify both branches explicitly.
     tbody_rows = await dialog.locator("tbody tr").count()
     open_links = dialog.locator('tbody a:has-text("Open")')
     open_count = await open_links.count()
-    expected_rendered = min(sheet_count, 500) if sheet_count > 0 else 1  # 1 = empty-state row
-    if tbody_rows != expected_rendered:
-        fail(
-            f"rendered tbody rows ({tbody_rows}) != expected ({expected_rendered}) "
-            f"for '{label}' with sheet_count={sheet_count}"
-        )
+    overflow_note = dialog.locator('[data-testid="drill-overflow-note"]')
+    overflow_present = await overflow_note.count() > 0
+
+    if sheet_count == 0:
+        # Empty-state placeholder row.
+        if tbody_rows != 1:
+            fail(f"empty drill '{label}' rendered {tbody_rows} tbody rows, expected 1")
+        if overflow_present:
+            fail(f"overflow note visible on empty '{label}' drill")
+        expected_rendered = 1
+    elif sheet_count <= DRILL_RENDER_CAP:
+        expected_rendered = sheet_count
+        if tbody_rows != expected_rendered:
+            fail(
+                f"'{label}' rendered {tbody_rows} rows but sheet_count={sheet_count} "
+                f"(<= cap {DRILL_RENDER_CAP}); expected {expected_rendered}"
+            )
+        if overflow_present:
+            fail(
+                f"overflow note visible for '{label}' at sheet_count={sheet_count} "
+                f"(<= cap {DRILL_RENDER_CAP})"
+            )
+        if open_count != expected_rendered:
+            fail(
+                f"'{label}' rendered {expected_rendered} rows but only "
+                f"{open_count} Open links"
+            )
+    else:
+        # sheet_count > DRILL_RENDER_CAP: enforce the cap + overflow note.
+        expected_rendered = DRILL_RENDER_CAP
+        if tbody_rows != DRILL_RENDER_CAP:
+            fail(
+                f"'{label}' at sheet_count={sheet_count} rendered {tbody_rows} rows; "
+                f"expected exactly {DRILL_RENDER_CAP} (no pagination/virtualization)"
+            )
+        if open_count != DRILL_RENDER_CAP:
+            fail(
+                f"'{label}' rendered {DRILL_RENDER_CAP} rows but {open_count} Open links "
+                f"— every rendered row must have an Open link"
+            )
+        if not overflow_present:
+            fail(
+                f"'{label}' at sheet_count={sheet_count} missing overflow note; "
+                f"drill-down must communicate the truncation"
+            )
+        note_total = await overflow_note.get_attribute("data-total") or ""
+        note_shown = await overflow_note.get_attribute("data-shown") or ""
+        try:
+            if int(note_total) != sheet_count:
+                fail(
+                    f"overflow-note data-total={note_total} != sheet_count "
+                    f"{sheet_count} for '{label}'"
+                )
+            if int(note_shown) != DRILL_RENDER_CAP:
+                fail(
+                    f"overflow-note data-shown={note_shown} != cap "
+                    f"{DRILL_RENDER_CAP} for '{label}'"
+                )
+        except ValueError:
+            fail(
+                f"overflow-note attrs not numeric: total={note_total!r} "
+                f"shown={note_shown!r}"
+            )
+        note_text = (await overflow_note.inner_text()).strip()
+        if f"Showing first {DRILL_RENDER_CAP} of" not in note_text:
+            fail(f"overflow-note text unexpected: {note_text!r}")
 
     await page.screenshot(path=str(SS / f"drill_{label.replace(' ', '_')}.png"))
 
@@ -415,12 +477,15 @@ async def drill_and_verify(page, label: str) -> dict:
         "kpi_card_count": expected_count,
         "sheet_count": sheet_count,
         "rendered_rows": tbody_rows,
+        "expected_rendered": expected_rendered,
+        "overflow_note": overflow_present,
         "open_links": open_count,
         "sample_href": open_href,
         "chip_kpi": chip_kpi_key,
         "chip_preset": preset_attr,
         "chip_range": [range_start_attr, range_end_attr],
     }
+
 
 
 
