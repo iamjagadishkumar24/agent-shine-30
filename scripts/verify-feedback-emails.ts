@@ -138,8 +138,8 @@ for (const c of cases) {
   }
 
   // Write artifacts for human inspection
-  writeFileSync(`/mnt/documents/feedback-email-verification/${c.id}.html`, html);
-  writeFileSync(`/mnt/documents/feedback-email-verification/${c.id}.txt`, rendered.text);
+  writeFileSync(`${OUT_DIR}/${c.id}.html`, html);
+  writeFileSync(`${OUT_DIR}/${c.id}.txt`, rendered.text);
 
   summaryRows.push(
     `${c.id.padEnd(14)}  interaction=${c.interaction.padEnd(4)}  scores=[${c.scores.join(",")}]  expected=${expectedOverallLabel}  status=${failures.filter((f) => f.case === c.id).length === 0 ? "PASS" : "FAIL"}`,
