@@ -1,13 +1,562 @@
 {
   "term": "zenwork",
-  "total_matches": 1,
-  "generated_at": "2026-07-20T23:32:43.755Z",
-  "detection": "case-insensitive + unicode-confusables + separator-insertions + zero-width-stripped",
-  "matches": [
+  "status": "passed",
+  "mode": "full",
+  "total_matches": 0,
+  "files_with_matches": 0,
+  "scanned_files": 242,
+  "scanned": [
+    ".env",
+    ".github/workflows/a11y.yml",
+    ".gitignore",
+    ".husky/pre-commit",
+    ".lovable/mcp/manifest.json",
+    ".lovable/plan.md",
+    ".lovable/project.json",
+    ".prettierignore",
+    ".prettierrc",
+    "AGENTS.md",
+    "bunfig.toml",
+    "components.json",
+    "eslint.config.js",
+    "package.json",
+    "public/_headers",
+    "src/assets/qualipulse-lockup.png.asset.json",
+    "src/assets/qualipulse-mark.png.asset.json",
+    "src/components/analytics/analytics-charts.tsx",
+    "src/components/auth/auth-hero.tsx",
+    "src/components/auth/auth-shell.tsx",
+    "src/components/brand/brand-lockup.tsx",
+    "src/components/coaching/add-to-calendar-menu.tsx",
+    "src/components/coaching/coaching-tabs.tsx",
+    "src/components/coaching/session-dialog.tsx",
+    "src/components/dashboard/heavy-charts.tsx",
+    "src/components/layout/command-palette.tsx",
+    "src/components/layout/page-header.tsx",
+    "src/components/notifications/notifications-bell.tsx",
+    "src/components/ui/accordion.tsx",
+    "src/components/ui/alert-dialog.tsx",
+    "src/components/ui/alert.tsx",
+    "src/components/ui/aspect-ratio.tsx",
+    "src/components/ui/avatar.tsx",
+    "src/components/ui/badge.tsx",
+    "src/components/ui/breadcrumb.tsx",
+    "src/components/ui/button.tsx",
+    "src/components/ui/calendar.tsx",
+    "src/components/ui/card.tsx",
+    "src/components/ui/carousel.tsx",
+    "src/components/ui/chart.tsx",
+    "src/components/ui/checkbox.tsx",
+    "src/components/ui/collapsible.tsx",
+    "src/components/ui/command.tsx",
+    "src/components/ui/context-menu.tsx",
+    "src/components/ui/data-table.tsx",
+    "src/components/ui/dialog.tsx",
+    "src/components/ui/drawer.tsx",
+    "src/components/ui/dropdown-menu.tsx",
+    "src/components/ui/empty-state.tsx",
+    "src/components/ui/form.tsx",
+    "src/components/ui/hover-card.tsx",
+    "src/components/ui/input-otp.tsx",
+    "src/components/ui/input.tsx",
+    "src/components/ui/label.tsx",
+    "src/components/ui/menubar.tsx",
+    "src/components/ui/navigation-menu.tsx",
+    "src/components/ui/pagination.tsx",
+    "src/components/ui/popover.tsx",
+    "src/components/ui/progress.tsx",
+    "src/components/ui/radio-group.tsx",
+    "src/components/ui/resizable.tsx",
+    "src/components/ui/scroll-area.tsx",
+    "src/components/ui/select.tsx",
+    "src/components/ui/separator.tsx",
+    "src/components/ui/sheet.tsx",
+    "src/components/ui/sidebar.tsx",
+    "src/components/ui/skeleton-blocks.tsx",
+    "src/components/ui/skeleton.tsx",
+    "src/components/ui/slider.tsx",
+    "src/components/ui/sonner.tsx",
+    "src/components/ui/switch.tsx",
+    "src/components/ui/table.tsx",
+    "src/components/ui/tabs.tsx",
+    "src/components/ui/textarea.tsx",
+    "src/components/ui/toggle-group.tsx",
+    "src/components/ui/toggle.tsx",
+    "src/components/ui/tooltip.tsx",
+    "src/hooks/use-mobile.tsx",
+    "src/hooks/use-realtime-invalidate.ts",
+    "src/integrations/lovable/index.ts",
+    "src/integrations/supabase/auth-attacher.ts",
+    "src/integrations/supabase/auth-middleware.ts",
+    "src/integrations/supabase/client.server.ts",
+    "src/integrations/supabase/client.ts",
+    "src/integrations/supabase/types.ts",
+    "src/lib/agent-portal.functions.ts",
+    "src/lib/ai-feedback.functions.ts",
+    "src/lib/ai-gateway.server.ts",
+    "src/lib/bulk-operations.functions.ts",
+    "src/lib/calendar-feed.functions.ts",
+    "src/lib/calendar-links.ts",
+    "src/lib/coaching-status.ts",
+    "src/lib/csv.ts",
+    "src/lib/disputes.functions.ts",
+    "src/lib/email-queue.functions.ts",
+    "src/lib/email-queue.server.ts",
+    "src/lib/email-settings.functions.ts",
+    "src/lib/email-spam-check.ts",
+    "src/lib/email/providers.server.ts",
+    "src/lib/error-capture.ts",
+    "src/lib/error-page.ts",
+    "src/lib/feedback-attachments.functions.ts",
+    "src/lib/feedback-email.functions.ts",
+    "src/lib/feedback-email.templates.ts",
+    "src/lib/feedback-email.variables.ts",
+    "src/lib/feedback-workflow.functions.ts",
+    "src/lib/health.functions.ts",
+    "src/lib/lovable-error-reporting.ts",
+    "src/lib/mcp/index.ts",
+    "src/lib/mcp/supabase.ts",
+    "src/lib/mcp/tools/create-feedback.ts",
+    "src/lib/mcp/tools/get-feedback.ts",
+    "src/lib/mcp/tools/list-agents.ts",
+    "src/lib/mcp/tools/list-coaching-sessions.ts",
+    "src/lib/mcp/tools/list-feedback.ts",
+    "src/lib/mcp/tools/update-feedback-status.ts",
+    "src/lib/mcp/tools/whoami.ts",
+    "src/lib/notification-types.ts",
+    "src/lib/notifications.functions.ts",
+    "src/lib/profile.functions.ts",
+    "src/lib/report-schedules.functions.ts",
+    "src/lib/report-schedules.server.ts",
+    "src/lib/reports.server.ts",
+    "src/lib/reports.ts",
+    "src/lib/scorecard.functions.ts",
+    "src/lib/scorecard.ts",
+    "src/lib/security.functions.ts",
+    "src/lib/theme.tsx",
+    "src/lib/utils.ts",
+    "src/router.tsx",
+    "src/routes/README.md",
+    "src/routes/[.]lovable.oauth.consent.tsx",
+    "src/routes/[.mcp]/invoke-tool/$tool.ts",
+    "src/routes/[.mcp]/list-tools.ts",
+    "src/routes/[.well-known]/oauth-protected-resource.ts",
+    "src/routes/__root.tsx",
+    "src/routes/_authenticated/account.tsx",
+    "src/routes/_authenticated/agents.tsx",
+    "src/routes/_authenticated/analytics.email.tsx",
+    "src/routes/_authenticated/analytics.tsx",
+    "src/routes/_authenticated/approvals.tsx",
+    "src/routes/_authenticated/coaching.$id.tsx",
+    "src/routes/_authenticated/coaching.new.tsx",
+    "src/routes/_authenticated/coaching.plans.$id.tsx",
+    "src/routes/_authenticated/coaching.plans.new.tsx",
+    "src/routes/_authenticated/coaching.plans.tsx",
+    "src/routes/_authenticated/coaching.tsx",
+    "src/routes/_authenticated/dashboard.tsx",
+    "src/routes/_authenticated/feedback.$id.tsx",
+    "src/routes/_authenticated/feedback.index.tsx",
+    "src/routes/_authenticated/feedback.new.tsx",
+    "src/routes/_authenticated/notifications.tsx",
+    "src/routes/_authenticated/portal.$id.tsx",
+    "src/routes/_authenticated/portal.tsx",
+    "src/routes/_authenticated/reports.schedules.tsx",
+    "src/routes/_authenticated/reports.tsx",
+    "src/routes/_authenticated/route.tsx",
+    "src/routes/_authenticated/settings.tsx",
+    "src/routes/api/public/calendar/$token.ics.ts",
+    "src/routes/api/public/hooks/dispatch-scheduled-reports.ts",
+    "src/routes/api/public/hooks/drain-email-queue.ts",
+    "src/routes/api/public/hooks/feedback-escalations.ts",
+    "src/routes/api/public/track/click.$id.ts",
+    "src/routes/api/public/track/open.$id.ts",
+    "src/routes/api/public/webhooks/email.$provider.ts",
+    "src/routes/auth.tsx",
+    "src/routes/forgot-password.tsx",
+    "src/routes/index.tsx",
+    "src/routes/mcp.ts",
+    "src/routes/reset-password.tsx",
+    "src/routes/sign-up.tsx",
+    "src/routes/verify-email.tsx",
+    "src/server.ts",
+    "src/start.ts",
+    "src/styles.css",
+    "supabase/config.toml",
+    "supabase/migrations/20260718151239_415fef1f-74f8-4f54-abfd-844b4796bb53.sql",
+    "supabase/migrations/20260718151305_c5ee6718-3356-4977-9319-35b7ad23ebd8.sql",
+    "supabase/migrations/20260718151910_ccefc848-1f94-451b-be57-13db6c3986b9.sql",
+    "supabase/migrations/20260718152924_ffff0fd7-e7c1-4e23-835c-e40745a9af44.sql",
+    "supabase/migrations/20260718153001_3e4362fb-e61b-4c1e-ab06-2f94ee48f523.sql",
+    "supabase/migrations/20260718155225_8ea9da5a-d7b7-4cdd-9137-4a4d5a3fcfee.sql",
+    "supabase/migrations/20260718155802_b3e74fe6-8122-4889-86fc-78a88a123fc6.sql",
+    "supabase/migrations/20260718160243_9742484f-4b58-4f52-9ce6-b0578447b704.sql",
+    "supabase/migrations/20260718161252_66a8334f-e9ee-4ec3-8996-cedfce165704.sql",
+    "supabase/migrations/20260718161912_3119e95c-62ce-4fed-a532-237a41a8e2be.sql",
+    "supabase/migrations/20260718162003_d2bf5b9a-ae16-4e31-ae0d-b065e9b2cca1.sql",
+    "supabase/migrations/20260718202853_8a6b5376-43fa-4925-af82-90171a3c6bb5.sql",
+    "supabase/migrations/20260718203555_93416c0c-77de-4919-a788-bfff5466263a.sql",
+    "supabase/migrations/20260718204326_653108e4-0101-43e8-bf7a-48d9e53a5a65.sql",
+    "supabase/migrations/20260718204353_bf27668c-55e2-4c05-b2a8-78cca2e50b33.sql",
+    "supabase/migrations/20260718210637_7adb4c55-2ca8-4e0e-83aa-544f39245142.sql",
+    "supabase/migrations/20260718210701_3416d774-bc2e-4303-8750-2931b0833f75.sql",
+    "supabase/migrations/20260718211859_d6aad0c1-6139-47ca-ab1a-8486216f1d09.sql",
+    "supabase/migrations/20260718212929_87cd1463-bfb7-4c13-becc-2fc27f468539.sql",
+    "supabase/migrations/20260718213101_d62f6a68-bc42-4d37-994b-da1bdf290a73.sql",
+    "supabase/migrations/20260719001947_84209771-03da-4cb6-a97b-4ae25984a34b.sql",
+    "supabase/migrations/20260719004012_34cda0b7-7841-48d8-a5a4-e0e0de82b78a.sql",
+    "supabase/migrations/20260719004740_75c92d44-514a-4af7-821a-986604af290a.sql",
+    "supabase/migrations/20260719004938_b84ef941-88a5-4128-818d-b201fc38dc08.sql",
+    "supabase/migrations/20260719020157_0d318b95-c206-42c9-899c-ae54ef8d021a.sql",
+    "supabase/migrations/20260719022617_bc44e93e-6b83-41f2-b0c2-aa34b320448f.sql",
+    "supabase/migrations/20260719024017_3139864b-a4b2-4efb-a1f0-373e30b93c37.sql",
+    "supabase/migrations/20260719035315_c59f5ac6-40b9-48d3-80de-0fe98e36ef23.sql",
+    "supabase/migrations/20260719041054_dcc8d3d7-faba-44b5-b9e9-f063878ef99c.sql",
+    "supabase/migrations/20260719164417_0139a5b3-b4a5-4c9d-91c3-31882a50db40.sql",
+    "supabase/migrations/20260719165926_d6de32dc-e9cf-4794-bea3-f4feab3f2a2c.sql",
+    "supabase/migrations/20260719171317_7ce4bd46-75b9-4b15-872d-3c3cd271bb03.sql",
+    "supabase/migrations/20260719171356_040ad93a-4762-462e-9132-e9ca73b13e91.sql",
+    "supabase/migrations/20260719172544_d6f74f7b-a212-48de-89a5-f3dbbf08c259.sql",
+    "supabase/migrations/20260719172616_8a8df767-0a40-46ba-8084-7cea27edb8d9.sql",
+    "supabase/migrations/20260719193420_7d311f42-1d5f-4cb2-b4bd-5e8357a39a22.sql",
+    "supabase/migrations/20260720202903_ed79c432-2cb2-4950-88a5-f9e841a70b37.sql",
+    "supabase/migrations/20260720203954_4cf524b7-b4e9-4fac-98f8-9c68a02b9673.sql",
+    "supabase/migrations/20260720231856_6a075849-9789-490e-b51f-0c79830a82ae.sql",
+    "tests/a11y/README.md",
+    "tests/a11y/artifacts/auth__dark.json",
+    "tests/a11y/artifacts/auth__light.json",
+    "tests/a11y/artifacts/reset-password__dark.json",
+    "tests/a11y/artifacts/reset-password__light.json",
+    "tests/a11y/artifacts/verify-email__dark.json",
+    "tests/a11y/artifacts/verify-email__light.json",
+    "tests/a11y/auth_routes.spec.py",
+    "tests/e2e/README.md",
+    "tests/e2e/acknowledge_flow.spec.py",
+    "tests/e2e/analytics_drilldown.spec.py",
+    "tests/e2e/coaching_status_regression.spec.py",
+    "tests/e2e/no_lovable_badge.spec.py",
+    "tests/e2e/no_lovable_badge_propagation.spec.py",
+    "tests/e2e/no_provider_leak.spec.py",
+    "tests/e2e/no_success_toasts.spec.py",
+    "tests/visual/.gitignore",
+    "tests/visual/README.md",
+    "tests/visual/auth_brand.spec.py",
+    "tests/visual/auth_lockup_spacing.spec.py",
+    "tests/visual/auth_logo.spec.py",
+    "tests/visual/header.spec.py",
+    "tests/visual/screenshots/auth_brand_report.json",
+    "tests/visual/screenshots/auth_lockup_report.json",
+    "tests/visual/screenshots/logo/report.json",
+    "tsconfig.json",
+    "vite.config.ts"
+  ],
+  "skipped": [
     {
-      "file": ".husky/pre-commit",
-      "line": 2,
-      "content": "# Rebrand guard — blocks commits that reintroduce legacy \"Zenwork\" references"
+      "file": "public/favicon.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/__pycache__/analytics_drilldown.spec.cpython-313.pyc",
+      "reason": "binary"
+    },
+    {
+      "file": "tests/e2e/screenshots/no_lovable_badge/auth.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/no_lovable_badge/forgot-password.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/no_lovable_badge/reset-password.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/no_lovable_badge/root.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/no_lovable_badge/sign-up.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/no_lovable_badge/verify-email.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/no_lovable_badge_propagation/auth.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/no_lovable_badge_propagation/forgot-password.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/no_lovable_badge_propagation/reset-password.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/no_lovable_badge_propagation/root.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/no_lovable_badge_propagation/sign-up.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/no_lovable_badge_propagation/verify-email.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/no_success_toasts/final.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/__baselines__/header_1024.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/__baselines__/header_1280.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/__baselines__/header_1440.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/__baselines__/header_2560.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_forgot_dark.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_forgot_light.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_forgot_system.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_reset_dark.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_reset_light.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_reset_system.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_signin_dark.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_signin_light.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_signin_system.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_signup_dark.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_signup_light.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_signup_system.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_verify_dark.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_verify_light.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/brand_verify_system.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/lockup_desktop_dark.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/lockup_desktop_dark_full.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/lockup_desktop_light.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/lockup_desktop_light_full.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/lockup_mobile_dark.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/lockup_mobile_dark_full.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/lockup_mobile_light.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/lockup_mobile_light_full.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/lockup_tablet_dark.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/lockup_tablet_dark_full.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/lockup_tablet_light.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/lockup_tablet_light_full.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/forgot-iphone-se.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/forgot-laptop.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/forgot-mobile-lg.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/forgot-mobile-sm.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/forgot-mobile.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/forgot-tablet.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/reset-iphone-se.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/reset-laptop.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/reset-mobile-lg.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/reset-mobile-sm.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/reset-mobile.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/reset-tablet.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/signin-iphone-se.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/signin-laptop.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/signin-mobile-lg.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/signin-mobile-sm.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/signin-mobile.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/signin-tablet.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/signup-iphone-se.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/signup-laptop.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/signup-mobile-lg.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/signup-mobile-sm.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/signup-mobile.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/signup-tablet.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/verify-iphone-se.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/verify-laptop.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/verify-mobile-lg.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/verify-mobile-sm.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/verify-mobile.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/visual/screenshots/logo/verify-tablet.png",
+      "reason": "binary-ext"
     }
-  ]
+  ],
+  "per_file": {},
+  "generated_at": "2026-07-20T23:37:15.481Z",
+  "detection": "case-insensitive + unicode-confusables + separator-insertions + zero-width-stripped",
+  "matches": []
 }

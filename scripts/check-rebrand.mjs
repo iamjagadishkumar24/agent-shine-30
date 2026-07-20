@@ -190,12 +190,34 @@ if (isStagedMode) {
   console.error("");
 }
 
-if (annotations.length > 0) {
+const outDir = process.env.REBRAND_GUARD_REPORT_DIR || "rebrand-guard-report";
+const failed = annotations.length > 0;
+const header = failed
+  ? `✖ Rebrand guard failed — ${annotations.length} residual "${TERM_DISPLAY}" reference(s) across ${perFile.size} file(s):`
+  : `✓ Rebrand guard passed — ${scanned.length} file(s) scanned, no "${TERM_DISPLAY}" references (including confusables) found.`;
+
+// Always emit a JSON report so CI (including passing staged runs) can inspect it.
+mkdirSync(outDir, { recursive: true });
+const reportPayload = {
+  term: TERM_DISPLAY,
+  status: failed ? "failed" : "passed",
+  mode: isStagedMode ? "staged" : "full",
+  total_matches: annotations.length,
+  files_with_matches: perFile.size,
+  scanned_files: scanned.length,
+  scanned,
+  skipped,
+  per_file: Object.fromEntries(perFileSorted),
+  generated_at: new Date().toISOString(),
+  detection: "case-insensitive + unicode-confusables + separator-insertions + zero-width-stripped",
+  matches: annotations,
+};
+writeFileSync(path.join(outDir, "report.json"), JSON.stringify(reportPayload, null, 2));
+
+if (failed) {
   const inGithub = process.env.GITHUB_ACTIONS === "true";
-  const header = `✖ Rebrand guard failed — ${annotations.length} residual "${TERM_DISPLAY}" reference(s) across ${perFile.size} file(s):`;
   console.error(header + "\n");
 
-  // Concise per-file summary first, then full detail.
   console.error("Summary (violations per file):");
   const width = String(perFileSorted[0]?.[1] ?? 0).length;
   for (const [file, count] of perFileSorted) {
@@ -214,25 +236,6 @@ if (annotations.length > 0) {
     }
   }
 
-  const outDir = "rebrand-guard-report";
-  mkdirSync(outDir, { recursive: true });
-  writeFileSync(
-    path.join(outDir, "report.json"),
-    JSON.stringify(
-      {
-        term: TERM_DISPLAY,
-        total_matches: annotations.length,
-        files_with_matches: perFile.size,
-        scanned_files: scanned.length,
-        per_file: Object.fromEntries(perFileSorted),
-        generated_at: new Date().toISOString(),
-        detection: "case-insensitive + unicode-confusables + separator-insertions + zero-width-stripped",
-        matches: annotations,
-      },
-      null,
-      2,
-    ),
-  );
   writeFileSync(
     path.join(outDir, "report.txt"),
     header + "\n\n" +
@@ -247,6 +250,5 @@ if (annotations.length > 0) {
   process.exit(1);
 }
 
-console.log(
-  `✓ Rebrand guard passed — ${scanned.length} file(s) scanned, no "${TERM_DISPLAY}" references (including confusables) found.`,
-);
+console.log(header);
+console.log(`JSON report written to ${outDir}/report.json.`);

@@ -25,7 +25,7 @@ jobs:
         run: node scripts/check-rebrand.mjs
 
       - name: Upload rebrand guard report
-        if: failure() && steps.guard.outcome == 'failure'
+        if: always() && hashFiles('rebrand-guard-report/report.json') != ''
         uses: actions/upload-artifact@v4
         with:
           name: rebrand-guard-report
