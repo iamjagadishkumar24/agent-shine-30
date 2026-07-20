@@ -672,16 +672,33 @@ function DrillSheet({
   onClose,
   feedback,
   agents,
+  rangeStart,
+  rangeEnd,
+  rangeAll,
+  preset,
 }: {
   drill: DrillKey | null;
   onClose: () => void;
   feedback: FeedbackRow[];
   agents: AgentRow[];
+  rangeStart: Date;
+  rangeEnd: Date;
+  rangeAll: boolean;
+  preset: string;
 }) {
   const open = drill !== null;
   const nameById = useMemo(() => new Map(agents.map((a) => [a.id, a.full_name ?? "Unassigned"])), [agents]);
   const rows = useMemo(() => (drill ? filterDrill(feedback, drill) : []), [feedback, drill]);
   const meta = drill ? DRILL_META[drill] : null;
+
+  const presetLabel = useMemo(() => {
+    const p = PRESETS.find((x) => x.key === preset);
+    return p?.label ?? "Custom";
+  }, [preset]);
+  const rangeLabel = rangeAll
+    ? "All time"
+    : `${format(rangeStart, "MMM d, yyyy")} – ${format(rangeEnd, "MMM d, yyyy")}`;
+
 
   const downloadCsv = () => {
     const header = [
