@@ -60,16 +60,18 @@ if (hasRg) {
 const lines = matches.split("\n").filter(Boolean);
 if (lines.length > 0) {
   const inGithub = process.env.GITHUB_ACTIONS === "true";
-  console.error(
-    `\n✖ Rebrand guard failed — found ${lines.length} residual "${TERM}" reference(s):\n`,
-  );
+  const header = `✖ Rebrand guard failed — found ${lines.length} residual "${TERM}" reference(s):`;
+  console.error("\n" + header + "\n");
+
+  const annotations = [];
   for (const l of lines) {
     console.error("  " + l);
-    if (inGithub) {
-      // Parse "./path/to/file:LINE:content" (rg) or "path:LINE:content" (grep).
-      const m = l.match(/^\.?\/?([^:]+):(\d+):(.*)$/);
-      if (m) {
-        const [, file, line, content] = m;
+    // Parse "./path/to/file:LINE:content" (rg) or "path:LINE:content" (grep).
+    const m = l.match(/^\.?\/?([^:]+):(\d+):(.*)$/);
+    if (m) {
+      const [, file, line, content] = m;
+      annotations.push({ file, line: Number(line), content: content.trim() });
+      if (inGithub) {
         const msg = `Legacy "${TERM}" reference found: ${content.trim()}`
           .replace(/%/g, "%25")
           .replace(/\r/g, "%0D")
@@ -78,8 +80,27 @@ if (lines.length > 0) {
       }
     }
   }
+
+  // Write full report to disk so CI can upload it as an artifact.
+  const outDir = "rebrand-guard-report";
+  mkdirSync(outDir, { recursive: true });
+  const summary = {
+    term: TERM,
+    total_matches: lines.length,
+    generated_at: new Date().toISOString(),
+    matches: annotations,
+  };
+  writeFileSync(path.join(outDir, "report.json"), JSON.stringify(summary, null, 2));
+  writeFileSync(
+    path.join(outDir, "report.txt"),
+    header + "\n\n" + lines.join("\n") + "\n",
+  );
+
   console.error(
-    `\nRemove or replace every occurrence with the QualiPulse brand before merging.\n`,
+    `\nFull report written to ${outDir}/report.txt and ${outDir}/report.json.`,
+  );
+  console.error(
+    `Remove or replace every occurrence with the QualiPulse brand before merging.\n`,
   );
   process.exit(1);
 }
