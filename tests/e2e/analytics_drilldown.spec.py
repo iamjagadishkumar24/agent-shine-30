@@ -61,7 +61,9 @@ def seed_drill_window() -> None:
     start = (now - timedelta(days=WINDOW_DAYS - 1)).isoformat()
 
     sql = f"""
-    DELETE FROM feedback WHERE '{SEED_TAG}' = ANY(tags);
+    -- Note: exec-mode psql access is select+insert only, so we do not delete
+    -- prior seed rows here. Duplicate rows across runs still fall inside the
+    -- WINDOW_DAYS range and only make the drill-down denser, which is fine.
 
     WITH agent_pool AS (
       SELECT id, row_number() OVER (ORDER BY id) AS rn FROM agents
