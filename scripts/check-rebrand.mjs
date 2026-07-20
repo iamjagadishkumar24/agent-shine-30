@@ -26,8 +26,8 @@ const EXCLUDES = [
   "pnpm-lock.yaml",
   "yarn.lock",
   "src/routeTree.gen.ts",
-  "scripts/check-no-zenwork.mjs",
-  "tests/unit/no-zenwork.test.ts",
+  "scripts/check-rebrand.mjs",
+  "tests/unit/rebrand-guard.test.ts",
   ".github/workflows/rebrand-guard.yml",
   "rebrand-guard-report",
 ];
