@@ -29,6 +29,7 @@ export type Database = {
           qa_score: number | null
           status: string
           team: string | null
+          team_id: string | null
           updated_at: string
           user_id: string | null
         }
@@ -46,6 +47,7 @@ export type Database = {
           qa_score?: number | null
           status?: string
           team?: string | null
+          team_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -63,10 +65,19 @@ export type Database = {
           qa_score?: number | null
           status?: string
           team?: string | null
+          team_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "agents_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       calendar_feed_tokens: {
         Row: {
@@ -587,6 +598,7 @@ export type Database = {
           acknowledged_at: string | null
           acknowledgement_note: string | null
           agent_id: string
+          agent_visible_notes: string | null
           case_id: string | null
           category: string
           click_count: number
@@ -597,13 +609,21 @@ export type Database = {
           due_date: string | null
           email_error: string | null
           escalated_at: string | null
+          evaluator_id: string | null
           feedback_type: Database["public"]["Enums"]["feedback_type"]
           first_opened_at: string | null
           id: string
           improvements: string | null
+          interaction_date: string | null
+          interaction_reference: string | null
+          interaction_type: string | null
+          internal_notes: string | null
           last_reminder_at: string | null
           open_count: number
           opened_at: string | null
+          overall_percentage: number | null
+          overall_score: number | null
+          performance_label: string | null
           recommended_actions: string | null
           reminder_count: number
           review_note: string | null
@@ -618,6 +638,7 @@ export type Database = {
           submitted_for_review_at: string | null
           summary: string | null
           tags: string[] | null
+          team_id: string | null
           title: string
           updated_at: string
         }
@@ -625,6 +646,7 @@ export type Database = {
           acknowledged_at?: string | null
           acknowledgement_note?: string | null
           agent_id: string
+          agent_visible_notes?: string | null
           case_id?: string | null
           category: string
           click_count?: number
@@ -635,13 +657,21 @@ export type Database = {
           due_date?: string | null
           email_error?: string | null
           escalated_at?: string | null
+          evaluator_id?: string | null
           feedback_type?: Database["public"]["Enums"]["feedback_type"]
           first_opened_at?: string | null
           id?: string
           improvements?: string | null
+          interaction_date?: string | null
+          interaction_reference?: string | null
+          interaction_type?: string | null
+          internal_notes?: string | null
           last_reminder_at?: string | null
           open_count?: number
           opened_at?: string | null
+          overall_percentage?: number | null
+          overall_score?: number | null
+          performance_label?: string | null
           recommended_actions?: string | null
           reminder_count?: number
           review_note?: string | null
@@ -656,6 +686,7 @@ export type Database = {
           submitted_for_review_at?: string | null
           summary?: string | null
           tags?: string[] | null
+          team_id?: string | null
           title: string
           updated_at?: string
         }
@@ -663,6 +694,7 @@ export type Database = {
           acknowledged_at?: string | null
           acknowledgement_note?: string | null
           agent_id?: string
+          agent_visible_notes?: string | null
           case_id?: string | null
           category?: string
           click_count?: number
@@ -673,13 +705,21 @@ export type Database = {
           due_date?: string | null
           email_error?: string | null
           escalated_at?: string | null
+          evaluator_id?: string | null
           feedback_type?: Database["public"]["Enums"]["feedback_type"]
           first_opened_at?: string | null
           id?: string
           improvements?: string | null
+          interaction_date?: string | null
+          interaction_reference?: string | null
+          interaction_type?: string | null
+          internal_notes?: string | null
           last_reminder_at?: string | null
           open_count?: number
           opened_at?: string | null
+          overall_percentage?: number | null
+          overall_score?: number | null
+          performance_label?: string | null
           recommended_actions?: string | null
           reminder_count?: number
           review_note?: string | null
@@ -694,6 +734,7 @@ export type Database = {
           submitted_for_review_at?: string | null
           summary?: string | null
           tags?: string[] | null
+          team_id?: string | null
           title?: string
           updated_at?: string
         }
@@ -703,6 +744,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -792,6 +840,53 @@ export type Database = {
           },
         ]
       }
+      feedback_disputes: {
+        Row: {
+          created_at: string
+          feedback_id: string
+          id: string
+          raised_by: string
+          reason: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          feedback_id: string
+          id?: string
+          raised_by: string
+          reason: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          feedback_id?: string
+          id?: string
+          raised_by?: string
+          reason?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_disputes_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback_email_events: {
         Row: {
           created_at: string
@@ -817,6 +912,107 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "feedback_email_events_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_score_revisions: {
+        Row: {
+          created_at: string
+          dispute_id: string
+          feedback_id: string
+          id: string
+          max_points: number
+          original_earned: number
+          original_percentage: number
+          parameter_name: string
+          revised_by: string | null
+          revised_earned: number
+          revised_percentage: number
+        }
+        Insert: {
+          created_at?: string
+          dispute_id: string
+          feedback_id: string
+          id?: string
+          max_points: number
+          original_earned: number
+          original_percentage: number
+          parameter_name: string
+          revised_by?: string | null
+          revised_earned: number
+          revised_percentage: number
+        }
+        Update: {
+          created_at?: string
+          dispute_id?: string
+          feedback_id?: string
+          id?: string
+          max_points?: number
+          original_earned?: number
+          original_percentage?: number
+          parameter_name?: string
+          revised_by?: string | null
+          revised_earned?: number
+          revised_percentage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_score_revisions_dispute_id_fkey"
+            columns: ["dispute_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_disputes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_score_revisions_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_scores: {
+        Row: {
+          created_at: string
+          display_order: number
+          earned_points: number
+          evaluator_note: string | null
+          feedback_id: string
+          id: string
+          max_points: number
+          parameter_name: string
+          selected_percentage: number
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          earned_points: number
+          evaluator_note?: string | null
+          feedback_id: string
+          id?: string
+          max_points: number
+          parameter_name: string
+          selected_percentage: number
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          earned_points?: number
+          evaluator_note?: string | null
+          feedback_id?: string
+          id?: string
+          max_points?: number
+          parameter_name?: string
+          selected_percentage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_scores_feedback_id_fkey"
             columns: ["feedback_id"]
             isOneToOne: false
             referencedRelation: "feedback"
@@ -997,6 +1193,95 @@ export type Database = {
         }
         Relationships: []
       }
+      scorecard_parameters: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          max_points: number
+          name: string
+          template_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          max_points: number
+          name: string
+          template_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          max_points?: number
+          name?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scorecard_parameters_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "scorecard_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scorecard_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      teams: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          leader_user_id: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          leader_user_id?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          leader_user_id?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -1043,7 +1328,12 @@ export type Database = {
     }
     Enums: {
       action_item_status: "open" | "in_progress" | "done" | "blocked"
-      app_role: "super_admin" | "qa_admin" | "team_manager" | "read_only"
+      app_role:
+        | "super_admin"
+        | "qa_admin"
+        | "team_manager"
+        | "read_only"
+        | "agent"
       coaching_goal_status: "on_track" | "at_risk" | "achieved" | "missed"
       coaching_plan_status: "active" | "completed" | "archived"
       coaching_priority: "low" | "medium" | "high" | "urgent"
@@ -1076,6 +1366,11 @@ export type Database = {
         | "revision_required"
         | "ready_to_send"
         | "failed"
+        | "submitted"
+        | "finalized"
+        | "disputed"
+        | "resolved"
+        | "archived"
       feedback_type:
         | "positive"
         | "constructive"
@@ -1213,7 +1508,13 @@ export const Constants = {
   public: {
     Enums: {
       action_item_status: ["open", "in_progress", "done", "blocked"],
-      app_role: ["super_admin", "qa_admin", "team_manager", "read_only"],
+      app_role: [
+        "super_admin",
+        "qa_admin",
+        "team_manager",
+        "read_only",
+        "agent",
+      ],
       coaching_goal_status: ["on_track", "at_risk", "achieved", "missed"],
       coaching_plan_status: ["active", "completed", "archived"],
       coaching_priority: ["low", "medium", "high", "urgent"],
@@ -1248,6 +1549,11 @@ export const Constants = {
         "revision_required",
         "ready_to_send",
         "failed",
+        "submitted",
+        "finalized",
+        "disputed",
+        "resolved",
+        "archived",
       ],
       feedback_type: [
         "positive",
