@@ -77,8 +77,8 @@ export function AuthShell({
       <h1
         style={{ fontWeight: 800 }}
         className={cn(
-          "font-display leading-[1.05] tracking-tight text-center whitespace-nowrap",
-          "text-[17px] sm:text-[19px] md:text-[20px]",
+          "font-display leading-[1.15] tracking-tight text-center break-words",
+          "text-[16px] sm:text-[18px] md:text-[19px]",
           "text-slate-900 dark:text-white",
         )}
       >
