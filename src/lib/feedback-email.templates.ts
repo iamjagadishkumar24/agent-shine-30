@@ -57,7 +57,7 @@ export type FeedbackEmailData = {
 
 const BRAND = {
   name: "QualiPulse",
-  tagline: "Driving Customer Success Through Quality, Performance & Continuous Improvement",
+  tagline: "Quality Feedback and Performance Management",
   supportEmail: "support@qualipulse.app",
   website: "https://www.qualipulse.app",
   websiteLabel: "www.qualipulse.app",
