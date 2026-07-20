@@ -276,7 +276,72 @@ function FeedbackDetail() {
     },
   });
 
-  const uploadFile = async (file: File) => {
+  // ── Dispute state ────────────────────────────────────────────────────────
+  const rolesFn = useServerFn(getMyRoles);
+  const { data: roles = [] } = useQuery({
+    queryKey: ["my-roles"],
+    queryFn: () => rolesFn(),
+    staleTime: 5 * 60_000,
+  });
+  const isStaff = roles.some((r) => ["super_admin", "qa_admin", "team_manager"].includes(r));
+  const canResolve = roles.some((r) => ["super_admin", "qa_admin"].includes(r));
+
+  const listDisputesFn = useServerFn(listDisputes);
+  const { data: disputes = [] } = useQuery({
+    queryKey: ["feedback-disputes", id],
+    queryFn: () => listDisputesFn({ data: { feedbackId: id } }),
+  });
+  const openDispute = disputes.find((d) => d.status === "open") ?? null;
+
+  const raiseFn = useServerFn(raiseDispute);
+  const resolveFn = useServerFn(resolveDispute);
+  const [raiseOpen, setRaiseOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [resolveOpen, setResolveOpen] = useState(false);
+  const [resolveAction, setResolveAction] = useState<"resolve" | "reject">("resolve");
+  const [resolutionNote, setResolutionNote] = useState("");
+  const [revised, setRevised] = useState<Record<string, string>>({});
+
+  const raiseM = useMutation({
+    mutationFn: () => raiseFn({ data: { feedbackId: id, reason: reason.trim() } }),
+    onSuccess: () => {
+      setRaiseOpen(false);
+      setReason("");
+      qc.invalidateQueries({ queryKey: ["feedback", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-disputes", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-audit", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-list"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Unable to raise dispute"),
+  });
+
+  const resolveM = useMutation({
+    mutationFn: () => {
+      const revisions = Object.entries(revised)
+        .map(([parameter_name, v]) => ({ parameter_name, revised_percentage: Number(v) }))
+        .filter((r) => Number.isFinite(r.revised_percentage) && r.revised_percentage >= 0 && r.revised_percentage <= 100);
+      return resolveFn({
+        data: {
+          disputeId: openDispute!.id,
+          action: resolveAction,
+          resolutionNote: resolutionNote.trim(),
+          revisions: resolveAction === "resolve" ? revisions : [],
+        },
+      });
+    },
+    onSuccess: () => {
+      setResolveOpen(false);
+      setResolutionNote("");
+      setRevised({});
+      qc.invalidateQueries({ queryKey: ["feedback", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-disputes", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-scores", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-audit", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-list"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Unable to close dispute"),
+  });
+
     if (file.size > 20 * 1024 * 1024) {
       toast.error("Max file size is 20 MB");
       return;
