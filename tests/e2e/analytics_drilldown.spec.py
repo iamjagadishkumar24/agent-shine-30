@@ -493,6 +493,7 @@ async def main() -> None:
     # Seed the exact date-range window used by the drill-down BEFORE the
     # browser session opens, so every KPI card has rows to click through.
     seed_drill_window()
+    seed_overflow_rows()
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
@@ -511,8 +512,20 @@ async def main() -> None:
         for label in KPI_LABELS:
             results.append(await drill_and_verify(page, label))
 
+        # When overflow seeding is on we insist that at least one KPI actually
+        # crossed the cap, otherwise the >500 branch never ran.
+        if OVERFLOW_ENABLED:
+            triggered = [r for r in results if r["sheet_count"] > DRILL_RENDER_CAP]
+            if not triggered:
+                fail(
+                    f"SEED_OVERFLOW=1 but no KPI exceeded {DRILL_RENDER_CAP} rows "
+                    f"— overflow assertions never ran. Counts: "
+                    f"{ {r['label']: r['sheet_count'] for r in results} }"
+                )
+
         print("PASS:", json.dumps(results, indent=2))
         await browser.close()
+
 
 
 if __name__ == "__main__":
