@@ -112,6 +112,7 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
     }
 
     const appBaseUrl = getAppBaseUrl();
+    const metrics = await loadMetrics(supabase, fb.id);
     const defaults = renderFeedbackEmail({
       feedbackId: fb.id,
       title: fb.title,
@@ -120,6 +121,7 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       category: fb.category,
       feedbackType: fb.feedback_type,
       severity: fb.severity,
+      interactionType: (fb as any).interaction_type,
       score: fb.score as number | null,
       summary: fb.summary,
       strengths: fb.strengths,
@@ -132,6 +134,7 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       signatureHtml: settings.signature_html,
       confidentialityNotice: settings.confidentiality_notice,
       attachmentLinks,
+      metrics,
     });
 
     let subject = defaults.subject;
