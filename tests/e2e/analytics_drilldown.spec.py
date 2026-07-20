@@ -23,7 +23,9 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import subprocess
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from playwright.async_api import async_playwright, TimeoutError as PWTimeout
@@ -32,6 +34,91 @@ from playwright.async_api import async_playwright, TimeoutError as PWTimeout
 BASE_URL = os.environ.get("APP_URL", "http://localhost:8080")
 SS = Path(__file__).parent / "screenshots" / "analytics_drilldown"
 SS.mkdir(parents=True, exist_ok=True)
+
+# The drill window we exercise in this test. Kept in sync with the URL we
+# navigate to below so seed rows are guaranteed to fall inside the range.
+WINDOW_DAYS = 30
+SEED_TAG = "e2e-drill-seed"
+
+
+def seed_drill_window() -> None:
+    """Insert feedback rows dated across the last WINDOW_DAYS days.
+
+    Every row has score, delivered_at, and (for half of them) acknowledged_at
+    populated, so all four KPIs (Total, Scored, Delivered, Acknowledged) have
+    rows in the drill-down for the same range the test navigates to.
+
+    Idempotent: deletes any prior rows tagged with SEED_TAG before inserting.
+    Runs only when psql + PG* env vars are available; otherwise no-ops and
+    lets the test rely on ambient data.
+    """
+    if not os.environ.get("PGHOST"):
+        print("seed: PGHOST not set, skipping seed step")
+        return
+
+    now = datetime.now(timezone.utc)
+    end = now.isoformat()
+    start = (now - timedelta(days=WINDOW_DAYS - 1)).isoformat()
+
+    sql = f"""
+    -- Note: exec-mode psql access is select+insert only, so we do not delete
+    -- prior seed rows here. Duplicate rows across runs still fall inside the
+    -- WINDOW_DAYS range and only make the drill-down denser, which is fine.
+
+    WITH agent_pool AS (
+      SELECT id, row_number() OVER (ORDER BY id) AS rn FROM agents
+    ),
+    creator AS (
+      SELECT created_by FROM feedback GROUP BY created_by
+      ORDER BY count(*) DESC LIMIT 1
+    ),
+    series AS (
+      SELECT gs AS i,
+             (now() - ((gs - 1) * interval '1 day')
+                    - (gs * interval '43 minutes')) AS ts
+      FROM generate_series(1, {WINDOW_DAYS - 1}) gs
+    )
+    INSERT INTO feedback (
+      agent_id, title, category, feedback_type, severity, status, score,
+      summary, tags, created_by,
+      created_at, updated_at, sent_at, delivered_at, acknowledged_at,
+      overall_score, overall_percentage, performance_label
+    )
+    SELECT
+      (SELECT id FROM agent_pool
+        WHERE rn = ((s.i - 1) % (SELECT count(*) FROM agent_pool)) + 1),
+      'E2E drill seed #' || s.i,
+      (ARRAY['Communication','Compliance','Product Knowledge',
+             'Handling Time','Customer Empathy'])[1 + (s.i % 5)],
+      (ARRAY['constructive','positive','critical',
+             'compliance','coaching']::feedback_type[])[1 + (s.i % 5)],
+      (ARRAY['low','medium','high','critical']::feedback_severity[])
+        [1 + (s.i % 4)],
+      CASE WHEN s.i % 2 = 0 THEN 'acknowledged'::feedback_status
+           ELSE 'sent'::feedback_status END,
+      65 + ((s.i * 11) % 30) + 0.5,
+      'Seeded for KPI drill-down E2E coverage #' || s.i,
+      ARRAY['{SEED_TAG}']::text[],
+      (SELECT created_by FROM creator),
+      s.ts, s.ts,
+      s.ts + interval '3 minutes',
+      s.ts + interval '7 minutes',
+      CASE WHEN s.i % 2 = 0 THEN s.ts + interval '90 minutes' ELSE NULL END,
+      65 + ((s.i * 11) % 30) + 0.5,
+      65 + ((s.i * 11) % 30) + 0.5,
+      'Good'
+    FROM series s;
+    """
+
+    result = subprocess.run(
+        ["psql", "-v", "ON_ERROR_STOP=1", "-q", "-c", sql],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        print("seed: psql failed:", result.stderr.strip())
+        sys.exit(2)
+    print(f"seed: inserted rows across last {WINDOW_DAYS} days "
+          f"[{start} .. {end}]")
 
 KPI_LABELS = [
     "Total feedback",
@@ -87,7 +174,8 @@ async def restore_session(context, page) -> None:
 
 
 async def open_analytics(page) -> None:
-    await page.goto(f"{BASE_URL}/analytics", wait_until="domcontentloaded")
+    # Force the 30d preset so the URL window matches seed_drill_window().
+    await page.goto(f"{BASE_URL}/analytics?preset=30d", wait_until="domcontentloaded")
     # If the auth gate redirects us to /auth, we can't proceed.
     try:
         await page.wait_for_url("**/analytics**", timeout=8000)
@@ -153,6 +241,10 @@ async def drill_and_verify(page, label: str) -> dict:
 
 
 async def main() -> None:
+    # Seed the exact date-range window used by the drill-down BEFORE the
+    # browser session opens, so every KPI card has rows to click through.
+    seed_drill_window()
+
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(viewport={"width": 1280, "height": 1800})
