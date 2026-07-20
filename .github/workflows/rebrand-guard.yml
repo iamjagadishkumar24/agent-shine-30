@@ -15,7 +15,7 @@ jobs:
 
       - name: Run rebrand guard
         id: guard
-        run: node scripts/check-no-zenwork.mjs
+        run: node scripts/check-rebrand.mjs
 
       - name: Upload rebrand guard report
         if: failure() && steps.guard.outcome == 'failure'

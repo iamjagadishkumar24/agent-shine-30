@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 
 describe("rebrand guard", () => {
   it("has no legacy Zenwork references anywhere in the repo", () => {
-    const result = spawnSync("node", ["scripts/check-no-zenwork.mjs"], {
+    const result = spawnSync("node", ["scripts/check-rebrand.mjs"], {
       encoding: "utf8",
     });
     if (result.status !== 0) {
