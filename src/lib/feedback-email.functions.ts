@@ -31,6 +31,18 @@ async function assertStaff(_supabase: unknown, _userId: string) {
   return;
 }
 
+// Load per-parameter scores in canonical order for the email body.
+async function loadMetrics(supabase: any, feedbackId: string) {
+  const { data } = await supabase
+    .from("feedback_scores")
+    .select("parameter_name, selected_percentage, display_order")
+    .eq("feedback_id", feedbackId)
+    .order("display_order", { ascending: true });
+  return (data ?? [])
+    .filter((r: any) => r.selected_percentage != null)
+    .map((r: any) => ({ label: r.parameter_name as string, score: Number(r.selected_percentage) }));
+}
+
 
 // Enqueue a feedback email. The background drainer sends it and updates
 // feedback.status = "sent" once the provider accepts it.
@@ -100,6 +112,7 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
     }
 
     const appBaseUrl = getAppBaseUrl();
+    const metrics = await loadMetrics(supabase, fb.id);
     const defaults = renderFeedbackEmail({
       feedbackId: fb.id,
       title: fb.title,
@@ -108,6 +121,7 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       category: fb.category,
       feedbackType: fb.feedback_type,
       severity: fb.severity,
+      interactionType: (fb as any).interaction_type,
       score: fb.score as number | null,
       summary: fb.summary,
       strengths: fb.strengths,
@@ -120,6 +134,7 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       signatureHtml: settings.signature_html,
       confidentialityNotice: settings.confidentiality_notice,
       attachmentLinks,
+      metrics,
     });
 
     let subject = defaults.subject;
@@ -289,6 +304,7 @@ export const previewFeedbackEmail = createServerFn({ method: "POST" })
       .maybeSingle();
 
     const appBaseUrl = getAppBaseUrl();
+    const metrics = await loadMetrics(supabase, fb.id);
     const rendered = renderFeedbackEmail({
       feedbackId: fb.id,
       title: fb.title,
@@ -297,6 +313,7 @@ export const previewFeedbackEmail = createServerFn({ method: "POST" })
       category: fb.category,
       feedbackType: fb.feedback_type,
       severity: fb.severity,
+      interactionType: (fb as any).interaction_type,
       score: fb.score as number | null,
       summary: fb.summary,
       strengths: fb.strengths,
@@ -308,6 +325,7 @@ export const previewFeedbackEmail = createServerFn({ method: "POST" })
       logoUrl: settings?.logo_url ?? `${appBaseUrl}${qualipulseMark.url}`,
       signatureHtml: settings?.signature_html,
       confidentialityNotice: settings?.confidentiality_notice,
+      metrics,
     });
     return {
       subject: rendered.subject,
@@ -365,6 +383,7 @@ export const sendFeedbackTestEmail = createServerFn({ method: "POST" })
     }
 
     const appBaseUrl = getAppBaseUrl();
+    const metrics = await loadMetrics(supabase, fb.id);
     const rendered = renderFeedbackEmail({
       feedbackId: fb.id,
       title: fb.title,
@@ -373,6 +392,7 @@ export const sendFeedbackTestEmail = createServerFn({ method: "POST" })
       category: fb.category,
       feedbackType: fb.feedback_type,
       severity: fb.severity,
+      interactionType: (fb as any).interaction_type,
       score: fb.score as number | null,
       summary: fb.summary,
       strengths: fb.strengths,
@@ -384,6 +404,7 @@ export const sendFeedbackTestEmail = createServerFn({ method: "POST" })
       logoUrl: settings.logo_url ?? `${appBaseUrl}${qualipulseMark.url}`,
       signatureHtml: settings.signature_html,
       confidentialityNotice: settings.confidentiality_notice,
+      metrics,
     });
 
     const { getProvider } = await import("@/lib/email/providers.server");

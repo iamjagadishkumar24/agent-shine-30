@@ -4,7 +4,7 @@
   "mode": "full",
   "total_matches": 0,
   "files_with_matches": 0,
-  "scanned_files": 242,
+  "scanned_files": 244,
   "scanned": [
     ".env",
     ".github/workflows/a11y.yml",
@@ -94,6 +94,7 @@
     "src/lib/agent-portal.functions.ts",
     "src/lib/ai-feedback.functions.ts",
     "src/lib/ai-gateway.server.ts",
+    "src/lib/brand.ts",
     "src/lib/bulk-operations.functions.ts",
     "src/lib/calendar-feed.functions.ts",
     "src/lib/calendar-links.ts",
@@ -221,6 +222,7 @@
     "supabase/migrations/20260720202903_ed79c432-2cb2-4950-88a5-f9e841a70b37.sql",
     "supabase/migrations/20260720203954_4cf524b7-b4e9-4fac-98f8-9c68a02b9673.sql",
     "supabase/migrations/20260720231856_6a075849-9789-490e-b51f-0c79830a82ae.sql",
+    "supabase/migrations/20260720234451_84ba3f21-f412-4d22-b0cb-ade7b7841f4a.sql",
     "tests/a11y/README.md",
     "tests/a11y/artifacts/auth__dark.json",
     "tests/a11y/artifacts/auth__light.json",
@@ -556,7 +558,7 @@
     }
   ],
   "per_file": {},
-  "generated_at": "2026-07-20T23:37:15.481Z",
+  "generated_at": "2026-07-20T23:48:06.804Z",
   "detection": "case-insensitive + unicode-confusables + separator-insertions + zero-width-stripped",
   "matches": []
 }
