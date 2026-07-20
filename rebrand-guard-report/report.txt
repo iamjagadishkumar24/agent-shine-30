@@ -1,0 +1,5 @@
+✖ Rebrand guard failed — found 3 residual "zenwork" reference(s):
+
+./package.json:12:    "check:rebrand": "node scripts/check-no-zenwork.mjs",
+./.github/workflows/rebrand-guard.yml:10:    name: No legacy Zenwork references
+./.github/workflows/rebrand-guard.yml:18:        run: node scripts/check-no-zenwork.mjs
