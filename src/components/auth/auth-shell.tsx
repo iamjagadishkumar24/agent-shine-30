@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
+import zenworkLockup from "@/assets/zenwork-brand-lockup.png.asset.json";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -66,24 +66,16 @@ export function AuthShell({
     <div
       role="group"
       aria-label="Zenwork Performance Manager"
-      className="mx-auto mb-5 flex w-full max-w-full flex-col items-center gap-2 px-2 sm:mb-6"
+      className="mx-auto mb-6 flex w-full max-w-full items-center justify-center px-2 sm:mb-7"
     >
       <img
-        src={zenworkLogo.url}
-        alt=""
-        aria-hidden="true"
-        className="block h-12 w-12 shrink-0 object-contain bg-transparent sm:h-14 sm:w-14"
+        src={zenworkLockup.url}
+        alt="Zenwork Performance Manager"
+        width={1500}
+        height={1000}
+        className="block h-auto w-auto max-w-full object-contain select-none dark:brightness-110 dark:contrast-110 max-h-[104px] sm:max-h-[120px] md:max-h-[132px] lg:max-h-[144px]"
+        draggable={false}
       />
-      <h1
-        style={{ fontWeight: 800 }}
-        className={cn(
-          "font-display leading-[1.15] tracking-tight text-center break-words",
-          "text-[16px] sm:text-[18px] md:text-[19px]",
-          "text-slate-900 dark:text-white",
-        )}
-      >
-        Zenwork Performance Manager
-      </h1>
     </div>
   ) : null;
 
