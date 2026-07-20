@@ -112,16 +112,14 @@ async def measure(page):
         }"""
     )
 
-    # Background color sampled from a point OUTSIDE the auth card,
-    # e.g. top-left of the viewport where the ambient gradient renders.
-    bg = await page.evaluate(
-        """() => {
-          const el = document.elementFromPoint(20, 20);
-          if (!el) return null;
-          return getComputedStyle(el).backgroundColor;
-        }"""
-    )
-    data["ambientBg"] = bg
+    # Sample the actual painted background pixel behind the ambient gradient
+    # by taking a small screenshot at a point outside the auth card.
+    # Top-left corner (20,20) sits above the header/card in every viewport.
+    shot = await page.screenshot(clip={"x": 10, "y": 10, "width": 4, "height": 4})
+    from PIL import Image
+    import io
+    px = Image.open(io.BytesIO(shot)).convert("RGB").getpixel((1, 1))
+    data["ambientBg"] = f"rgb({px[0]}, {px[1]}, {px[2]})"
     return img, data
 
 
