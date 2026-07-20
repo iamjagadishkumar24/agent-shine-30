@@ -14,4 +14,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run rebrand guard
-        run: node scripts/check-no-zenwork.mjs
+        id: guard
+        run: node scripts/check-rebrand.mjs
+
+      - name: Upload rebrand guard report
+        if: failure() && steps.guard.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rebrand-guard-report
+          path: rebrand-guard-report/
+          if-no-files-found: ignore
+          retention-days: 14
