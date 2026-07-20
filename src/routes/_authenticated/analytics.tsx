@@ -373,24 +373,28 @@ function AnalyticsPage() {
                 hint={all ? "All time" : `${metrics.inWindow.toLocaleString()} in window`}
                 delta={all ? undefined : metrics.delta}
                 icon={<BarChart3 className="h-4 w-4" />}
+                onClick={() => setDrill("total")}
               />
               <KpiCard
                 label="Avg Quality score"
                 value={metrics.avgScore ? metrics.avgScore.toFixed(2) : "—"}
                 hint={`${feedback.filter((f) => f.score != null).length.toLocaleString()} scored`}
                 icon={<Target className="h-4 w-4" />}
+                onClick={() => setDrill("scored")}
               />
               <KpiCard
                 label="Delivery rate"
                 value={`${pct(metrics.delivered, metrics.sent)}%`}
                 hint={`${metrics.delivered.toLocaleString()} / ${metrics.sent.toLocaleString()} sent`}
                 icon={<TrendingUp className="h-4 w-4" />}
+                onClick={() => setDrill("delivered")}
               />
               <KpiCard
                 label="Acknowledgement rate"
                 value={`${pct(metrics.acknowledged, metrics.delivered)}%`}
                 hint={`${metrics.acknowledged.toLocaleString()} acknowledged`}
                 icon={<Users className="h-4 w-4" />}
+                onClick={() => setDrill("acknowledged")}
               />
             </div>
 
