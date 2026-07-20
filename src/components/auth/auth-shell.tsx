@@ -64,8 +64,6 @@ export function AuthShell({
 }) {
   const brandBlock = showBrand ? (
     <div
-      role="group"
-      aria-label="Zenwork Performance Manager"
       className="mx-auto mt-1 mb-5 flex w-full items-center justify-center px-4 sm:mt-2 sm:mb-7 sm:px-6 md:mb-8 lg:mb-10"
     >
       <img
