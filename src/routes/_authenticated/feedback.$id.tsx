@@ -16,7 +16,10 @@ import { formatDistanceToNow } from "date-fns";
 import { sendFeedbackEmail, previewFeedbackEmail, sendFeedbackTestEmail } from "@/lib/feedback-email.functions";
 import { createUploadUrl, deleteAttachment } from "@/lib/feedback-attachments.functions";
 // review workflow retired — feedback flows draft → ready_to_send → sent
-import { completeFeedback } from "@/lib/agent-portal.functions";
+import { completeFeedback, getMyRoles } from "@/lib/agent-portal.functions";
+import { listDisputes, raiseDispute, resolveDispute } from "@/lib/disputes.functions";
+import { Label } from "@/components/ui/label";
+import { Gavel, Scale } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { analyzeEmailForSpamRisk } from "@/lib/email-spam-check";
@@ -42,6 +45,8 @@ const STATUS_TONE: Record<string, string> = {
   failed: "bg-destructive/15 text-destructive",
   acknowledged: "bg-[oklch(0.72_0.16_160)]/15 text-[oklch(0.72_0.16_160)]",
   completed: "bg-[oklch(0.72_0.16_160)]/15 text-[oklch(0.72_0.16_160)]",
+  disputed: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  resolved: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
 };
 
 
@@ -50,6 +55,8 @@ function FeedbackDetail() {
   useRealtimeInvalidate("feedback", [["feedback", id]], { filter: `id=eq.${id}` });
   useRealtimeInvalidate("feedback_audit_log", [["feedback", id]], { filter: `feedback_id=eq.${id}` });
   useRealtimeInvalidate("email_queue", [["feedback-queue", id]], { filter: `feedback_id=eq.${id}` });
+  useRealtimeInvalidate("feedback_disputes", [["feedback-disputes", id], ["feedback-audit", id]], { filter: `feedback_id=eq.${id}` });
+  useRealtimeInvalidate("feedback_score_revisions", [["feedback-disputes", id], ["feedback-scores", id]], { filter: `feedback_id=eq.${id}` });
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [ackNote, setAckNote] = useState("");
@@ -269,6 +276,72 @@ function FeedbackDetail() {
     },
   });
 
+  // ── Dispute state ────────────────────────────────────────────────────────
+  const rolesFn = useServerFn(getMyRoles);
+  const { data: roles = [] } = useQuery({
+    queryKey: ["my-roles"],
+    queryFn: () => rolesFn(),
+    staleTime: 5 * 60_000,
+  });
+  const isStaff = roles.some((r) => ["super_admin", "qa_admin", "team_manager"].includes(r));
+  const canResolve = roles.some((r) => ["super_admin", "qa_admin"].includes(r));
+
+  const listDisputesFn = useServerFn(listDisputes);
+  const { data: disputes = [] } = useQuery({
+    queryKey: ["feedback-disputes", id],
+    queryFn: () => listDisputesFn({ data: { feedbackId: id } }),
+  });
+  const openDispute = disputes.find((d) => d.status === "open") ?? null;
+
+  const raiseFn = useServerFn(raiseDispute);
+  const resolveFn = useServerFn(resolveDispute);
+  const [raiseOpen, setRaiseOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [resolveOpen, setResolveOpen] = useState(false);
+  const [resolveAction, setResolveAction] = useState<"resolve" | "reject">("resolve");
+  const [resolutionNote, setResolutionNote] = useState("");
+  const [revised, setRevised] = useState<Record<string, string>>({});
+
+  const raiseM = useMutation({
+    mutationFn: () => raiseFn({ data: { feedbackId: id, reason: reason.trim() } }),
+    onSuccess: () => {
+      setRaiseOpen(false);
+      setReason("");
+      qc.invalidateQueries({ queryKey: ["feedback", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-disputes", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-audit", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-list"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Unable to raise dispute"),
+  });
+
+  const resolveM = useMutation({
+    mutationFn: () => {
+      const revisions = Object.entries(revised)
+        .map(([parameter_name, v]) => ({ parameter_name, revised_percentage: Number(v) }))
+        .filter((r) => Number.isFinite(r.revised_percentage) && r.revised_percentage >= 0 && r.revised_percentage <= 100);
+      return resolveFn({
+        data: {
+          disputeId: openDispute!.id,
+          action: resolveAction,
+          resolutionNote: resolutionNote.trim(),
+          revisions: resolveAction === "resolve" ? revisions : [],
+        },
+      });
+    },
+    onSuccess: () => {
+      setResolveOpen(false);
+      setResolutionNote("");
+      setRevised({});
+      qc.invalidateQueries({ queryKey: ["feedback", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-disputes", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-scores", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-audit", id] });
+      qc.invalidateQueries({ queryKey: ["feedback-list"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Unable to close dispute"),
+  });
+
   const uploadFile = async (file: File) => {
     if (file.size > 20 * 1024 * 1024) {
       toast.error("Max file size is 20 MB");
@@ -435,6 +508,129 @@ function FeedbackDetail() {
               </div>
             </Card>
           )}
+
+          {(disputes.length > 0 || data.status === "disputed" || data.status === "resolved") && (
+            <Card className={cn(
+              "rounded-xl p-6",
+              openDispute ? "border-amber-500/40 bg-amber-500/5" : "border-emerald-500/30 bg-emerald-500/5",
+            )}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  {openDispute ? <Scale className="h-4 w-4 text-amber-600 dark:text-amber-400" /> : <Gavel className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />}
+                  <div>
+                    <div className="text-sm font-semibold">
+                      {openDispute ? "Dispute open" : "Dispute history"}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {openDispute
+                        ? "Waiting for a Quality Analyst to review this dispute."
+                        : `${disputes.length} closed dispute${disputes.length === 1 ? "" : "s"} on this feedback.`}
+                    </div>
+                  </div>
+                </div>
+                {openDispute && canResolve && (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setResolveAction("reject");
+                        setResolveOpen(true);
+                      }}
+                    >
+                      Reject
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setResolveAction("resolve");
+                        setResolveOpen(true);
+                      }}
+                    >
+                      Review & resolve
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <ul className="mt-4 space-y-4">
+                {disputes.map((d) => (
+                  <li key={d.id} className="rounded-lg border border-border/60 bg-background/40 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className={cn(
+                          "rounded-md px-2 py-0.5 font-medium capitalize",
+                          d.status === "open" && "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+                          d.status === "resolved" && "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+                          d.status === "rejected" && "bg-muted text-muted-foreground",
+                        )}>{d.status}</span>
+                        <span className="text-muted-foreground">
+                          Raised by {d.raised_by_name || "agent"} · {safeTimeAgo(d.created_at) ?? "—"}
+                        </span>
+                      </div>
+                      {d.resolved_at && (
+                        <span className="text-muted-foreground">
+                          Closed by {d.resolved_by_name || "analyst"} · {safeTimeAgo(d.resolved_at) ?? "—"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-2">
+                      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Reason</div>
+                      <p className="mt-1 whitespace-pre-wrap text-sm">{d.reason}</p>
+                    </div>
+                    {d.resolution_note && (
+                      <div className="mt-3">
+                        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Resolution note</div>
+                        <p className="mt-1 whitespace-pre-wrap text-sm">{d.resolution_note}</p>
+                      </div>
+                    )}
+                    {d.revisions.length > 0 && (
+                      <div className="mt-3 overflow-hidden rounded-md border border-border/60">
+                        <table className="w-full text-xs">
+                          <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <tr>
+                              <th className="px-2 py-1 text-left font-medium">Parameter</th>
+                              <th className="px-2 py-1 text-right font-medium">Original %</th>
+                              <th className="px-2 py-1 text-right font-medium">Revised %</th>
+                              <th className="px-2 py-1 text-right font-medium">Earned Δ</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {d.revisions.map((r) => {
+                              const delta = Number(r.revised_earned) - Number(r.original_earned);
+                              return (
+                                <tr key={r.id} className="border-t border-border/60">
+                                  <td className="px-2 py-1 font-medium">{r.parameter_name}</td>
+                                  <td className="px-2 py-1 text-right tabular-nums text-muted-foreground line-through">{Number(r.original_percentage).toFixed(0)}%</td>
+                                  <td className="px-2 py-1 text-right tabular-nums font-semibold">{Number(r.revised_percentage).toFixed(0)}%</td>
+                                  <td className={cn(
+                                    "px-2 py-1 text-right tabular-nums font-semibold",
+                                    delta > 0 && "text-emerald-600 dark:text-emerald-400",
+                                    delta < 0 && "text-red-600 dark:text-red-400",
+                                  )}>
+                                    {delta > 0 ? "+" : ""}{delta.toFixed(2)}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+
+          {!openDispute && !isStaff && (data.status === "sent" || data.status === "acknowledged") && (
+            <div>
+              <Button variant="outline" size="sm" onClick={() => setRaiseOpen(true)}>
+                <Scale className="mr-1.5 h-3.5 w-3.5" /> Dispute this feedback
+              </Button>
+            </div>
+          )}
+
 
 
           {data.status === "failed" && (
@@ -762,6 +958,129 @@ function FeedbackDetail() {
               </Button>
             )}
 
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Raise dispute dialog */}
+      <Dialog open={raiseOpen} onOpenChange={setRaiseOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Scale className="h-4 w-4 text-amber-500" /> Dispute this feedback</DialogTitle>
+            <DialogDescription>
+              Explain what you disagree with. A Quality Analyst will review the scores and evidence, then respond.
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label htmlFor="dispute-reason">Reason</Label>
+            <Textarea
+              id="dispute-reason"
+              className="mt-1.5"
+              rows={6}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Cite specific parameters, moments in the interaction, or evidence you'd like reviewed."
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {reason.trim().length}/2000 characters · minimum 10
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRaiseOpen(false)} disabled={raiseM.isPending}>Cancel</Button>
+            <Button
+              onClick={() => raiseM.mutate()}
+              disabled={raiseM.isPending || reason.trim().length < 10}
+            >
+              {raiseM.isPending ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Submitting…</> : "Submit dispute"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Resolve / reject dialog (staff) */}
+      <Dialog open={resolveOpen} onOpenChange={setResolveOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gavel className="h-4 w-4 text-primary" /> {resolveAction === "resolve" ? "Resolve dispute" : "Reject dispute"}
+            </DialogTitle>
+            <DialogDescription>
+              {resolveAction === "resolve"
+                ? "Adjust parameter scores if warranted, then post a resolution note. Overall score will recalculate automatically."
+                : "Reject this dispute with a note explaining the outcome. Scores stay unchanged."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {openDispute && (
+            <div className="rounded-lg border border-border/60 bg-muted/30 p-3 text-xs">
+              <div className="font-semibold uppercase tracking-wider text-muted-foreground">Agent's reason</div>
+              <p className="mt-1 whitespace-pre-wrap">{openDispute.reason}</p>
+            </div>
+          )}
+
+          {resolveAction === "resolve" && scoreRows.length > 0 && (
+            <div className="overflow-hidden rounded-lg border border-border/60">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium">Parameter</th>
+                    <th className="px-3 py-2 text-right font-medium">Max</th>
+                    <th className="px-3 py-2 text-right font-medium">Current %</th>
+                    <th className="px-3 py-2 text-right font-medium">Revised %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {scoreRows.map((r) => (
+                    <tr key={r.parameter_name} className="border-t border-border/60">
+                      <td className="px-3 py-2 font-medium">{r.parameter_name}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{Number(r.max_points).toFixed(0)}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
+                        {Number(r.selected_percentage).toFixed(0)}%
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          className="ml-auto w-24 text-right"
+                          placeholder={String(Number(r.selected_percentage).toFixed(0))}
+                          value={revised[r.parameter_name] ?? ""}
+                          onChange={(e) => setRevised((s) => ({ ...s, [r.parameter_name]: e.target.value }))}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="border-t border-border/60 bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
+                Leave a field blank to keep the current score. Values 0–100.
+              </p>
+            </div>
+          )}
+
+          <div>
+            <Label htmlFor="resolution-note">Resolution note</Label>
+            <Textarea
+              id="resolution-note"
+              className="mt-1.5"
+              rows={4}
+              value={resolutionNote}
+              onChange={(e) => setResolutionNote(e.target.value)}
+              placeholder={resolveAction === "resolve"
+                ? "Summarize what was reviewed and what changed."
+                : "Explain why the original score stands."}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResolveOpen(false)} disabled={resolveM.isPending}>Cancel</Button>
+            <Button
+              onClick={() => resolveM.mutate()}
+              disabled={resolveM.isPending || resolutionNote.trim().length < 5}
+              variant={resolveAction === "reject" ? "outline" : "default"}
+            >
+              {resolveM.isPending ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Saving…</> : resolveAction === "resolve" ? "Resolve dispute" : "Reject dispute"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
