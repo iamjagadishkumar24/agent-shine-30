@@ -172,7 +172,8 @@ async def restore_session(context, page) -> None:
 
 
 async def open_analytics(page) -> None:
-    await page.goto(f"{BASE_URL}/analytics", wait_until="domcontentloaded")
+    # Force the 30d preset so the URL window matches seed_drill_window().
+    await page.goto(f"{BASE_URL}/analytics?preset=30d", wait_until="domcontentloaded")
     # If the auth gate redirects us to /auth, we can't proceed.
     try:
         await page.wait_for_url("**/analytics**", timeout=8000)
