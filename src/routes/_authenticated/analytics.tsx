@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 import { cn } from "@/lib/utils";
@@ -267,6 +270,7 @@ function AnalyticsPage() {
   }, [feedback, agents]);
 
   type S = z.infer<typeof searchSchema>;
+  const [drill, setDrill] = useState<DrillKey | null>(null);
   const setPreset = (key: string) => {
     navigate({ search: (prev: S) => ({ ...prev, preset: key, from: "", to: "" }) });
   };
@@ -369,24 +373,28 @@ function AnalyticsPage() {
                 hint={all ? "All time" : `${metrics.inWindow.toLocaleString()} in window`}
                 delta={all ? undefined : metrics.delta}
                 icon={<BarChart3 className="h-4 w-4" />}
+                onClick={() => setDrill("total")}
               />
               <KpiCard
                 label="Avg Quality score"
                 value={metrics.avgScore ? metrics.avgScore.toFixed(2) : "—"}
                 hint={`${feedback.filter((f) => f.score != null).length.toLocaleString()} scored`}
                 icon={<Target className="h-4 w-4" />}
+                onClick={() => setDrill("scored")}
               />
               <KpiCard
                 label="Delivery rate"
                 value={`${pct(metrics.delivered, metrics.sent)}%`}
                 hint={`${metrics.delivered.toLocaleString()} / ${metrics.sent.toLocaleString()} sent`}
                 icon={<TrendingUp className="h-4 w-4" />}
+                onClick={() => setDrill("delivered")}
               />
               <KpiCard
                 label="Acknowledgement rate"
                 value={`${pct(metrics.acknowledged, metrics.delivered)}%`}
                 hint={`${metrics.acknowledged.toLocaleString()} acknowledged`}
                 icon={<Users className="h-4 w-4" />}
+                onClick={() => setDrill("acknowledged")}
               />
             </div>
 
@@ -435,6 +443,12 @@ function AnalyticsPage() {
           </>
         )}
       </div>
+      <DrillSheet
+        drill={drill}
+        onClose={() => setDrill(null)}
+        feedback={feedback}
+        agents={agents}
+      />
     </div>
   );
 }
@@ -563,16 +577,33 @@ function KpiCard({
   hint,
   delta,
   icon,
+  onClick,
 }: {
   label: string;
   value: string;
   hint?: string;
   delta?: number;
   icon?: React.ReactNode;
+  onClick?: () => void;
 }) {
   const trendPositive = (delta ?? 0) >= 0;
   return (
-    <Card className="rounded-xl border-border/60 bg-card/60 p-4 backdrop-blur-xl">
+    <Card
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (!onClick) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className={cn(
+        "rounded-xl border-border/60 bg-card/60 p-4 backdrop-blur-xl transition",
+        onClick && "cursor-pointer hover:border-primary/40 hover:bg-card/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary",
+      )}
+    >
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>{label}</span>
         {icon}
@@ -590,7 +621,187 @@ function KpiCard({
           </span>
         )}
         {hint && <span>{hint}</span>}
+        {onClick && <span className="ml-auto text-primary">View →</span>}
       </div>
     </Card>
+  );
+}
+
+// ── Drill-down ───────────────────────────────────────────────────────────────
+type DrillKey = "total" | "scored" | "delivered" | "acknowledged";
+
+const DRILL_META: Record<DrillKey, { title: string; description: string }> = {
+  total: {
+    title: "All feedback",
+    description: "Every feedback record inside the selected date range.",
+  },
+  scored: {
+    title: "Scored feedback",
+    description: "Feedback records that contributed to the average Quality score.",
+  },
+  delivered: {
+    title: "Delivered feedback",
+    description: "Records sent and confirmed as delivered by the email provider.",
+  },
+  acknowledged: {
+    title: "Acknowledged feedback",
+    description: "Records the agent has opened and acknowledged.",
+  },
+};
+
+function filterDrill(rows: FeedbackRow[], key: DrillKey): FeedbackRow[] {
+  switch (key) {
+    case "total":
+      return rows;
+    case "scored":
+      return rows.filter((r) => r.score != null);
+    case "delivered":
+      return rows.filter((r) => r.delivered_at);
+    case "acknowledged":
+      return rows.filter((r) => r.acknowledged_at);
+  }
+}
+
+function DrillSheet({
+  drill,
+  onClose,
+  feedback,
+  agents,
+}: {
+  drill: DrillKey | null;
+  onClose: () => void;
+  feedback: FeedbackRow[];
+  agents: AgentRow[];
+}) {
+  const open = drill !== null;
+  const nameById = useMemo(() => new Map(agents.map((a) => [a.id, a.full_name ?? "Unassigned"])), [agents]);
+  const rows = useMemo(() => (drill ? filterDrill(feedback, drill) : []), [feedback, drill]);
+  const meta = drill ? DRILL_META[drill] : null;
+
+  const downloadCsv = () => {
+    const header = [
+      "id",
+      "created_at",
+      "agent",
+      "type",
+      "severity",
+      "status",
+      "score",
+      "delivered_at",
+      "opened_at",
+      "acknowledged_at",
+    ];
+    const lines = rows.map((r) =>
+      [
+        r.id,
+        r.created_at,
+        nameById.get(r.agent_id ?? "") ?? "",
+        r.feedback_type ?? "",
+        r.severity ?? "",
+        r.status,
+        r.score ?? "",
+        r.delivered_at ?? "",
+        r.opened_at ?? "",
+        r.acknowledged_at ?? "",
+      ]
+        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+        .join(","),
+    );
+    const blob = new Blob([[header.join(","), ...lines].join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${drill ?? "feedback"}-${format(new Date(), "yyyyMMdd-HHmm")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent side="right" className="w-full sm:max-w-4xl overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>{meta?.title ?? "Feedback"}</SheetTitle>
+          <SheetDescription>{meta?.description}</SheetDescription>
+        </SheetHeader>
+        <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+          <span>
+            {rows.length.toLocaleString()} record{rows.length === 1 ? "" : "s"}
+          </span>
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={downloadCsv} disabled={rows.length === 0}>
+            Export CSV
+          </Button>
+        </div>
+        <div className="mt-3 rounded-lg border border-border/60">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[110px]">Created</TableHead>
+                <TableHead>Agent</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Severity</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Score</TableHead>
+                <TableHead className="w-[70px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-8 text-center text-xs text-muted-foreground">
+                    No matching records.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                rows.slice(0, 500).map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {format(new Date(r.created_at), "MMM d, yyyy")}
+                    </TableCell>
+                    <TableCell className="text-xs font-medium">
+                      {nameById.get(r.agent_id ?? "") ?? "Unassigned"}
+                    </TableCell>
+                    <TableCell className="text-xs capitalize">
+                      {(r.feedback_type ?? "—").replace(/_/g, " ")}
+                    </TableCell>
+                    <TableCell className="text-xs capitalize">
+                      {r.severity ? (
+                        <Badge variant="outline" className="text-[10px] capitalize">
+                          {r.severity}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs capitalize">
+                      <Badge variant="outline" className="text-[10px] capitalize">
+                        {r.status.replace(/_/g, " ")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right text-xs tabular-nums">
+                      {r.score != null ? Number(r.score).toFixed(2) : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        to="/feedback/$id"
+                        params={{ id: r.id }}
+                        className="text-xs font-medium text-primary hover:underline"
+                        onClick={onClose}
+                      >
+                        Open
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        {rows.length > 500 && (
+          <div className="mt-2 text-center text-[11px] text-muted-foreground">
+            Showing first 500 of {rows.length.toLocaleString()}. Export CSV for the full list.
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
   );
 }
