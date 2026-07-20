@@ -239,6 +239,10 @@ async def drill_and_verify(page, label: str) -> dict:
 
 
 async def main() -> None:
+    # Seed the exact date-range window used by the drill-down BEFORE the
+    # browser session opens, so every KPI card has rows to click through.
+    seed_drill_window()
+
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(viewport={"width": 1280, "height": 1800})
