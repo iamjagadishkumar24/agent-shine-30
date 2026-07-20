@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Rebrand guard — blocks commits that reintroduce legacy "Zenwork" references
+# Rebrand guard — blocks commits that reintroduce the legacy brand name
 # (including case variations, separator tricks, zero-width chars, and Unicode
 # confusables). Scoped to staged text files for speed; falls back to a full
 # scan if the staged-file mode is skipped.
