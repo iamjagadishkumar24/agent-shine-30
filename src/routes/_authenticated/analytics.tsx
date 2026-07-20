@@ -448,7 +448,12 @@ function AnalyticsPage() {
         onClose={() => setDrill(null)}
         feedback={feedback}
         agents={agents}
+        rangeStart={start}
+        rangeEnd={end}
+        rangeAll={all}
+        preset={search.preset}
       />
+
     </div>
   );
 }
