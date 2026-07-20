@@ -369,6 +369,8 @@ function AnalyticsPage() {
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <KpiCard
                 label="Total feedback"
+                drillKey="total"
+                count={metrics.total}
                 value={metrics.total.toLocaleString()}
                 hint={all ? "All time" : `${metrics.inWindow.toLocaleString()} in window`}
                 delta={all ? undefined : metrics.delta}
@@ -377,6 +379,8 @@ function AnalyticsPage() {
               />
               <KpiCard
                 label="Avg Quality score"
+                drillKey="scored"
+                count={feedback.filter((f) => f.score != null).length}
                 value={metrics.avgScore ? metrics.avgScore.toFixed(2) : "—"}
                 hint={`${feedback.filter((f) => f.score != null).length.toLocaleString()} scored`}
                 icon={<Target className="h-4 w-4" />}
@@ -384,6 +388,8 @@ function AnalyticsPage() {
               />
               <KpiCard
                 label="Delivery rate"
+                drillKey="delivered"
+                count={metrics.delivered}
                 value={`${pct(metrics.delivered, metrics.sent)}%`}
                 hint={`${metrics.delivered.toLocaleString()} / ${metrics.sent.toLocaleString()} sent`}
                 icon={<TrendingUp className="h-4 w-4" />}
@@ -391,12 +397,15 @@ function AnalyticsPage() {
               />
               <KpiCard
                 label="Acknowledgement rate"
+                drillKey="acknowledged"
+                count={metrics.acknowledged}
                 value={`${pct(metrics.acknowledged, metrics.delivered)}%`}
                 hint={`${metrics.acknowledged.toLocaleString()} acknowledged`}
                 icon={<Users className="h-4 w-4" />}
                 onClick={() => setDrill("acknowledged")}
               />
             </div>
+
 
             <Suspense fallback={<Skeleton className="h-72 rounded-xl" />}>
               <Charts monthly={trend} byType={byType} bySeverity={bySeverity} />
