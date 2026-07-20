@@ -59,10 +59,25 @@ if (hasRg) {
 
 const lines = matches.split("\n").filter(Boolean);
 if (lines.length > 0) {
+  const inGithub = process.env.GITHUB_ACTIONS === "true";
   console.error(
     `\n✖ Rebrand guard failed — found ${lines.length} residual "${TERM}" reference(s):\n`,
   );
-  for (const l of lines) console.error("  " + l);
+  for (const l of lines) {
+    console.error("  " + l);
+    if (inGithub) {
+      // Parse "./path/to/file:LINE:content" (rg) or "path:LINE:content" (grep).
+      const m = l.match(/^\.?\/?([^:]+):(\d+):(.*)$/);
+      if (m) {
+        const [, file, line, content] = m;
+        const msg = `Legacy "${TERM}" reference found: ${content.trim()}`
+          .replace(/%/g, "%25")
+          .replace(/\r/g, "%0D")
+          .replace(/\n/g, "%0A");
+        console.log(`::error file=${file},line=${line}::${msg}`);
+      }
+    }
+  }
   console.error(
     `\nRemove or replace every occurrence with the QualiPulse brand before merging.\n`,
   );
