@@ -745,6 +745,28 @@ function DrillSheet({
           <SheetTitle>{meta?.title ?? "Feedback"}</SheetTitle>
           <SheetDescription>{meta?.description}</SheetDescription>
         </SheetHeader>
+        <div
+          data-testid="drill-chips"
+          className="mt-3 flex flex-wrap items-center gap-2"
+        >
+          <Badge
+            variant="secondary"
+            data-testid="drill-chip-kpi"
+            data-kpi={drill ?? ""}
+          >
+            KPI: {meta?.title ?? "—"}
+          </Badge>
+          <Badge
+            variant="outline"
+            data-testid="drill-chip-range"
+            data-preset={preset}
+            data-range-start={rangeAll ? "all" : rangeStart.toISOString()}
+            data-range-end={rangeAll ? "all" : rangeEnd.toISOString()}
+          >
+            Range: {presetLabel} · {rangeLabel}
+          </Badge>
+        </div>
+
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
           <span>
             {rows.length.toLocaleString()} record{rows.length === 1 ? "" : "s"}
