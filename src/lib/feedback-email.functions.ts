@@ -304,6 +304,7 @@ export const previewFeedbackEmail = createServerFn({ method: "POST" })
       .maybeSingle();
 
     const appBaseUrl = getAppBaseUrl();
+    const metrics = await loadMetrics(supabase, fb.id);
     const rendered = renderFeedbackEmail({
       feedbackId: fb.id,
       title: fb.title,
@@ -312,6 +313,7 @@ export const previewFeedbackEmail = createServerFn({ method: "POST" })
       category: fb.category,
       feedbackType: fb.feedback_type,
       severity: fb.severity,
+      interactionType: (fb as any).interaction_type,
       score: fb.score as number | null,
       summary: fb.summary,
       strengths: fb.strengths,
@@ -323,6 +325,7 @@ export const previewFeedbackEmail = createServerFn({ method: "POST" })
       logoUrl: settings?.logo_url ?? `${appBaseUrl}${qualipulseMark.url}`,
       signatureHtml: settings?.signature_html,
       confidentialityNotice: settings?.confidentiality_notice,
+      metrics,
     });
     return {
       subject: rendered.subject,
