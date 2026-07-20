@@ -137,13 +137,28 @@ function looksBinary(buf) {
 }
 
 const files = (await resolveFileList()).filter((f) => f && !isExcluded(f));
+const isStagedMode = process.argv.includes("--stdin-null");
+const scanned = [];
+const skipped = [];
 const annotations = [];
 
 for (const rel of files) {
-  if (BINARY_EXT.has(path.extname(rel).toLowerCase())) continue;
+  if (BINARY_EXT.has(path.extname(rel).toLowerCase())) {
+    skipped.push({ file: rel, reason: "binary-ext" });
+    continue;
+  }
   let buf;
-  try { buf = readFileSync(rel); } catch { continue; }
-  if (looksBinary(buf)) continue;
+  try {
+    buf = readFileSync(rel);
+  } catch {
+    skipped.push({ file: rel, reason: "unreadable" });
+    continue;
+  }
+  if (looksBinary(buf)) {
+    skipped.push({ file: rel, reason: "binary" });
+    continue;
+  }
+  scanned.push(rel);
   const text = buf.toString("utf8");
   const lines = text.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
@@ -156,10 +171,37 @@ for (const rel of files) {
   }
 }
 
+// Per-file violation counts (deterministic order: most hits first, then path).
+const perFile = new Map();
+for (const a of annotations) perFile.set(a.file, (perFile.get(a.file) ?? 0) + 1);
+const perFileSorted = [...perFile.entries()].sort(
+  (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+);
+
+// Show which files were considered in staged mode — the pre-commit hook
+// runs against a limited set, so surfacing it makes intent obvious.
+if (isStagedMode) {
+  console.error(`Rebrand guard — scanning ${scanned.length} staged file(s):`);
+  for (const f of scanned) console.error(`  • ${f}`);
+  if (skipped.length) {
+    console.error(`Skipped ${skipped.length} (binary/unreadable):`);
+    for (const s of skipped) console.error(`  • ${s.file} [${s.reason}]`);
+  }
+  console.error("");
+}
+
 if (annotations.length > 0) {
   const inGithub = process.env.GITHUB_ACTIONS === "true";
-  const header = `✖ Rebrand guard failed — found ${annotations.length} residual "${TERM_DISPLAY}" reference(s) (including confusables/separators):`;
-  console.error("\n" + header + "\n");
+  const header = `✖ Rebrand guard failed — ${annotations.length} residual "${TERM_DISPLAY}" reference(s) across ${perFile.size} file(s):`;
+  console.error(header + "\n");
+
+  // Concise per-file summary first, then full detail.
+  console.error("Summary (violations per file):");
+  const width = String(perFileSorted[0]?.[1] ?? 0).length;
+  for (const [file, count] of perFileSorted) {
+    console.error(`  ${String(count).padStart(width)}  ${file}`);
+  }
+  console.error("\nDetail:");
 
   for (const a of annotations) {
     console.error(`  ${a.file}:${a.line}:${a.content}`);
@@ -180,6 +222,9 @@ if (annotations.length > 0) {
       {
         term: TERM_DISPLAY,
         total_matches: annotations.length,
+        files_with_matches: perFile.size,
+        scanned_files: scanned.length,
+        per_file: Object.fromEntries(perFileSorted),
         generated_at: new Date().toISOString(),
         detection: "case-insensitive + unicode-confusables + separator-insertions + zero-width-stripped",
         matches: annotations,
@@ -191,7 +236,10 @@ if (annotations.length > 0) {
   writeFileSync(
     path.join(outDir, "report.txt"),
     header + "\n\n" +
-      annotations.map((a) => `${a.file}:${a.line}:${a.content}`).join("\n") + "\n",
+      "Summary:\n" +
+      perFileSorted.map(([f, c]) => `  ${c}  ${f}`).join("\n") +
+      "\n\nDetail:\n" +
+      annotations.map((a) => `  ${a.file}:${a.line}:${a.content}`).join("\n") + "\n",
   );
 
   console.error(`\nFull report written to ${outDir}/report.txt and ${outDir}/report.json.`);
@@ -199,4 +247,6 @@ if (annotations.length > 0) {
   process.exit(1);
 }
 
-console.log(`✓ Rebrand guard passed — no "${TERM_DISPLAY}" references (including confusables) found.`);
+console.log(
+  `✓ Rebrand guard passed — ${scanned.length} file(s) scanned, no "${TERM_DISPLAY}" references (including confusables) found.`,
+);
