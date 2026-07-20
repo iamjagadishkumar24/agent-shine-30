@@ -815,7 +815,16 @@ function DrillSheet({
                 </TableRow>
               ) : (
                 rows.slice(0, 500).map((r) => (
-                  <TableRow key={r.id}>
+                  <TableRow
+                    key={r.id}
+                    data-testid="drill-row"
+                    data-id={r.id}
+                    data-status={r.status}
+                    data-score={r.score != null ? String(r.score) : ""}
+                    data-created={r.created_at}
+                    data-delivered={r.delivered_at ?? ""}
+                    data-acknowledged={r.acknowledged_at ?? ""}
+                  >
                     <TableCell className="text-xs text-muted-foreground">
                       {format(new Date(r.created_at), "MMM d, yyyy")}
                     </TableCell>
