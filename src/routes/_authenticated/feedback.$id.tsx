@@ -342,6 +342,7 @@ function FeedbackDetail() {
     onError: (e: any) => toast.error(e?.message ?? "Unable to close dispute"),
   });
 
+  const uploadFile = async (file: File) => {
     if (file.size > 20 * 1024 * 1024) {
       toast.error("Max file size is 20 MB");
       return;
