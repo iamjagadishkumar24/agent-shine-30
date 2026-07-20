@@ -66,16 +66,18 @@ export function AuthShell({
     <div
       role="group"
       aria-label="Zenwork Performance Manager"
-      className="mx-auto mb-6 flex w-full max-w-full items-center justify-center px-2 sm:mb-7"
+      className="mx-auto -mt-2 mb-6 flex w-full max-w-full items-center justify-center px-2 sm:mb-8"
     >
       <img
         src={zenworkLockup.url}
         alt="Zenwork Performance Manager"
         width={1500}
         height={1000}
-        className="block h-auto w-full max-w-[360px] object-contain select-none dark:brightness-110 dark:contrast-110 sm:max-w-[400px] md:max-w-[440px]"
+        className="block h-auto w-full max-w-[520px] object-contain select-none dark:brightness-110 dark:contrast-110 sm:max-w-[560px] md:max-w-[600px] lg:max-w-[640px]"
         draggable={false}
       />
+    </div>
+  ) : null;
     </div>
   ) : null;
 
