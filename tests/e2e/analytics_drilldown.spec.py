@@ -283,7 +283,15 @@ async def drill_and_verify(page, label: str) -> dict:
         if await dialog.is_visible():
             fail(f"drill sheet for '{label}' did not close on Escape")
 
-    return {"label": label, "rows": row_count, "open_links": open_count, "sample_href": open_href}
+    return {
+        "label": label,
+        "rows": row_count,
+        "open_links": open_count,
+        "sample_href": open_href,
+        "chip_kpi": chip_kpi_key,
+        "chip_preset": preset_attr,
+        "chip_range": [range_start_attr, range_end_attr],
+    }
 
 
 async def main() -> None:
