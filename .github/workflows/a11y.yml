@@ -1,0 +1,75 @@
+name: Accessibility
+
+on:
+  pull_request:
+    paths:
+      - "src/routes/auth.tsx"
+      - "src/routes/sign-up.tsx"
+      - "src/routes/forgot-password.tsx"
+      - "src/routes/reset-password.tsx"
+      - "src/routes/verify-email.tsx"
+      - "src/components/auth/**"
+      - "src/styles.css"
+      - "tests/a11y/**"
+      - ".github/workflows/a11y.yml"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  auth-a11y:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install app deps
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright + axe-core Python bindings
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install playwright==1.48.0
+          python -m playwright install --with-deps chromium
+
+      - name: Build app
+        run: bun run build
+
+      - name: Start preview server
+        run: |
+          bun run preview --port 8080 &
+          echo $! > .preview.pid
+          for i in {1..40}; do
+            if curl -sfI http://localhost:8080/auth >/dev/null; then
+              echo "preview up"; exit 0
+            fi
+            sleep 1
+          done
+          echo "preview failed to start"; exit 1
+
+      - name: Run axe-core auth route audit
+        env:
+          BASE_URL: http://localhost:8080
+        run: python3 tests/a11y/auth_routes.spec.py
+
+      - name: Stop preview server
+        if: always()
+        run: |
+          if [ -f .preview.pid ]; then kill "$(cat .preview.pid)" || true; fi
+
+      - name: Upload a11y artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-artifacts
+          path: tests/a11y/artifacts/**
+          if-no-files-found: ignore
+          retention-days: 14
