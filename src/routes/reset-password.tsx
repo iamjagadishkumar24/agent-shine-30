@@ -95,6 +95,7 @@ function ResetPasswordPage() {
 
   return (
     <AuthShell
+      sidePanel={<AuthHero variant="reset" />}
       loading={loading}
       loadingLabel="Updating your password…"
       error={errorMsg}
