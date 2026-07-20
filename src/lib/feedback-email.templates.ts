@@ -1,26 +1,19 @@
 // Pure HTML email template — client-safe (no server imports).
-//
-// QualiPulse — Performance Feedback Review email.
-// Follows the canonical QualiPulse sample layout: branded header, greeting,
-// Feedback Summary, Overall Performance metrics table, star rating,
-// Performance Highlights, Areas for Improvement, Coaching Recommendations,
-// Manager's Comments, Next Steps, Need Assistance, and closing signature.
-// Inline CSS for Gmail / Outlook / Apple Mail / mobile compatibility.
+// Simplified QualiPulse feedback email: compact, mobile-friendly, no marketing.
 
-export type FeedbackEmailAttachmentLink = {
-  fileName: string;
-  url: string;
-};
+import { BRAND, QUALITY_PARAMETERS, computeOverallScore } from "./brand";
 
+export type FeedbackEmailAttachmentLink = { fileName: string; url: string };
 export type FeedbackMetric = { label: string; score: number };
 
 export type FeedbackEmailData = {
   feedbackId: string;
   title: string;
   agentName: string;
-  category: string;
-  feedbackType: string;
-  severity: string;
+  category?: string;
+  feedbackType?: string;
+  severity?: string;
+  interactionType?: string | null;   // "chat" | "case"
   score?: number | null;
   summary?: string | null;
   strengths?: string | null;
@@ -32,13 +25,15 @@ export type FeedbackEmailData = {
   appBaseUrl: string;
   isReminder?: boolean;
   reminderCount?: number;
-  // Branding
+  // Branding overrides
   senderName?: string;
   logoUrl?: string | null;
   signatureHtml?: string | null;
   confidentialityNotice?: string | null;
   attachmentLinks?: FeedbackEmailAttachmentLink[];
-  // Optional enterprise metadata
+  // Per-parameter scores. Order/labels are canonicalized against QUALITY_PARAMETERS.
+  metrics?: FeedbackMetric[] | null;
+  // Ignored legacy fields (kept for API compatibility)
   customerName?: string | null;
   department?: string | null;
   interactionDate?: string | null;
@@ -49,268 +44,124 @@ export type FeedbackEmailData = {
   managerComments?: string | null;
   managerTitle?: string | null;
   nextSteps?: string | null;
-  // New (sample-aligned) fields
   reviewPeriodStart?: string | null;
   reviewPeriodEnd?: string | null;
-  metrics?: FeedbackMetric[] | null;
-};
-
-const BRAND = {
-  name: "QualiPulse",
-  tagline: "Quality Feedback and Performance Management",
-  supportEmail: "support@qualipulse.app",
-  website: "https://www.qualipulse.app",
-  websiteLabel: "www.qualipulse.app",
-  privacyUrl: "https://www.qualipulse.app/privacy",
-  termsUrl: "https://www.qualipulse.app/terms",
-  supportUrl: "https://www.qualipulse.app/support",
-  contactUrl: "https://www.qualipulse.app/contact",
-  address: "QualiPulse Inc. · Hyderabad, India",
-  gradient: "linear-gradient(135deg,#312e81 0%,#4338ca 40%,#6d28d9 100%)",
-  gradientFallback: "#312e81",
-  ink: "#0f172a",
-  inkSoft: "#334155",
-  mute: "#64748b",
-  line: "#e2e8f0",
-  surface: "#ffffff",
-  page: "#f1f5f9",
-  accent: "#4f46e5",
 };
 
 const FONT = `-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif`;
+const INK = "#0f172a";
+const INK_SOFT = "#334155";
+const MUTE = "#64748b";
+const LINE = "#e5e7eb";
+const ACCENT = "#4f46e5";
+const PAGE = "#f4f6f8";
 
 const escape = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-const titleCase = (s: string) =>
-  s.replace(/(^|[\s_-])(\w)/g, (_, sep, ch) => (sep === "_" || sep === "-" ? " " : sep) + ch.toUpperCase());
-
 const firstName = (full: string) => full.split(/\s+/)[0] || full;
 
-const toItems = (raw?: string | null): string[] => {
-  if (!raw) return [];
-  const parts = raw
-    .split(/\r?\n|•|·|(?:^|\s)-\s|(?:^|\s)\*\s|;/g)
-    .map((s) => s.replace(/^[-*•·\s]+/, "").trim())
-    .filter(Boolean);
-  if (parts.length > 1) return parts;
-  return raw
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-};
+// Normalize per-parameter scores to the canonical seven, preserving order.
+function normalizeMetrics(input?: FeedbackMetric[] | null): FeedbackMetric[] {
+  const byKey = new Map<string, number>();
+  for (const m of input ?? []) {
+    const k = m.label.trim().toLowerCase();
+    if (typeof m.score === "number" && !Number.isNaN(m.score)) byKey.set(k, m.score);
+  }
+  const out: FeedbackMetric[] = [];
+  for (const label of QUALITY_PARAMETERS) {
+    const key = label.toLowerCase();
+    if (byKey.has(key)) out.push({ label, score: Math.max(0, Math.min(100, byKey.get(key)!)) });
+  }
+  return out;
+}
 
-const ratingFromScore = (score?: number | null): { label: string; stars: number } => {
-  if (score == null) return { label: "Not scored", stars: 0 };
-  if (score >= 90) return { label: "Excellent", stars: 5 };
-  if (score >= 80) return { label: "Exceeds Expectations", stars: 4 };
-  if (score >= 70) return { label: "Meets Expectations", stars: 3 };
-  if (score >= 60) return { label: "Developing", stars: 2 };
-  return { label: "Needs Improvement", stars: 1 };
-};
+function formatPct(n: number): string {
+  return `${(Math.round(n * 10) / 10).toFixed(1)}%`;
+}
 
-const scoreColor = (score: number) => {
-  if (score >= 90) return "#047857";
-  if (score >= 80) return "#1d4ed8";
-  if (score >= 70) return "#a16207";
+function scoreColor(n: number): string {
+  if (n >= 90) return "#047857";
+  if (n >= 80) return "#1d4ed8";
+  if (n >= 70) return "#a16207";
   return "#b91c1c";
-};
+}
 
-const formatDate = (iso?: string | null) => {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
-};
+function narrativeBlock(title: string, body: string | null | undefined): string {
+  const text = (body ?? "").trim();
+  if (!text) return "";
+  return `
+    <tr><td style="padding:8px 24px 4px;">
+      <div style="font:700 12px/1 ${FONT};letter-spacing:.12em;text-transform:uppercase;color:${MUTE};margin-bottom:6px;">${escape(title)}</div>
+      <div style="font:14.5px/1.65 ${FONT};color:${INK};white-space:pre-wrap;">${escape(text)}</div>
+    </td></tr>`;
+}
 
-const monthYear = (iso?: string | null) => {
-  const d = iso ? new Date(iso) : new Date();
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-};
+export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; html: string; text: string } {
+  const metrics = normalizeMetrics(d.metrics);
+  const overallFromMetrics = metrics.length ? computeOverallScore(metrics.map((m) => m.score)) : null;
+  const overall = overallFromMetrics ?? (typeof d.score === "number" ? d.score : null);
+  const overallLabel = overall != null ? formatPct(overall) : "—";
 
-const formatReviewId = (id: string) => {
-  const short = id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase();
-  const year = new Date().getFullYear();
-  const numeric = parseInt(short, 36);
-  const seq = Number.isNaN(numeric) ? short : String(numeric % 1000000).padStart(6, "0");
-  return `FB-${year}-${seq}`;
-};
+  const interactionRaw = (d.interactionType ?? "").toLowerCase();
+  const interactionLabel = interactionRaw === "case" ? "Case" : interactionRaw === "chat" ? "Chat" : "interaction";
 
-// ── Reusable blocks ────────────────────────────────────────────────────────
+  const senderName = d.senderName ?? BRAND.senderName;
+  const isReminder = !!d.isReminder;
+  const subject = isReminder
+    ? `Reminder: Quality Feedback – ${d.title}`
+    : `Quality Feedback – ${d.title}`;
 
-const summaryRow = (label: string, value: string) => `
-  <tr>
-    <td style="padding:11px 0;border-bottom:1px solid ${BRAND.line};font:500 12px/1.4 ${FONT};color:${BRAND.mute};width:42%;letter-spacing:.02em;">${escape(label)}</td>
-    <td style="padding:11px 0;border-bottom:1px solid ${BRAND.line};font:600 13.5px/1.4 ${FONT};color:${BRAND.ink};text-align:right;">${escape(value)}</td>
-  </tr>`;
+  const greetingName = firstName(d.agentName);
+  const ackUrl = `${d.appBaseUrl}/api/public/track/click/${d.feedbackId}?to=${encodeURIComponent(`/portal/${d.feedbackId}`)}`;
+  const pixelUrl = `${d.appBaseUrl}/api/public/track/open/${d.feedbackId}`;
 
-const sectionCard = (title: string, inner: string, accent = BRAND.accent) => `
-  <tr><td style="padding:0 24px 20px;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.surface};border:1px solid ${BRAND.line};border-radius:14px;overflow:hidden;">
-      <tr><td style="padding:16px 20px;background:linear-gradient(90deg,${accent}14,transparent);border-bottom:1px solid ${BRAND.line};">
-        <div style="font:700 12px/1 ${FONT};letter-spacing:.14em;text-transform:uppercase;color:${accent};">${escape(title)}</div>
-      </td></tr>
-      <tr><td style="padding:18px 20px;font:14px/1.7 ${FONT};color:${BRAND.inkSoft};">${inner}</td></tr>
-    </table>
-  </td></tr>`;
+  const logoImg = d.logoUrl
+    ? `<img src="${escape(d.logoUrl)}" alt="${escape(BRAND.name)}" height="40" style="display:block;height:40px;width:auto;max-width:200px;border:0;outline:none;text-decoration:none;" />`
+    : `<div style="font:800 22px/1 ${FONT};color:${INK};letter-spacing:.04em;">${escape(BRAND.name)}</div>`;
 
-const bulletList = (items: string[], dotColor: string, emptyText = "Nothing recorded.") =>
-  items.length
-    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items
-        .map(
-          (i) => `<tr>
-            <td valign="top" width="20" style="padding:6px 8px 6px 0;">
-              <div style="width:8px;height:8px;border-radius:99px;background:${dotColor};margin-top:8px;"></div>
-            </td>
-            <td style="padding:6px 0;font:14px/1.65 ${FONT};color:${BRAND.ink};">${escape(i)}</td>
-          </tr>`,
-        )
-        .join("")}</table>`
-    : `<div style="font:14px/1.6 ${FONT};color:${BRAND.mute};font-style:italic;">${escape(emptyText)}</div>`;
-
-const metricsTable = (rows: FeedbackMetric[]) => {
-  if (!rows.length) return "";
-  const body = rows
-    .map((r, i) => {
-      const pct = Math.max(0, Math.min(100, Math.round(r.score)));
-      const color = scoreColor(pct);
-      const bg = i % 2 === 0 ? "#ffffff" : "#f8fafc";
+  const metricsRows = metrics
+    .map((m) => {
+      const pct = formatPct(m.score);
+      const color = scoreColor(m.score);
       return `
         <tr>
-          <td style="padding:12px 16px;background:${bg};border-bottom:1px solid ${BRAND.line};font:500 13.5px/1.4 ${FONT};color:${BRAND.ink};">${escape(r.label)}</td>
-          <td style="padding:12px 16px;background:${bg};border-bottom:1px solid ${BRAND.line};font:700 13.5px/1.4 ${FONT};color:${color};text-align:right;width:80px;">${pct}%</td>
+          <td style="padding:9px 0;font:14px/1.4 ${FONT};color:${INK};">
+            <span style="display:inline-block;width:16px;color:#059669;font-weight:700;">&#10003;</span>
+            ${escape(m.label)}
+          </td>
+          <td align="right" style="padding:9px 0;font:700 14px/1.4 ${FONT};color:${color};white-space:nowrap;">${pct}</td>
         </tr>`;
     })
     .join("");
-  return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${BRAND.line};border-radius:12px;overflow:hidden;">
-      <tr>
-        <td style="padding:11px 16px;background:#f1f5f9;border-bottom:1px solid ${BRAND.line};font:700 11px/1 ${FONT};letter-spacing:.12em;text-transform:uppercase;color:${BRAND.mute};">Metric</td>
-        <td style="padding:11px 16px;background:#f1f5f9;border-bottom:1px solid ${BRAND.line};font:700 11px/1 ${FONT};letter-spacing:.12em;text-transform:uppercase;color:${BRAND.mute};text-align:right;">Score</td>
-      </tr>
-      ${body}
-    </table>`;
-};
 
-const starRating = (stars: number, label: string) => {
-  const full = "★".repeat(Math.max(0, Math.min(5, stars)));
-  const empty = "☆".repeat(Math.max(0, 5 - stars));
-  return `
-    <div style="margin-top:18px;padding:16px 18px;background:linear-gradient(90deg,#fef3c7,#fffbeb);border:1px solid #fde68a;border-radius:12px;text-align:center;">
-      <div style="font:600 11px/1 ${FONT};letter-spacing:.14em;text-transform:uppercase;color:#92400e;">Overall Rating</div>
-      <div style="margin-top:10px;font:700 22px/1 ${FONT};color:#b45309;letter-spacing:.14em;">
-        <span style="color:#f59e0b;">${full}</span><span style="color:#fde68a;">${empty}</span>
-      </div>
-      <div style="margin-top:10px;font:700 15px/1.2 ${FONT};color:${BRAND.ink};">${escape(label)}</div>
-    </div>`;
-};
-
-// ── Main renderer ──────────────────────────────────────────────────────────
-
-export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; html: string; text: string } {
-  const ackUrl = `${d.appBaseUrl}/api/public/track/click/${d.feedbackId}?to=${encodeURIComponent(`/feedback/${d.feedbackId}`)}`;
-  const pixelUrl = `${d.appBaseUrl}/api/public/track/open/${d.feedbackId}`;
-
-  const isReminder = !!d.isReminder;
-  const department = d.department ?? "Customer Success";
-  const reviewDateIso = d.reviewDate ?? new Date().toISOString().slice(0, 10);
-  const reviewDate = formatDate(reviewDateIso);
-  const reviewMonth = monthYear(reviewDateIso);
-  const reviewId = formatReviewId(d.feedbackId);
-
-  const subjectBase = `Performance Feedback Review – ${department}${reviewMonth ? ` | ${reviewMonth}` : ""}`;
-  const subject = isReminder ? `Reminder: Please acknowledge — ${subjectBase}` : subjectBase;
-
-  const customerName = d.customerName ?? d.agentName;
-  const greetingName = firstName(customerName);
-
-  const rating = ratingFromScore(d.score);
-  const overallRatingLabel = d.overallRating ?? rating.label;
-
-  const strengths = toItems(d.strengths);
-  const improvements = toItems(d.improvements);
-  const coachingItems = toItems(d.recommendedActions);
-
-  // Metrics: use provided list, or synthesize a canonical set anchored to score.
-  const baseScore = d.score != null ? Math.round(d.score) : null;
-  const derivedMetrics: FeedbackMetric[] =
-    d.metrics && d.metrics.length
-      ? d.metrics
-      : baseScore != null
-        ? [
-            { label: "Overall Quality Score", score: baseScore },
-            { label: "Customer Satisfaction (CSAT)", score: Math.max(0, Math.min(100, baseScore + 3)) },
-            { label: "Communication Skills", score: Math.max(0, Math.min(100, baseScore + 2)) },
-            { label: "Product Knowledge", score: Math.max(0, Math.min(100, baseScore - 1)) },
-            { label: "Case Resolution", score: Math.max(0, Math.min(100, baseScore + 1)) },
-            { label: "Process Compliance", score: Math.max(0, Math.min(100, baseScore - 2)) },
-            { label: "Documentation Quality", score: Math.max(0, Math.min(100, baseScore - 3)) },
-          ]
-        : [];
-
-  const reviewPeriod =
-    d.reviewPeriodStart && d.reviewPeriodEnd
-      ? `${formatDate(d.reviewPeriodStart)} – ${formatDate(d.reviewPeriodEnd)}`
-      : d.interactionDate
-        ? formatDate(d.interactionDate)
-        : "—";
-
-  const logoImg = d.logoUrl
-    ? `<img src="${escape(d.logoUrl)}" alt="${escape(d.senderName ?? BRAND.name)}" height="44" style="display:block;height:44px;width:auto;max-width:200px;border:0;outline:none;text-decoration:none;background:transparent;" />`
-    : `<div style="font:800 20px/1 ${FONT};color:#ffffff;letter-spacing:.06em;">QUALIPULSE</div>`;
-  const logoHeader = `<a href="${escape(BRAND.website)}" target="_blank" style="display:inline-block;text-decoration:none;background:transparent;">${logoImg}</a>`;
+  const metricsBlock = metrics.length
+    ? `
+      <tr><td style="padding:8px 24px 4px;">
+        <div style="font:700 12px/1 ${FONT};letter-spacing:.12em;text-transform:uppercase;color:${MUTE};margin-bottom:6px;">Quality Evaluation</div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${metricsRows}</table>
+      </td></tr>`
+    : "";
 
   const reminderBanner = isReminder
-    ? `<tr><td style="padding:0 24px 4px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid #ea580c;border-radius:12px;margin-bottom:16px;">
-          <tr><td style="padding:14px 18px;">
-            <div style="font:700 13px/1.3 ${FONT};color:#9a3412;">⚠︎ Reminder #${d.reminderCount ?? 1} — Acknowledgement required</div>
-            <div style="margin-top:4px;font:13px/1.55 ${FONT};color:#9a3412;">This review is past its acknowledgement SLA. Please read and acknowledge below at your earliest convenience.</div>
-          </td></tr>
-        </table>
+    ? `<tr><td style="padding:0 24px 8px;">
+        <div style="padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-left:3px solid #ea580c;border-radius:8px;font:600 13px/1.4 ${FONT};color:#9a3412;">
+          Reminder${d.reminderCount ? ` #${d.reminderCount}` : ""} — please acknowledge this feedback.
+        </div>
       </td></tr>`
     : "";
 
   const attachmentsBlock = (d.attachmentLinks ?? []).length
-    ? sectionCard(
-        "Attachments",
-        (d.attachmentLinks ?? [])
+    ? `<tr><td style="padding:8px 24px 4px;">
+        <div style="font:700 12px/1 ${FONT};letter-spacing:.12em;text-transform:uppercase;color:${MUTE};margin-bottom:6px;">Attachments</div>
+        ${(d.attachmentLinks ?? [])
           .map(
             (a) =>
-              `<a href="${escape(a.url)}" style="display:inline-block;margin:0 8px 8px 0;padding:10px 14px;border:1px solid ${BRAND.line};border-radius:10px;background:#f8fafc;color:${BRAND.ink};text-decoration:none;font:600 13px/1 ${FONT};">📎 ${escape(a.fileName)}</a>`,
+              `<a href="${escape(a.url)}" style="display:inline-block;margin:0 6px 6px 0;padding:8px 12px;border:1px solid ${LINE};border-radius:8px;background:#f8fafc;color:${INK};text-decoration:none;font:600 12.5px/1 ${FONT};">📎 ${escape(a.fileName)}</a>`,
           )
-          .join(""),
-        "#0ea5e9",
-      )
+          .join("")}
+      </td></tr>`
     : "";
-
-  const highlightsIntro =
-    d.feedbackType === "corrective"
-      ? "During this evaluation period, the following strengths were noted:"
-      : "Congratulations on another strong review. During this evaluation period, you consistently demonstrated:";
-
-  const improvementsIntro =
-    "While your overall performance is on track, the following areas present opportunities for further growth:";
-
-  const coachingIntro = "Based on this evaluation, the following coaching activities are recommended:";
-
-  const managerComments =
-    d.managerComments ??
-    (d.feedbackType === "corrective"
-      ? `${greetingName} has the foundational skills required for the role. With focused coaching on the areas noted above, we are confident performance will strengthen materially over the coming weeks.`
-      : d.feedbackType === "positive"
-        ? `${greetingName} continues to demonstrate excellent ownership, professionalism, and a customer-first mindset. Communication quality and case handling remain consistently strong.`
-        : `${greetingName} continues to demonstrate strong ownership, professionalism, and a customer-first mindset. By focusing on the improvement areas noted, ${greetingName} is well positioned for continued success.`);
-
-  const managerSignatoryName = d.managerName ?? d.reviewerName ?? `${BRAND.name} Team`;
-  const managerSignatoryTitle = d.managerTitle ?? "Customer Success Manager";
-
-  const nextSteps =
-    d.nextSteps ??
-    `Please review your feedback in the ${BRAND.name} portal and discuss any questions or development goals during your next one-on-one meeting with your manager. If coaching has been assigned, you will receive a separate invitation to schedule your coaching session.${
-      d.dueDate ? ` Kindly acknowledge this review by <strong style="color:${BRAND.ink};">${escape(formatDate(d.dueDate))}</strong>.` : ""
-    }`;
 
   const html = `<!doctype html>
 <html lang="en">
@@ -319,324 +170,108 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="x-apple-disable-message-reformatting" />
   <meta name="color-scheme" content="light" />
-  <meta name="supported-color-schemes" content="light" />
   <title>${escape(subject)}</title>
-  <!--[if mso]><style>table{border-collapse:collapse;} .fallback{background-color:${BRAND.gradientFallback} !important;}</style><![endif]-->
   <style>
     @media only screen and (max-width:620px){
       .container{width:100% !important;border-radius:0 !important;}
       .px{padding-left:16px !important;padding-right:16px !important;}
-      .hero-title{font-size:22px !important;line-height:1.25 !important;}
-      .cta{display:block !important;width:100% !important;box-sizing:border-box !important;text-align:center !important;}
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background:${BRAND.page};">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
-    Performance Feedback Review for ${escape(greetingName)} — ${escape(reviewId)}
-  </div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.page};">
-    <tr><td align="center" style="padding:28px 12px;">
-      <table role="presentation" class="container" width="640" cellpadding="0" cellspacing="0" style="width:640px;max-width:640px;background:${BRAND.surface};border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(15,23,42,.08);">
+<body style="margin:0;padding:0;background:${PAGE};">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Quality Feedback – ${escape(d.title)} · Overall ${escape(overallLabel)}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAGE};">
+    <tr><td align="center" style="padding:24px 12px;">
+      <table role="presentation" class="container" width="640" cellpadding="0" cellspacing="0" style="width:640px;max-width:640px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(15,23,42,.06);">
 
-        <!-- Header -->
-        <tr>
-          <td class="fallback px" style="padding:32px 32px 34px;background:${BRAND.gradient};background-color:${BRAND.gradientFallback};color:#ffffff;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                <td valign="middle">${logoHeader}</td>
-                <td valign="middle" align="right" style="font:600 11px/1 ${FONT};letter-spacing:.16em;text-transform:uppercase;color:#ffffff;">
-                  <span style="color:#ffffff;">${escape(reviewMonth || reviewDate)}</span>
-                </td>
-              </tr>
-            </table>
-            <div style="margin-top:24px;font:700 12px/1 ${FONT};letter-spacing:.2em;text-transform:uppercase;color:#ffffff;opacity:.92;">${escape(BRAND.name)}</div>
-            <div class="hero-title" style="margin-top:10px;font:700 28px/1.25 ${FONT};color:#ffffff;letter-spacing:-.01em;">Performance Feedback Review</div>
-            <div style="margin-top:10px;font:400 14px/1.6 ${FONT};color:#ffffff;opacity:.92;max-width:520px;">${escape(BRAND.tagline)}</div>
-          </td></tr>
+        <tr><td class="px" style="padding:22px 24px 8px;border-bottom:1px solid ${LINE};">
+          ${logoImg}
+        </td></tr>
 
         ${reminderBanner}
 
-        <!-- Greeting -->
-        <tr><td class="px" style="padding:28px 28px 4px;">
-          <div style="font:600 16px/1.5 ${FONT};color:${BRAND.ink};">Hello ${escape(greetingName)},</div>
-          <div style="margin-top:12px;font:15px/1.75 ${FONT};color:${BRAND.inkSoft};">We hope you're doing well.</div>
-          <div style="margin-top:12px;font:15px/1.75 ${FONT};color:${BRAND.inkSoft};">
-            Your recent performance evaluation has been completed in <strong style="color:${BRAND.ink};">${escape(BRAND.name)}</strong>. Thank you for your continued commitment to delivering an excellent customer experience. This review is intended to recognize your strengths, provide actionable feedback, and support your professional development.
+        <tr><td class="px" style="padding:18px 24px 4px;">
+          <div style="font:600 16px/1.5 ${FONT};color:${INK};">Hello ${escape(greetingName)},</div>
+          <div style="margin-top:8px;font:14.5px/1.65 ${FONT};color:${INK_SOFT};">
+            A quality evaluation has been completed for your recent ${escape(interactionLabel)} interaction.
           </div>
         </td></tr>
 
-        <!-- Feedback Summary -->
-        <tr><td class="px" style="padding:20px 24px 8px;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(180deg,#f8fafc,#ffffff);border:1px solid ${BRAND.line};border-radius:16px;">
-            <tr><td style="padding:20px 22px 6px;">
-              <div style="font:700 11px/1 ${FONT};letter-spacing:.14em;text-transform:uppercase;color:${BRAND.accent};">Feedback Summary</div>
-              <div style="margin-top:6px;font:700 18px/1.35 ${FONT};color:${BRAND.ink};">${escape(d.title)}</div>
-            </td></tr>
-            <tr><td style="padding:10px 22px 20px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                ${summaryRow("Review ID", reviewId)}
-                ${summaryRow("Evaluation Date", reviewDate)}
-                ${summaryRow("Evaluator", d.reviewerName ?? d.managerName ?? "—")}
-                ${summaryRow("Department", department)}
-                ${summaryRow("Review Period", reviewPeriod)}
-              </table>
+        <tr><td class="px" style="padding:16px 24px 4px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(180deg,#eef2ff,#ffffff);border:1px solid ${LINE};border-radius:12px;">
+            <tr><td align="center" style="padding:18px 16px;">
+              <div style="font:700 11px/1 ${FONT};letter-spacing:.14em;text-transform:uppercase;color:${ACCENT};">Overall Quality Score</div>
+              <div style="margin-top:8px;font:800 34px/1 ${FONT};color:${overall != null ? scoreColor(overall) : INK};">${escape(overallLabel)}</div>
             </td></tr>
           </table>
         </td></tr>
 
-        <!-- Overall Performance -->
-        ${
-          derivedMetrics.length
-            ? `<tr><td class="px" style="padding:12px 24px 8px;">
-                <div style="font:700 12px/1 ${FONT};letter-spacing:.14em;text-transform:uppercase;color:${BRAND.accent};margin-bottom:12px;">Overall Performance</div>
-                ${metricsTable(derivedMetrics)}
-                ${starRating(rating.stars, overallRatingLabel)}
-              </td></tr>`
-            : ""
-        }
+        ${metricsBlock}
 
-        <!-- Performance Highlights -->
-        ${sectionCard(
-          "Performance Highlights",
-          `<div style="margin-bottom:12px;font:14px/1.7 ${FONT};color:${BRAND.inkSoft};">${escape(highlightsIntro)}</div>${bulletList(
-            strengths.length
-              ? strengths
-              : [
-                  "Professional and empathetic communication with customers.",
-                  "Strong understanding of products and internal processes.",
-                  "Timely case ownership and follow-up.",
-                  "High customer satisfaction scores.",
-                  "Excellent collaboration with team members.",
-                  "Consistent adherence to quality standards.",
-                ],
-            "#10b981",
-          )}<div style="margin-top:14px;font:14px/1.7 ${FONT};color:${BRAND.inkSoft};">Your dedication continues to make a positive impact on both customer experience and team performance.</div>`,
-          "#10b981",
-        )}
-
-        <!-- Areas for Improvement -->
-        ${sectionCard(
-          "Areas for Improvement",
-          `<div style="margin-bottom:12px;font:14px/1.7 ${FONT};color:${BRAND.inkSoft};">${escape(improvementsIntro)}</div>${bulletList(
-            improvements.length
-              ? improvements
-              : [
-                  "Improve documentation detail for complex customer interactions.",
-                  "Increase the use of standardized troubleshooting workflows.",
-                  "Enhance proactive communication during longer case resolutions.",
-                  "Continue strengthening knowledge of newly released features and policies.",
-                ],
-            "#f59e0b",
-          )}`,
-          "#f59e0b",
-        )}
-
-        <!-- Coaching Recommendations -->
-        ${sectionCard(
-          "Coaching Recommendations",
-          `<div style="margin-bottom:12px;font:14px/1.7 ${FONT};color:${BRAND.inkSoft};">${escape(coachingIntro)}</div>${bulletList(
-            coachingItems.length
-              ? coachingItems
-              : [
-                  "Attend the upcoming Advanced Customer Communication Workshop.",
-                  "Complete the latest Product Knowledge refresher training.",
-                  "Review best-practice documentation for case management.",
-                  "Schedule a one-on-one coaching session with your Team Manager within the next two weeks.",
-                ],
-            "#4f46e5",
-          )}`,
-          "#4f46e5",
-        )}
-
-        <!-- Manager's Comments -->
-        ${sectionCard(
-          "Manager's Comments",
-          `<div style="font:15px/1.8 ${FONT};color:${BRAND.ink};font-style:italic;border-left:3px solid #7c3aed;padding-left:14px;">${escape(managerComments)}</div>
-           <div style="margin-top:14px;font:600 14px/1.4 ${FONT};color:${BRAND.ink};">— ${escape(managerSignatoryName)}</div>
-           <div style="margin-top:2px;font:500 12.5px/1.4 ${FONT};color:${BRAND.mute};">${escape(managerSignatoryTitle)}</div>`,
-          "#7c3aed",
-        )}
-
+        ${narrativeBlock("Summary", d.summary)}
+        ${narrativeBlock("Strengths", d.strengths)}
+        ${narrativeBlock("Areas to Improve", d.improvements)}
+        ${narrativeBlock("Recommended Actions", d.recommendedActions)}
         ${attachmentsBlock}
 
-        <!-- Next Steps -->
-        ${sectionCard("Next Steps", `<div style="font:14px/1.75 ${FONT};color:${BRAND.inkSoft};">${nextSteps}</div>`, "#0ea5e9")}
-
-        <!-- CTA -->
-        <tr><td class="px" align="center" style="padding:4px 24px 24px;">
-          <a href="${ackUrl}" class="cta" style="display:inline-block;padding:14px 28px;background:${BRAND.gradient};background-color:${BRAND.gradientFallback};color:#ffffff;text-decoration:none;border-radius:12px;font:700 15px/1 ${FONT};letter-spacing:.01em;box-shadow:0 6px 18px rgba(79,70,229,.28);">
-            Open Review in Portal →
-          </a>
-          <div style="margin-top:12px;font:12px/1.5 ${FONT};color:${BRAND.mute};">
-            Or open directly: <a href="${ackUrl}" style="color:${BRAND.accent};text-decoration:none;">${escape(`${d.appBaseUrl}/feedback/${d.feedbackId}`)}</a>
-          </div>
+        <tr><td class="px" align="center" style="padding:18px 24px 6px;">
+          <a href="${ackUrl}" style="display:inline-block;padding:12px 22px;background:${ACCENT};color:#ffffff;text-decoration:none;border-radius:10px;font:700 14px/1 ${FONT};">Open in QualiPulse</a>
         </td></tr>
 
-        <!-- Need Assistance -->
-        ${sectionCard(
-          "Need Assistance?",
-          `<div style="font:14px/1.75 ${FONT};color:${BRAND.inkSoft};">
-            If you have any questions regarding this performance review or believe any information requires clarification, please contact your manager or reach out to the Customer Success Operations team.
-          </div>
-          <div style="margin-top:10px;font:14px/1.75 ${FONT};color:${BRAND.inkSoft};">
-            📧 <a href="mailto:${escape(BRAND.supportEmail)}" style="color:${BRAND.accent};text-decoration:none;">${escape(BRAND.supportEmail)}</a>
-            &nbsp;·&nbsp; 🌐 <a href="${escape(BRAND.supportUrl)}" target="_blank" style="color:${BRAND.accent};text-decoration:none;">Support Portal</a>
-          </div>`,
-          "#64748b",
-        )}
-
-        <!-- Closing / Signature (dark-mode & background-safe, all inline) -->
-        <tr><td class="px" bgcolor="#ffffff" style="padding:4px 28px 8px;background-color:#ffffff;">
-          <div style="margin:0;font-family:${FONT};font-size:15px;line-height:1.75;color:#334155;mso-line-height-rule:exactly;">
-            Thank you for your continued dedication and commitment to delivering outstanding customer experiences. We appreciate your contributions and look forward to supporting your continued growth and success.
-          </div>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="margin-top:18px;border-collapse:collapse;background-color:#ffffff;">
-            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:0;font-family:${FONT};font-size:15px;line-height:1.5;font-weight:600;color:#0f172a;mso-line-height-rule:exactly;">Regards,</td></tr>
-            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:2px 0 0;font-family:${FONT};font-size:15px;line-height:1.5;font-weight:700;color:#0f172a;mso-line-height-rule:exactly;">${escape(BRAND.name)} Team</td></tr>
-            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:4px 0 0;font-family:${FONT};font-size:12.5px;line-height:1.5;font-weight:500;font-style:italic;color:#475569;mso-line-height-rule:exactly;">${escape(BRAND.tagline)}.</td></tr>
-            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:12px 0 0;font-family:${FONT};font-size:13px;line-height:1.6;font-weight:600;color:#334155;mso-line-height-rule:exactly;">
-              <span style="display:inline-block;width:20px;color:#4f46e5;mso-text-raise:0;">&#128231;</span>
-              <a href="mailto:${escape(BRAND.supportEmail)}" style="color:#4f46e5;text-decoration:none;font-weight:600;">${escape(BRAND.supportEmail)}</a>
-            </td></tr>
-            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:4px 0 0;font-family:${FONT};font-size:13px;line-height:1.6;font-weight:600;color:#334155;mso-line-height-rule:exactly;">
-              <span style="display:inline-block;width:20px;color:#4f46e5;mso-text-raise:0;">&#127760;</span>
-              <a href="${escape(BRAND.website)}" style="color:#4f46e5;text-decoration:none;font-weight:600;">${escape(BRAND.websiteLabel)}</a>
-            </td></tr>
-          </table>
-        </td></tr>
-
-        <!-- Automated notice -->
-        <tr><td class="px" style="padding:18px 28px 28px;">
-          <div style="padding:12px 14px;background:#f8fafc;border:1px dashed ${BRAND.line};border-radius:10px;font:500 12px/1.6 ${FONT};color:${BRAND.mute};">
-            This is an automated email generated by ${escape(BRAND.name)}. Please do not reply directly to this message.
-          </div>
-        </td></tr>
-
-        <!-- Footer -->
-        <tr><td style="padding:24px 28px;background:#0f172a;color:#94a3b8;font:12px/1.6 ${FONT};">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-            <tr>
-              <td align="center" style="font:700 13px/1.3 ${FONT};color:#e2e8f0;">${escape(BRAND.name)}</td>
-            </tr>
-            <tr>
-              <td align="center" style="padding-top:4px;font:500 11px/1.5 ${FONT};color:#94a3b8;font-style:italic;">${escape(BRAND.tagline)}</td>
-            </tr>
-            <tr>
-              <td align="center" style="padding-top:14px;">
-                <a href="${escape(BRAND.privacyUrl)}" style="color:#cbd5e1;text-decoration:none;font:600 12px/1 ${FONT};margin:0 8px;">Privacy Policy</a>
-                <span style="color:#334155;">·</span>
-                <a href="${escape(BRAND.termsUrl)}" style="color:#cbd5e1;text-decoration:none;font:600 12px/1 ${FONT};margin:0 8px;">Terms of Service</a>
-                <span style="color:#334155;">·</span>
-                <a href="${escape(BRAND.supportUrl)}" style="color:#cbd5e1;text-decoration:none;font:600 12px/1 ${FONT};margin:0 8px;">Support Center</a>
-                <span style="color:#334155;">·</span>
-                <a href="${escape(BRAND.contactUrl)}" style="color:#cbd5e1;text-decoration:none;font:600 12px/1 ${FONT};margin:0 8px;">Contact Us</a>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding-top:14px;border-top:1px solid #1e293b;">
-                <div style="padding-top:12px;color:#94a3b8;">© ${new Date().getFullYear()} ${escape(BRAND.name)}. All rights reserved.</div>
-                <div style="margin-top:4px;color:#64748b;">${escape(BRAND.address)}</div>
-                <div style="margin-top:6px;color:#475569;font-size:11px;">Review ID · ${escape(reviewId)}</div>
-              </td>
-            </tr>
-          </table>
-          ${
-            d.confidentialityNotice
-              ? `<div style="margin-top:14px;padding-top:12px;border-top:1px solid #1e293b;font-style:italic;color:#64748b;text-align:center;">${escape(d.confidentialityNotice)}</div>`
-              : ""
-          }
+        <tr><td class="px" style="padding:18px 24px 22px;border-top:1px solid ${LINE};">
+          <div style="font:14.5px/1.6 ${FONT};color:${INK};">Regards,</div>
+          <div style="margin-top:2px;font:700 14.5px/1.6 ${FONT};color:${INK};">${escape(BRAND.name)} Team</div>
+          <div style="margin-top:2px;font:13px/1.6 ${FONT};color:${MUTE};">${escape(BRAND.tagline)}</div>
         </td></tr>
 
       </table>
+      <div style="max-width:640px;margin:12px auto 0;padding:0 12px;font:11.5px/1.5 ${FONT};color:${MUTE};text-align:center;">
+        This is an automated message from ${escape(BRAND.name)}. Please do not reply directly.
+        ${d.confidentialityNotice ? `<div style="margin-top:6px;font-style:italic;">${escape(d.confidentialityNotice)}</div>` : ""}
+      </div>
     </td></tr>
   </table>
   <img src="${pixelUrl}" width="1" height="1" alt="" style="display:none;width:1px;height:1px;border:0;" />
 </body>
 </html>`;
 
-  // ── Plain-text fallback ─────────────────────────────────────────────────
-  const line = "─".repeat(56);
-  const metricLines = derivedMetrics.length
-    ? [`OVERALL PERFORMANCE`, line, ...derivedMetrics.map((m) => `${m.label.padEnd(34)} ${Math.round(m.score)}%`), ""]
-    : [];
-  const text = [
-    `${BRAND.name.toUpperCase()}`,
-    BRAND.tagline,
-    line,
-    `Performance Feedback Review${reviewMonth ? ` – ${department} | ${reviewMonth}` : ""}`,
+  // ── Plain-text fallback ────────────────────────────────────────────────
+  const textLines: string[] = [
+    `${BRAND.name}`,
+    `Quality Feedback – ${d.title}`,
     "",
     `Hello ${greetingName},`,
     "",
-    "We hope you're doing well.",
+    `A quality evaluation has been completed for your recent ${interactionLabel} interaction.`,
     "",
-    `Your recent performance evaluation has been completed in ${BRAND.name}. Thank you for your continued commitment to delivering an excellent customer experience.`,
+    `Overall Quality Score: ${overallLabel}`,
     "",
-    "FEEDBACK SUMMARY",
-    line,
-    `Review ID:        ${reviewId}`,
-    `Evaluation Date:  ${reviewDate}`,
-    `Evaluator:        ${d.reviewerName ?? d.managerName ?? "—"}`,
-    `Department:       ${department}`,
-    `Review Period:    ${reviewPeriod}`,
-    "",
-    ...metricLines,
-    `Overall Rating:   ${overallRatingLabel} (${rating.stars}/5 stars)`,
-    "",
-    "PERFORMANCE HIGHLIGHTS",
-    line,
-    highlightsIntro,
-    ...(strengths.length ? strengths : [
-      "Professional and empathetic communication with customers.",
-      "Strong understanding of products and internal processes.",
-      "Timely case ownership and follow-up.",
-    ]).map((s) => `• ${s}`),
-    "",
-    "AREAS FOR IMPROVEMENT",
-    line,
-    improvementsIntro,
-    ...(improvements.length ? improvements : [
-      "Improve documentation detail for complex customer interactions.",
-      "Increase the use of standardized troubleshooting workflows.",
-    ]).map((s) => `• ${s}`),
-    "",
-    "COACHING RECOMMENDATIONS",
-    line,
-    coachingIntro,
-    ...(coachingItems.length ? coachingItems : [
-      "Attend the upcoming Advanced Customer Communication Workshop.",
-      "Complete the latest Product Knowledge refresher training.",
-      "Schedule a one-on-one coaching session with your Team Manager.",
-    ]).map((s) => `• ${s}`),
-    "",
-    "MANAGER'S COMMENTS",
-    line,
-    managerComments,
-    `— ${managerSignatoryName}, ${managerSignatoryTitle}`,
-    "",
-    "NEXT STEPS",
-    line,
-    nextSteps.replace(/<[^>]+>/g, ""),
-    "",
-    `Open in portal: ${ackUrl}`,
-    d.dueDate ? `Acknowledge by: ${formatDate(d.dueDate)}` : "",
-    "",
-    "NEED ASSISTANCE?",
-    line,
-    "If you have questions or need clarification, please contact your manager or the Customer Success Operations team.",
-    `${BRAND.supportEmail} · ${BRAND.supportUrl}`,
+  ];
+  if (metrics.length) {
+    textLines.push("Quality Evaluation");
+    for (const m of metrics) textLines.push(`  [x] ${m.label} — ${formatPct(m.score)}`);
+    textLines.push("");
+  }
+  const narrativeText = (label: string, val?: string | null) => {
+    const v = (val ?? "").trim();
+    if (!v) return;
+    textLines.push(label, v, "");
+  };
+  narrativeText("Summary", d.summary);
+  narrativeText("Strengths", d.strengths);
+  narrativeText("Areas to Improve", d.improvements);
+  narrativeText("Recommended Actions", d.recommendedActions);
+  textLines.push(
+    `Open in QualiPulse: ${d.appBaseUrl}/portal/${d.feedbackId}`,
     "",
     "Regards,",
     `${BRAND.name} Team`,
-    `${BRAND.tagline}.`,
-    `📧 ${BRAND.supportEmail}`,
-    `🌐 ${BRAND.websiteLabel}`,
-    "",
-    `This is an automated email generated by ${BRAND.name}. Please do not reply directly to this message.`,
-    d.confidentialityNotice ? `\n${d.confidentialityNotice}` : "",
-  ]
-    .filter(Boolean)
-    .join("\n");
+    BRAND.tagline,
+  );
+  if (d.confidentialityNotice) textLines.push("", d.confidentialityNotice);
 
-  return { subject, html, text };
+  // Suppress unused-parameter warnings from legacy fields.
+  void senderName;
+
+  return { subject, html, text: textLines.join("\n") };
 }
