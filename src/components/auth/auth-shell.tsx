@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import zenworkLockup from "@/assets/zenwork-brand-lockup.png.asset.json";
+import qualipulseLockup from "@/assets/qualipulse-lockup.png.asset.json";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -67,8 +67,8 @@ export function AuthShell({
       className="mx-auto mt-1 mb-5 flex w-full items-center justify-center px-4 sm:mt-2 sm:mb-7 sm:px-6 md:mb-8 lg:mb-10"
     >
       <img
-        src={zenworkLockup.url}
-        alt="Zenwork Performance Manager"
+        src={qualipulseLockup.url}
+        alt="QualiPulse"
         width={690}
         height={614}
         style={{ width: "clamp(240px, 78%, 480px)" }}
@@ -129,7 +129,7 @@ export function AuthShell({
 
       <footer className="relative z-10 border-t border-white/50 bg-white/40 backdrop-blur dark:border-white/10 dark:bg-white/[0.03]">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:flex-row sm:px-8">
-          <p>&copy; {new Date().getFullYear()} Zenwork · {APP_VERSION}</p>
+          <p>&copy; {new Date().getFullYear()} QualiPulse · {APP_VERSION}</p>
           <nav className="flex items-center gap-4">
             <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
             <a href="#" className="hover:text-foreground transition-colors">Terms</a>
@@ -266,7 +266,7 @@ function LearnMoreDialog() {
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-xl">Zenwork Performance Manager</DialogTitle>
+          <DialogTitle className="text-xl">QualiPulse</DialogTitle>
           <DialogDescription>
             The modern quality management platform for Customer Success teams.
           </DialogDescription>

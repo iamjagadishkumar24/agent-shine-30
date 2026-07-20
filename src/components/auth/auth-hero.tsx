@@ -1,5 +1,5 @@
 import { BarChart3, LineChart, ShieldCheck, KeyRound, UserPlus, Sparkles, TrendingUp, Cloud, CheckCircle2, Lock, Rocket, Users } from "lucide-react";
-import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
+import qualipulseMark from "@/assets/qualipulse-mark.png.asset.json";
 
 export type AuthHeroVariant = "signin" | "signup" | "forgot" | "reset" | "verify";
 
@@ -20,8 +20,8 @@ export function AuthHero({ variant }: { variant: AuthHeroVariant }) {
       </div>
 
       <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/70 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-slate-500 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-300">
-        <img src={zenworkLogo.url} alt="" aria-hidden className="h-3.5 w-3.5" />
-        Zenwork Performance Manager
+        <img src={qualipulseMark.url} alt="" aria-hidden className="h-3.5 w-3.5" />
+        QualiPulse
       </div>
 
       <h2 className="max-w-md text-3xl font-extrabold leading-tight tracking-tight text-slate-800 dark:text-white xl:text-4xl">
@@ -62,8 +62,8 @@ const COPY: Record<AuthHeroVariant, { title: string; accent: string; body: strin
   },
   signup: {
     title: "Get started with",
-    accent: "Zenwork in minutes",
-    body: "Join teams using Zenwork to run structured reviews, automated coaching, and executive dashboards — all in one workspace.",
+    accent: "QualiPulse in minutes",
+    body: "Join teams using QualiPulse to run structured reviews, automated coaching, and executive dashboards — all in one workspace.",
     chips: [
       { icon: Rocket, label: "Fast onboarding" },
       { icon: Users, label: "Team-ready" },
@@ -93,7 +93,7 @@ const COPY: Record<AuthHeroVariant, { title: string; accent: string; body: strin
   verify: {
     title: "One quick step to",
     accent: "activate your account",
-    body: "Confirm your email address to unlock your Zenwork workspace, invites, and coaching workflows.",
+    body: "Confirm your email address to unlock your QualiPulse workspace, invites, and coaching workflows.",
     chips: [
       { icon: CheckCircle2, label: "Instant activation" },
       { icon: ShieldCheck, label: "Secure" },

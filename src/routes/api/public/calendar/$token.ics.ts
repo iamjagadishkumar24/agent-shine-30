@@ -58,7 +58,7 @@ export const Route = createFileRoute("/api/public/calendar/$token/ics")({
             s.agent?.full_name ? `Agent: ${s.agent.full_name}` : "",
           ].filter(Boolean);
           return {
-            uid: `${s.id}@zenwork.coaching`,
+            uid: `${s.id}@qualipulse.coaching`,
             title: s.topic ?? "Coaching session",
             description: bodyParts.join("\n\n") || undefined,
             location: s.meeting_location ?? undefined,
@@ -76,7 +76,7 @@ export const Route = createFileRoute("/api/public/calendar/$token/ics")({
           headers: {
             "Content-Type": "text/calendar; charset=utf-8",
             "Cache-Control": "no-cache, must-revalidate",
-            "Content-Disposition": 'inline; filename="zenwork-coaching.ics"',
+            "Content-Disposition": 'inline; filename="qualipulse-coaching.ics"',
           },
         });
       },

@@ -358,7 +358,7 @@ function CalendarTab() {
             <h3 className="font-semibold">Calendar subscription</h3>
             <p className="text-sm text-muted-foreground mt-1">
               Subscribe to a live feed of your coaching sessions in Outlook, Google Calendar, or Apple Calendar.
-              Changes made in Zenwork appear automatically — no import needed.
+              Changes made in QualiPulse appear automatically — no import needed.
             </p>
           </div>
           {feedUrl ? (
@@ -414,7 +414,7 @@ function CalendarTab() {
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Generate a personal link to subscribe your calendar app to Zenwork coaching sessions.
+            Generate a personal link to subscribe your calendar app to QualiPulse coaching sessions.
           </p>
         )}
       </Card>

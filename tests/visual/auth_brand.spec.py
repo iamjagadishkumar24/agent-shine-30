@@ -1,4 +1,4 @@
-"""Visual regression: verify Zenwork brand title color / weight / spacing across
+"""Visual regression: verify QualiPulse brand title color / weight / spacing across
 Light, Dark, and System themes on every auth route.
 
 Runs against the local dev server at http://localhost:8080.
@@ -23,7 +23,7 @@ ROUTES = [
 ]
 THEMES = ["light", "dark", "system"]  # system => emulated as light below
 STORAGE_KEY = "signal-qms-theme"
-BRAND = "Zenwork Performance Manager"
+BRAND = "QualiPulse"
 
 # Expected computed values.
 EXPECTED_WEIGHT_MIN = 700

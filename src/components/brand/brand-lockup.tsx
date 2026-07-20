@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
+import qualipulseMark from "@/assets/qualipulse-mark.png.asset.json";
 import { cn } from "@/lib/utils";
 
 /**
- * BrandLockup — the canonical Zenwork Performance Manager identity block.
+ * BrandLockup — the canonical QualiPulse identity block.
  *
  * A single unified lockup used across every authentication surface (sign in,
  * sign up, forgot password, reset password). The logo, wordmark, and optional
@@ -69,7 +69,7 @@ export function BrandLockup({
   const lockupInner = (
     <>
       <img
-        src={zenworkLogo.url}
+        src={qualipulseMark.url}
         alt=""
         aria-hidden="true"
         // The mark is a colored isometric cube (green / yellow / purple) that
@@ -97,7 +97,7 @@ export function BrandLockup({
           WORDMARK_SIZE[size],
         )}
       >
-        Zenwork Performance Manager
+        QualiPulse
       </span>
     </>
   );
@@ -117,13 +117,13 @@ export function BrandLockup({
       {href ? (
         <Link
           to={href}
-          aria-label="Zenwork Performance Manager — go to home"
+          aria-label="QualiPulse — go to home"
           className={lockupClasses}
         >
           {lockupInner}
         </Link>
       ) : (
-        <div aria-label="Zenwork Performance Manager" className={lockupClasses}>
+        <div aria-label="QualiPulse" className={lockupClasses}>
           {lockupInner}
         </div>
       )}

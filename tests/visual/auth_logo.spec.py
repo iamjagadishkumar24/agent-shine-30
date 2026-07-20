@@ -38,14 +38,14 @@ MIN_LOGO_SIZE = 48
 
 async def check(page, route_name: str, path: str, vp_name: str) -> dict:
     await page.goto(f"{BASE}{path}", wait_until="domcontentloaded")
-    banner = page.get_by_role("group", name="Zenwork Performance Manager")
+    banner = page.get_by_role("group", name="QualiPulse")
     await banner.wait_for(state="visible", timeout=8000)
     logo = banner.locator("img[aria-hidden='true']").first
     await logo.wait_for(state="visible", timeout=4000)
 
     metrics = await page.evaluate(
         """() => {
-          const banner = document.querySelector('[role="group"][aria-label="Zenwork Performance Manager"]');
+          const banner = document.querySelector('[role="group"][aria-label="QualiPulse"]');
           const img = banner?.querySelector('img[aria-hidden="true"]');
           if (!banner || !img) return null;
           const bRect = banner.getBoundingClientRect();

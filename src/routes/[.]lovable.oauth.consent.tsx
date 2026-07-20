@@ -78,7 +78,7 @@ function Consent() {
           <div className="grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-foreground">
             <Sparkles className="h-4 w-4" />
           </div>
-          <span className="font-semibold tracking-tight">Zenwork Performance Manager</span>
+          <span className="font-semibold tracking-tight">QualiPulse</span>
         </div>
         <h1 className="mt-6 text-xl font-semibold tracking-tight">
           Connect {clientName} to your account

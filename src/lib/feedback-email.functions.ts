@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getRequestHost } from "@tanstack/react-start/server";
 import { renderFeedbackEmail, type FeedbackEmailAttachmentLink } from "./feedback-email.templates";
 import { buildVariableMap, renderCustomTemplate } from "./feedback-email.variables";
-import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
+import qualipulseMark from "@/assets/qualipulse-mark.png.asset.json";
 
 const STAFF_ROLES = ["qa_admin", "qa_manager", "qa_reviewer"] as const;
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -116,7 +116,7 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       dueDate: fb.due_date,
       appBaseUrl,
       senderName: settings.sender_name,
-      logoUrl: settings.logo_url ?? `${appBaseUrl}${zenworkLogo.url}`,
+      logoUrl: settings.logo_url ?? `${appBaseUrl}${qualipulseMark.url}`,
       signatureHtml: settings.signature_html,
       confidentialityNotice: settings.confidentiality_notice,
       attachmentLinks,
@@ -305,7 +305,7 @@ export const previewFeedbackEmail = createServerFn({ method: "POST" })
       dueDate: fb.due_date,
       appBaseUrl,
       senderName: settings?.sender_name,
-      logoUrl: settings?.logo_url ?? `${appBaseUrl}${zenworkLogo.url}`,
+      logoUrl: settings?.logo_url ?? `${appBaseUrl}${qualipulseMark.url}`,
       signatureHtml: settings?.signature_html,
       confidentialityNotice: settings?.confidentiality_notice,
     });
@@ -381,7 +381,7 @@ export const sendFeedbackTestEmail = createServerFn({ method: "POST" })
       dueDate: fb.due_date,
       appBaseUrl,
       senderName: settings.sender_name,
-      logoUrl: settings.logo_url ?? `${appBaseUrl}${zenworkLogo.url}`,
+      logoUrl: settings.logo_url ?? `${appBaseUrl}${qualipulseMark.url}`,
       signatureHtml: settings.signature_html,
       confidentialityNotice: settings.confidentiality_notice,
     });

@@ -98,7 +98,7 @@ async def main() -> int:
                         )
                         # Wait for the auth shell so we don't scan a blank shell.
                         await page.locator(
-                            'img[alt="Zenwork Performance Manager"]'
+                            'img[alt="QualiPulse"]'
                         ).wait_for(state="visible", timeout=10_000)
                         violations = await run_axe(page, route, theme, axe_src)
                     except Exception as exc:  # network, nav, wait timeout

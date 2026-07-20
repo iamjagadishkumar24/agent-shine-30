@@ -146,7 +146,7 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
     if (form.notes) parts.push(`Notes:\n${form.notes}`);
     if (agent?.full_name) parts.push(`Agent: ${agent.full_name}`);
     return {
-      uid: `${id}@zenwork.coaching`,
+      uid: `${id}@qualipulse.coaching`,
       title: form.topic || "Coaching session",
       description: parts.join("\n\n") || undefined,
       location: form.meeting_location || undefined,
