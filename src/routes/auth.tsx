@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { AuthHero } from "@/components/auth/auth-hero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -280,9 +281,11 @@ function AuthPage() {
   const loadingLabel =
     mode === "signup" ? "Creating your account…" : mode === "forgot" ? "Sending reset link…" : "Signing you in…";
 
+  const heroVariant = mode === "signup" ? "signup" : mode === "forgot" ? "forgot" : "signin";
+
   return (
     <AuthShell
-      sidePanel={mode === "signin" ? <SignInMarketingPanel /> : undefined}
+      sidePanel={<AuthHero variant={heroVariant} />}
       loading={loading}
       loadingLabel={loadingLabel}
       error={errorMsg}
@@ -290,8 +293,45 @@ function AuthPage() {
     >
 
       <>
-        <div className="text-center">
+        {/* Mode tabs */}
+        <div
+          role="tablist"
+          aria-label="Authentication mode"
+          className="mb-5 grid grid-cols-3 gap-1 rounded-xl bg-slate-100/70 p-1 text-[13px] font-semibold dark:bg-white/[0.06]"
+        >
+          {([
+            { key: "signin", label: "Sign In" },
+            { key: "signup", label: "Sign Up" },
+            { key: "forgot", label: "Recovery" },
+          ] as { key: Mode; label: string }[]).map((t) => {
+            const active = mode === t.key;
+            return (
+              <button
+                key={t.key}
+                role="tab"
+                aria-selected={active}
+                type="button"
+                onClick={() => {
+                  setMode(t.key);
+                  setTouched({});
+                  setResetSent(false);
+                  setErrorMsg(null);
+                  setErrorField(null);
+                }}
+                className={cn(
+                  "rounded-lg py-1.5 transition-all",
+                  active
+                    ? "bg-white text-slate-900 shadow-sm dark:bg-white/10 dark:text-white"
+                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white",
+                )}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
 
+        <div className="text-center">
               {mode === "forgot" && (
                 <button
                   type="button"
@@ -312,6 +352,7 @@ function AuthPage() {
                 {mode === "forgot" && "Enter your email and we'll send you a secure reset link."}
               </p>
             </div>
+
 
             {mode === "forgot" && resetSent ? (
               <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
@@ -503,7 +544,7 @@ function AuthPage() {
                   type="submit"
                   aria-disabled={!canSubmit}
                   data-inert={!canSubmit ? "true" : undefined}
-                  className="h-11 w-full rounded-lg text-sm font-semibold data-[inert=true]:opacity-50 data-[inert=true]:cursor-not-allowed"
+                  className="h-11 w-full rounded-xl border-0 bg-gradient-to-r from-emerald-500 via-cyan-500 to-violet-500 text-sm font-semibold text-white shadow-[0_10px_30px_-10px_rgba(16,185,129,0.6)] transition-all hover:from-emerald-600 hover:via-cyan-600 hover:to-violet-600 hover:shadow-[0_14px_36px_-10px_rgba(16,185,129,0.65)] active:scale-[0.99] data-[inert=true]:opacity-60 data-[inert=true]:cursor-not-allowed data-[inert=true]:shadow-none"
                 >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   <span className="inline-flex items-center gap-2">
@@ -513,6 +554,7 @@ function AuthPage() {
                     {!loading && <ArrowRight className="h-4 w-4" />}
                   </span>
                 </Button>
+
 
                 {mode !== "forgot" && (
                   <>

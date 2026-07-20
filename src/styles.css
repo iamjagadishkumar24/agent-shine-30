@@ -587,3 +587,13 @@ a[href*="lovable.dev"] {
 .rbc-shell .rbc-show-more { color: hsl(var(--primary)); font-size: 11px; }
 
 
+
+@keyframes authblob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(20px, -20px) scale(1.06); }
+}
+
+@keyframes authfloat {
+  0%, 100% { transform: translateY(0) var(--tw-rotate, rotate(0deg)); }
+  50% { transform: translateY(-8px) var(--tw-rotate, rotate(0deg)); }
+}
