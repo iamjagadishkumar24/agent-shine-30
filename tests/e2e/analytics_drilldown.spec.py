@@ -127,6 +127,92 @@ def seed_drill_window() -> None:
     print(f"seed: inserted rows across last {WINDOW_DAYS} days "
           f"[{start} .. {end}]")
 
+
+def seed_overflow_rows() -> None:
+    """Insert enough rows so the Total-feedback drill exceeds DRILL_RENDER_CAP.
+
+    Gated on SEED_OVERFLOW=1 because it grows the table by hundreds of rows
+    per run and the sandbox psql has no DELETE. When disabled, the >500
+    branch below asserts *conditionally* on ambient data instead.
+    """
+    if not OVERFLOW_ENABLED:
+        print("seed(overflow): SEED_OVERFLOW!=1, skipping overflow seed")
+        return
+    if not os.environ.get("PGHOST"):
+        print("seed(overflow): PGHOST not set, skipping")
+        return
+
+    # Only top up what's missing so re-runs converge instead of doubling.
+    check = subprocess.run(
+        ["psql", "-Atqc",
+         f"select count(*) from feedback where created_at >= now() "
+         f"- interval '{WINDOW_DAYS} days'"],
+        capture_output=True, text=True,
+    )
+    if check.returncode != 0:
+        print("seed(overflow): count query failed:", check.stderr.strip())
+        return
+    try:
+        current = int((check.stdout or "0").strip())
+    except ValueError:
+        current = 0
+    needed = max(0, OVERFLOW_TARGET - current)
+    if needed == 0:
+        print(f"seed(overflow): already {current} rows in window, no top-up needed")
+        return
+
+    sql = f"""
+    WITH agent_pool AS (
+      SELECT id, row_number() OVER (ORDER BY id) AS rn FROM agents
+    ),
+    creator AS (
+      SELECT created_by FROM feedback GROUP BY created_by
+      ORDER BY count(*) DESC LIMIT 1
+    ),
+    series AS (
+      SELECT gs AS i,
+             (now() - ((gs % {WINDOW_DAYS}) * interval '1 hour')
+                    - (gs * interval '31 seconds')) AS ts
+      FROM generate_series(1, {needed}) gs
+    )
+    INSERT INTO feedback (
+      agent_id, title, category, feedback_type, severity, status, score,
+      summary, tags, created_by,
+      created_at, updated_at, sent_at, delivered_at, acknowledged_at,
+      overall_score, overall_percentage, performance_label
+    )
+    SELECT
+      (SELECT id FROM agent_pool
+        WHERE rn = ((s.i - 1) % (SELECT count(*) FROM agent_pool)) + 1),
+      'E2E overflow #' || s.i,
+      'Communication',
+      'constructive'::feedback_type,
+      'low'::feedback_severity,
+      'sent'::feedback_status,
+      70 + ((s.i * 7) % 25) + 0.25,
+      'Overflow row #' || s.i,
+      ARRAY['{OVERFLOW_TAG}']::text[],
+      (SELECT created_by FROM creator),
+      s.ts, s.ts,
+      s.ts + interval '2 minutes',
+      s.ts + interval '5 minutes',
+      NULL,
+      70 + ((s.i * 7) % 25) + 0.25,
+      70 + ((s.i * 7) % 25) + 0.25,
+      'Good'
+    FROM series s;
+    """
+    result = subprocess.run(
+        ["psql", "-v", "ON_ERROR_STOP=1", "-q", "-c", sql],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        print("seed(overflow): psql failed:", result.stderr.strip())
+        sys.exit(2)
+    print(f"seed(overflow): topped up +{needed} rows "
+          f"(target={OVERFLOW_TARGET}, previous={current})")
+
+
 KPI_LABELS = [
     "Total feedback",
     "Avg Quality score",
