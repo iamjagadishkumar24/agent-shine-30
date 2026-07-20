@@ -21,6 +21,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { analyzeEmailForSpamRisk } from "@/lib/email-spam-check";
 import { ShieldCheck, ShieldAlert, ShieldX } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { getFeedbackScores } from "@/lib/scorecard.functions";
+import { labelTone } from "@/lib/scorecard";
 
 function safeTimeAgo(v: string | null | undefined): string | null {
   if (!v) return null;
