@@ -463,6 +463,74 @@ async def drill_and_verify(page, label: str) -> dict:
         if "/feedback/" not in open_href:
             fail(f"'{label}' open link href unexpected: {open_href!r}")
 
+    # ── Per-row filter semantics ─────────────────────────────────────────
+    # Inspect a sample of rendered rows to prove the KPI card actually
+    # filters rows to match its metric AND that every rendered row's
+    # created_at falls inside the range chip window.
+    if sheet_count > 0:
+        row_locator = dialog.locator('[data-testid="drill-row"]')
+        sample_n = min(await row_locator.count(), 25)
+        try:
+            win_start = datetime.fromisoformat(range_start_attr.replace("Z", "+00:00"))
+            win_end = datetime.fromisoformat(range_end_attr.replace("Z", "+00:00"))
+        except ValueError:
+            win_start = win_end = None
+
+        expected_key = KPI_TO_DRILL_KEY[label]
+        DELIVERED_STATUSES = {"sent", "opened", "acknowledged", "completed"}
+        ACK_STATUSES = {"acknowledged", "completed"}
+
+        for i in range(sample_n):
+            row = row_locator.nth(i)
+            r_status = (await row.get_attribute("data-status") or "").strip()
+            r_score = (await row.get_attribute("data-score") or "").strip()
+            r_created = (await row.get_attribute("data-created") or "").strip()
+            r_delivered = (await row.get_attribute("data-delivered") or "").strip()
+            r_ack = (await row.get_attribute("data-acknowledged") or "").strip()
+            r_id = (await row.get_attribute("data-id") or "").strip()
+
+            # Date-range filter: created_at ∈ [win_start, win_end].
+            if win_start and win_end and r_created:
+                try:
+                    created = datetime.fromisoformat(r_created.replace("Z", "+00:00"))
+                    if not (win_start <= created <= win_end):
+                        fail(
+                            f"'{label}' row {r_id} created_at={r_created} "
+                            f"outside range {range_start_attr}..{range_end_attr}"
+                        )
+                except ValueError:
+                    fail(f"'{label}' row {r_id} unparseable created_at={r_created!r}")
+
+            # KPI-specific content filter.
+            if expected_key == "scored":
+                if r_score == "":
+                    fail(f"'{label}' row {r_id} has empty score but is in 'scored' drill")
+            elif expected_key == "delivered":
+                # Server filter is `delivered_at IS NOT NULL`; verify directly.
+                if not r_delivered:
+                    fail(
+                        f"'{label}' row {r_id} has no delivered_at but is in "
+                        f"'delivered' drill (status={r_status!r})"
+                    )
+                if r_status not in DELIVERED_STATUSES:
+                    fail(
+                        f"'{label}' row {r_id} status={r_status!r} not in "
+                        f"delivered set {sorted(DELIVERED_STATUSES)}"
+                    )
+            elif expected_key == "acknowledged":
+                if not r_ack:
+                    fail(
+                        f"'{label}' row {r_id} has no acknowledged_at but is in "
+                        f"'acknowledged' drill (status={r_status!r})"
+                    )
+                if r_status not in ACK_STATUSES:
+                    fail(
+                        f"'{label}' row {r_id} status={r_status!r} not in "
+                        f"acknowledged set {sorted(ACK_STATUSES)}"
+                    )
+            # 'total' has no per-row filter beyond the date range.
+
+
     # Close the sheet — press Escape and confirm it disappears.
     await page.keyboard.press("Escape")
     try:
