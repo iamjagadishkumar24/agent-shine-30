@@ -93,7 +93,22 @@ function isExcluded(rel) {
   return false;
 }
 
-function listFiles() {
+async function readStdinAll() {
+  return await new Promise((resolve) => {
+    let data = "";
+    process.stdin.setEncoding("utf8");
+    process.stdin.on("data", (chunk) => (data += chunk));
+    process.stdin.on("end", () => resolve(data));
+    if (process.stdin.isTTY) resolve("");
+  });
+}
+
+async function resolveFileList() {
+  // Staged-only mode: NUL-separated file list on stdin (pre-commit hook).
+  if (process.argv.includes("--stdin-null")) {
+    const raw = await readStdinAll();
+    return raw.split("\0").map((s) => s.trim()).filter(Boolean);
+  }
   // Prefer git for speed and accuracy; fall back to fs walk.
   const git = spawnSync("git", ["ls-files", "-co", "--exclude-standard"], { encoding: "utf8" });
   if (git.status === 0 && git.stdout.trim()) {
@@ -121,7 +136,7 @@ function looksBinary(buf) {
   return false;
 }
 
-const files = listFiles().filter((f) => !isExcluded(f));
+const files = (await resolveFileList()).filter((f) => f && !isExcluded(f));
 const annotations = [];
 
 for (const rel of files) {
