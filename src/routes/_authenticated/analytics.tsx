@@ -266,12 +266,13 @@ function AnalyticsPage() {
       .slice(0, 10);
   }, [feedback, agents]);
 
+  type S = z.infer<typeof searchSchema>;
   const setPreset = (key: string) => {
-    navigate({ search: (prev) => ({ ...prev, preset: key, from: "", to: "" }) });
+    navigate({ search: (prev: S) => ({ ...prev, preset: key, from: "", to: "" }) });
   };
   const setCustom = (fromDate?: Date, toDate?: Date) => {
     navigate({
-      search: (prev) => ({
+      search: (prev: S) => ({
         ...prev,
         preset: "custom",
         from: fromDate ? format(fromDate, "yyyy-MM-dd") : prev.from,
