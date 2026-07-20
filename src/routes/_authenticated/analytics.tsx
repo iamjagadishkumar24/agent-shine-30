@@ -1,12 +1,31 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, lazy, Suspense } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
+import { useMemo, lazy, Suspense, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { format, startOfDay, endOfDay, subDays, startOfYear } from "date-fns";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, TrendingUp, TrendingDown, Users, Target, AlertCircle, Mail, ArrowRight } from "lucide-react";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
+import { cn } from "@/lib/utils";
+import {
+  BarChart3,
+  TrendingUp,
+  TrendingDown,
+  Users,
+  Target,
+  AlertCircle,
+  Mail,
+  ArrowRight,
+  CalendarIcon,
+  RefreshCw,
+  Radio,
+} from "lucide-react";
 
 const Charts = lazy(() => import("@/components/analytics/analytics-charts"));
 
@@ -31,16 +50,55 @@ type FeedbackRow = {
 
 type AgentRow = { id: string; full_name: string | null; qa_score: number | null };
 
-function useAnalyticsData() {
+// ── Search params ────────────────────────────────────────────────────────────
+const searchSchema = z.object({
+  from: fallback(z.string(), "").default(""),
+  to: fallback(z.string(), "").default(""),
+  preset: fallback(z.string(), "30d").default("30d"),
+});
+
+type Preset = { key: string; label: string; days?: number; ytd?: boolean; all?: boolean };
+const PRESETS: Preset[] = [
+  { key: "7d", label: "Last 7 days", days: 7 },
+  { key: "30d", label: "Last 30 days", days: 30 },
+  { key: "90d", label: "Last 90 days", days: 90 },
+  { key: "ytd", label: "Year to date", ytd: true },
+  { key: "all", label: "All time", all: true },
+  { key: "custom", label: "Custom" },
+];
+
+function resolveRange(preset: string, from: string, to: string): { start: Date; end: Date; all: boolean } {
+  const now = new Date();
+  const endDefault = endOfDay(now);
+  const p = PRESETS.find((x) => x.key === preset);
+  if (p?.all) return { start: new Date(0), end: endDefault, all: true };
+  if (p?.ytd) return { start: startOfYear(now), end: endDefault, all: false };
+  if (p?.days) return { start: startOfDay(subDays(now, p.days - 1)), end: endDefault, all: false };
+  // custom
+  const parsedFrom = from ? new Date(from) : null;
+  const parsedTo = to ? new Date(to) : null;
+  const start = parsedFrom && !isNaN(parsedFrom.getTime()) ? startOfDay(parsedFrom) : startOfDay(subDays(now, 29));
+  const end = parsedTo && !isNaN(parsedTo.getTime()) ? endOfDay(parsedTo) : endDefault;
+  return { start, end, all: false };
+}
+
+function useAnalyticsData(start: Date, end: Date, all: boolean) {
+  const key = ["analytics", "core", all ? "all" : start.toISOString(), all ? "all" : end.toISOString()];
   return useQuery({
-    queryKey: ["analytics", "core"],
+    queryKey: key,
     queryFn: async () => {
+      let fb = supabase
+        .from("feedback")
+        .select(
+          "id, status, feedback_type, severity, score, created_at, agent_id, delivered_at, opened_at, acknowledged_at",
+        )
+        .order("created_at", { ascending: false })
+        .limit(5000);
+      if (!all) {
+        fb = fb.gte("created_at", start.toISOString()).lte("created_at", end.toISOString());
+      }
       const [fbRes, agRes] = await Promise.all([
-        supabase
-          .from("feedback")
-          .select("id, status, feedback_type, severity, score, created_at, agent_id, delivered_at, opened_at, acknowledged_at")
-          .order("created_at", { ascending: false })
-          .limit(5000),
+        fb,
         supabase.from("agents").select("id, full_name, qa_score").limit(2000),
       ]);
       if (fbRes.error) throw fbRes.error;
@@ -50,7 +108,7 @@ function useAnalyticsData() {
         agents: (agRes.data ?? []) as unknown as AgentRow[],
       };
     },
-    staleTime: 30_000,
+    staleTime: 15_000,
   });
 }
 
@@ -60,11 +118,26 @@ function pct(a: number, b: number) {
 }
 
 export const Route = createFileRoute("/_authenticated/analytics")({
+  validateSearch: zodValidator(searchSchema),
   component: AnalyticsPage,
 });
 
 function AnalyticsPage() {
-  const { data, isLoading, isError, error, refetch, isFetching } = useAnalyticsData();
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: "/analytics" });
+
+  const { start, end, all } = useMemo(
+    () => resolveRange(search.preset, search.from, search.to),
+    [search.preset, search.from, search.to],
+  );
+  const rangeDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / 864e5));
+
+  // Realtime — invalidate every analytics query on any feedback change.
+  useRealtimeInvalidate("feedback", [["analytics"]]);
+  useRealtimeInvalidate("feedback_scores", [["analytics"]]);
+  useRealtimeInvalidate("agents", [["analytics"]]);
+
+  const { data, isLoading, isError, error, refetch, isFetching } = useAnalyticsData(start, end, all);
   const feedback = data?.feedback ?? [];
   const agents = data?.agents ?? [];
 
@@ -77,41 +150,66 @@ function AnalyticsPage() {
     const scored = feedback.filter((f) => f.score != null);
     const avgScore = scored.length ? scored.reduce((s, f) => s + Number(f.score ?? 0), 0) / scored.length : 0;
 
-    // trailing 30d vs prior 30d
-    const now = Date.now();
-    const d30 = now - 30 * 864e5;
-    const d60 = now - 60 * 864e5;
-    const last30 = feedback.filter((f) => {
+    // Trailing window vs prior window of equal length (for delta on current range).
+    const windowMs = end.getTime() - start.getTime();
+    const prevStart = start.getTime() - windowMs;
+    const prevEnd = start.getTime();
+    const inWindow = feedback.filter((f) => {
       const t = parseTime(f.created_at);
-      return t != null && t >= d30;
+      return t != null && t >= start.getTime() && t <= end.getTime();
     }).length;
-    const prev30 = feedback.filter((f) => {
+    const prevWindow = feedback.filter((f) => {
       const t = parseTime(f.created_at);
-      return t != null && t >= d60 && t < d30;
+      return t != null && t >= prevStart && t < prevEnd;
     }).length;
-    const delta = prev30 === 0 ? (last30 ? 100 : 0) : Math.round(((last30 - prev30) / prev30) * 100);
+    // Note: for the "all" preset the prev-window comparison isn't meaningful.
+    const delta = all
+      ? 0
+      : prevWindow === 0
+        ? inWindow
+          ? 100
+          : 0
+        : Math.round(((inWindow - prevWindow) / prevWindow) * 100);
 
-    return { total, sent, delivered, opened, acknowledged, avgScore, last30, delta };
-  }, [feedback]);
+    return { total, sent, delivered, opened, acknowledged, avgScore, inWindow, delta };
+  }, [feedback, start, end, all]);
 
-  const monthly = useMemo(() => {
+  // Bucket into daily buckets for <= 60 day windows, otherwise monthly.
+  const trend = useMemo(() => {
+    const useDaily = !all && rangeDays <= 60;
     const buckets = new Map<string, { label: string; count: number; scoreSum: number; scoreN: number }>();
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      buckets.set(key, {
-        label: d.toLocaleDateString(undefined, { month: "short" }),
-        count: 0,
-        scoreSum: 0,
-        scoreN: 0,
-      });
+    if (useDaily) {
+      for (let i = 0; i < rangeDays; i++) {
+        const d = new Date(start);
+        d.setDate(d.getDate() + i);
+        const key = format(d, "yyyy-MM-dd");
+        buckets.set(key, { label: format(d, "MMM d"), count: 0, scoreSum: 0, scoreN: 0 });
+      }
+    } else {
+      const first = all
+        ? feedback.reduce<Date | null>((acc, f) => {
+            const t = parseTime(f.created_at);
+            if (t == null) return acc;
+            const d = new Date(t);
+            return acc == null || d < acc ? d : acc;
+          }, null) ?? subDays(new Date(), 335)
+        : start;
+      const startMonth = new Date(first.getFullYear(), first.getMonth(), 1);
+      const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+      const cur = new Date(startMonth);
+      while (cur <= endMonth) {
+        const key = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, "0")}`;
+        buckets.set(key, { label: format(cur, "MMM yy"), count: 0, scoreSum: 0, scoreN: 0 });
+        cur.setMonth(cur.getMonth() + 1);
+      }
     }
     for (const f of feedback) {
       const t = parseTime(f.created_at);
       if (t == null) continue;
       const d = new Date(t);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const key = useDaily
+        ? format(d, "yyyy-MM-dd")
+        : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       const b = buckets.get(key);
       if (!b) continue;
       b.count += 1;
@@ -125,7 +223,7 @@ function AnalyticsPage() {
       count: b.count,
       avgScore: b.scoreN ? Number((b.scoreSum / b.scoreN).toFixed(2)) : 0,
     }));
-  }, [feedback]);
+  }, [feedback, start, end, all, rangeDays]);
 
   const byType = useMemo(() => {
     const m = new Map<string, number>();
@@ -140,9 +238,7 @@ function AnalyticsPage() {
     const order = ["critical", "high", "medium", "low"];
     const m = new Map<string, number>();
     for (const f of feedback) m.set(f.severity ?? "unset", (m.get(f.severity ?? "unset") ?? 0) + 1);
-    return order
-      .map((k) => ({ label: k, value: m.get(k) ?? 0 }))
-      .filter((x) => x.value > 0);
+    return order.map((k) => ({ label: k, value: m.get(k) ?? 0 })).filter((x) => x.value > 0);
   }, [feedback]);
 
   const topAgents = useMemo(() => {
@@ -170,12 +266,41 @@ function AnalyticsPage() {
       .slice(0, 10);
   }, [feedback, agents]);
 
+  type S = z.infer<typeof searchSchema>;
+  const setPreset = (key: string) => {
+    navigate({ search: (prev: S) => ({ ...prev, preset: key, from: "", to: "" }) });
+  };
+  const setCustom = (fromDate?: Date, toDate?: Date) => {
+    navigate({
+      search: (prev: S) => ({
+        ...prev,
+        preset: "custom",
+        from: fromDate ? format(fromDate, "yyyy-MM-dd") : prev.from,
+        to: toDate ? format(toDate, "yyyy-MM-dd") : prev.to,
+      }),
+    });
+  };
+
+  const filterBar = (
+    <FilterBar
+      preset={search.preset}
+      start={start}
+      end={end}
+      all={all}
+      onPreset={setPreset}
+      onCustom={setCustom}
+      onRefresh={() => refetch()}
+      isFetching={isFetching}
+    />
+  );
+
   if (isError) {
     return (
       <div>
         <PageHeader title="Analytics" subtitle="Deep trends across feedback, delivery, and agent performance." />
-        <div className="mx-auto max-w-4xl px-8 pb-12 pt-6">
-          <Card className="rounded-xl border-destructive/50 bg-destructive/5 p-8 text-center">
+        <div className="mx-auto max-w-7xl px-4 pb-12 pt-6 md:px-8">
+          {filterBar}
+          <Card className="mt-4 rounded-xl border-destructive/50 bg-destructive/5 p-8 text-center">
             <AlertCircle className="mx-auto h-6 w-6 text-destructive" />
             <h2 className="mt-3 text-sm font-medium">Couldn't load analytics</h2>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -190,46 +315,6 @@ function AnalyticsPage() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div>
-        <PageHeader title="Analytics" subtitle="Deep trends across feedback, delivery, and agent performance." />
-        <div className="mx-auto max-w-7xl space-y-4 px-8 pb-12 pt-6">
-          <div className="grid grid-cols-4 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-xl" />
-            ))}
-          </div>
-          <Skeleton className="h-72 rounded-xl" />
-          <div className="grid grid-cols-2 gap-4">
-            <Skeleton className="h-72 rounded-xl" />
-            <Skeleton className="h-72 rounded-xl" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!feedback.length) {
-    return (
-      <div>
-        <PageHeader title="Analytics" subtitle="Deep trends across feedback, delivery, and agent performance." />
-        <div className="mx-auto max-w-4xl px-8 pb-12 pt-6">
-          <Card className="rounded-xl border-border/60 bg-card/60 p-10 text-center">
-            <BarChart3 className="mx-auto h-6 w-6 text-muted-foreground" />
-            <h2 className="mt-3 text-sm font-medium">No feedback data yet</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Create feedback records to unlock trend, distribution, and leaderboard analytics.
-            </p>
-            <Link to="/feedback/new" className="mt-4 inline-block text-xs font-medium text-primary hover:underline">
-              Create feedback →
-            </Link>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div>
       <PageHeader
@@ -237,84 +322,238 @@ function AnalyticsPage() {
         subtitle="Deep trends across feedback, delivery, and agent performance."
         actions={
           <Button asChild size="sm" variant="outline" className="h-8 gap-1.5">
-            <Link to="/analytics/email"><Mail className="h-3.5 w-3.5" /> Email analytics <ArrowRight className="h-3.5 w-3.5" /></Link>
+            <Link to="/analytics/email">
+              <Mail className="h-3.5 w-3.5" /> Email analytics <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </Button>
         }
       />
-      <div className="mx-auto max-w-7xl space-y-4 px-8 pb-12 pt-6">
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <KpiCard
-            label="Total feedback"
-            value={metrics.total.toLocaleString()}
-            hint={`${metrics.last30.toLocaleString()} in last 30d`}
-            delta={metrics.delta}
-            icon={<BarChart3 className="h-4 w-4" />}
-          />
-          <KpiCard
-            label="Avg Quality score"
-            value={metrics.avgScore ? metrics.avgScore.toFixed(2) : "—"}
-            hint={`${feedback.filter((f) => f.score != null).length.toLocaleString()} scored`}
-            icon={<Target className="h-4 w-4" />}
-          />
-          <KpiCard
-            label="Delivery rate"
-            value={`${pct(metrics.delivered, metrics.sent)}%`}
-            hint={`${metrics.delivered.toLocaleString()} / ${metrics.sent.toLocaleString()} sent`}
-            icon={<TrendingUp className="h-4 w-4" />}
-          />
-          <KpiCard
-            label="Acknowledgement rate"
-            value={`${pct(metrics.acknowledged, metrics.delivered)}%`}
-            hint={`${metrics.acknowledged.toLocaleString()} acknowledged`}
-            icon={<Users className="h-4 w-4" />}
-          />
-        </div>
+      <div className="mx-auto max-w-7xl space-y-4 px-4 pb-12 pt-6 md:px-8">
+        {filterBar}
 
-        <Suspense fallback={<Skeleton className="h-72 rounded-xl" />}>
-          <Charts monthly={monthly} byType={byType} bySeverity={bySeverity} />
-        </Suspense>
-
-        <Card className="rounded-2xl border-border/60 bg-card/60 p-6 backdrop-blur-xl">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <div className="text-sm font-semibold">Top agents by feedback volume</div>
-              <div className="text-xs text-muted-foreground">Highest engagement over the entire history.</div>
+        {isLoading ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 rounded-xl" />
+              ))}
             </div>
-            <Link to="/agents" className="text-xs font-medium text-primary hover:underline">
-              View all →
-            </Link>
+            <Skeleton className="h-72 rounded-xl" />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Skeleton className="h-72 rounded-xl" />
+              <Skeleton className="h-72 rounded-xl" />
+            </div>
           </div>
-          {topAgents.length === 0 ? (
-            <div className="py-8 text-center text-xs text-muted-foreground">No assigned feedback yet.</div>
-          ) : (
-            <div className="space-y-2">
-              {topAgents.map((a) => {
-                const max = topAgents[0]?.count ?? 1;
-                const width = Math.max(4, Math.round((a.count / max) * 100));
-                return (
-                  <div key={a.name} className="grid grid-cols-[1fr_auto] items-center gap-4">
-                    <div>
-                      <div className="mb-1 flex items-center justify-between text-xs">
-                        <span className="font-medium">{a.name}</span>
-                        <span className="text-muted-foreground">
-                          {a.count.toLocaleString()} · {a.avgScore != null ? `avg ${a.avgScore}` : "no scores"}
-                        </span>
-                      </div>
-                      <div className="h-1.5 overflow-hidden rounded-full bg-muted/40">
-                        <div
-                          className="h-full rounded-full bg-primary/70"
-                          style={{ width: `${width}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+        ) : feedback.length === 0 ? (
+          <Card className="rounded-xl border-border/60 bg-card/60 p-10 text-center">
+            <BarChart3 className="mx-auto h-6 w-6 text-muted-foreground" />
+            <h2 className="mt-3 text-sm font-medium">No feedback in this range</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Try widening the date range, or create feedback to populate analytics.
+            </p>
+            <div className="mt-4 flex justify-center gap-2">
+              <Button size="sm" variant="outline" onClick={() => setPreset("all")}>
+                View all time
+              </Button>
+              <Button size="sm" asChild>
+                <Link to="/feedback/new">Create feedback</Link>
+              </Button>
             </div>
-          )}
-        </Card>
+          </Card>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <KpiCard
+                label="Total feedback"
+                value={metrics.total.toLocaleString()}
+                hint={all ? "All time" : `${metrics.inWindow.toLocaleString()} in window`}
+                delta={all ? undefined : metrics.delta}
+                icon={<BarChart3 className="h-4 w-4" />}
+              />
+              <KpiCard
+                label="Avg Quality score"
+                value={metrics.avgScore ? metrics.avgScore.toFixed(2) : "—"}
+                hint={`${feedback.filter((f) => f.score != null).length.toLocaleString()} scored`}
+                icon={<Target className="h-4 w-4" />}
+              />
+              <KpiCard
+                label="Delivery rate"
+                value={`${pct(metrics.delivered, metrics.sent)}%`}
+                hint={`${metrics.delivered.toLocaleString()} / ${metrics.sent.toLocaleString()} sent`}
+                icon={<TrendingUp className="h-4 w-4" />}
+              />
+              <KpiCard
+                label="Acknowledgement rate"
+                value={`${pct(metrics.acknowledged, metrics.delivered)}%`}
+                hint={`${metrics.acknowledged.toLocaleString()} acknowledged`}
+                icon={<Users className="h-4 w-4" />}
+              />
+            </div>
+
+            <Suspense fallback={<Skeleton className="h-72 rounded-xl" />}>
+              <Charts monthly={trend} byType={byType} bySeverity={bySeverity} />
+            </Suspense>
+
+            <Card className="rounded-2xl border-border/60 bg-card/60 p-6 backdrop-blur-xl">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold">Top agents by feedback volume</div>
+                  <div className="text-xs text-muted-foreground">
+                    {all ? "Highest engagement over the entire history." : `Within ${format(start, "MMM d")} – ${format(end, "MMM d, yyyy")}.`}
+                  </div>
+                </div>
+                <Link to="/agents" className="text-xs font-medium text-primary hover:underline">
+                  View all →
+                </Link>
+              </div>
+              {topAgents.length === 0 ? (
+                <div className="py-8 text-center text-xs text-muted-foreground">No assigned feedback in this range.</div>
+              ) : (
+                <div className="space-y-2">
+                  {topAgents.map((a) => {
+                    const max = topAgents[0]?.count ?? 1;
+                    const width = Math.max(4, Math.round((a.count / max) * 100));
+                    return (
+                      <div key={a.name} className="grid grid-cols-[1fr_auto] items-center gap-4">
+                        <div>
+                          <div className="mb-1 flex items-center justify-between text-xs">
+                            <span className="font-medium">{a.name}</span>
+                            <span className="text-muted-foreground">
+                              {a.count.toLocaleString()} · {a.avgScore != null ? `avg ${a.avgScore}` : "no scores"}
+                            </span>
+                          </div>
+                          <div className="h-1.5 overflow-hidden rounded-full bg-muted/40">
+                            <div className="h-full rounded-full bg-primary/70" style={{ width: `${width}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
+          </>
+        )}
       </div>
     </div>
+  );
+}
+
+function FilterBar({
+  preset,
+  start,
+  end,
+  all,
+  onPreset,
+  onCustom,
+  onRefresh,
+  isFetching,
+}: {
+  preset: string;
+  start: Date;
+  end: Date;
+  all: boolean;
+  onPreset: (key: string) => void;
+  onCustom: (from?: Date, to?: Date) => void;
+  onRefresh: () => void;
+  isFetching: boolean;
+}) {
+  const [fromOpen, setFromOpen] = useState(false);
+  const [toOpen, setToOpen] = useState(false);
+  const rangeLabel = all
+    ? "All time"
+    : `${format(start, "MMM d, yyyy")} – ${format(end, "MMM d, yyyy")}`;
+
+  return (
+    <Card className="rounded-xl border-border/60 bg-card/60 p-3 backdrop-blur-xl">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {PRESETS.filter((p) => p.key !== "custom").map((p) => (
+            <Button
+              key={p.key}
+              size="sm"
+              variant={preset === p.key ? "default" : "outline"}
+              className="h-7 text-xs"
+              onClick={() => onPreset(p.key)}
+            >
+              {p.label}
+            </Button>
+          ))}
+        </div>
+
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <Popover open={fromOpen} onOpenChange={setFromOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn("h-7 justify-start text-xs font-normal", preset !== "custom" && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                  {preset === "custom" && !all ? format(start, "MMM d, yyyy") : "From"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={preset === "custom" ? start : undefined}
+                  onSelect={(d) => {
+                    if (d) {
+                      onCustom(d, end);
+                      setFromOpen(false);
+                    }
+                  }}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+
+            <span className="text-xs text-muted-foreground">–</span>
+
+            <Popover open={toOpen} onOpenChange={setToOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn("h-7 justify-start text-xs font-normal", preset !== "custom" && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                  {preset === "custom" && !all ? format(end, "MMM d, yyyy") : "To"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={preset === "custom" ? end : undefined}
+                  onSelect={(d) => {
+                    if (d) {
+                      onCustom(start, d);
+                      setToOpen(false);
+                    }
+                  }}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="hidden items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/5 px-2 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 md:flex">
+            <Radio className="h-3 w-3 animate-pulse" /> Live
+          </div>
+
+          <Button size="sm" variant="outline" className="h-7" onClick={onRefresh} disabled={isFetching}>
+            <RefreshCw className={cn("h-3.5 w-3.5", isFetching && "animate-spin")} />
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-2 text-[11px] text-muted-foreground">
+        Showing <span className="font-medium text-foreground">{rangeLabel}</span>
+      </div>
+    </Card>
   );
 }
 
