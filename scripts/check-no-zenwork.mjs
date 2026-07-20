@@ -27,6 +27,7 @@ const EXCLUDES = [
   "yarn.lock",
   "src/routeTree.gen.ts",
   "scripts/check-no-zenwork.mjs",
+  "tests/unit/no-zenwork.test.ts",
 ];
 
 function run(cmd, args) {
