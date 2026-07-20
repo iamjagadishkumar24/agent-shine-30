@@ -39,6 +39,13 @@ SS.mkdir(parents=True, exist_ok=True)
 # navigate to below so seed rows are guaranteed to fall inside the range.
 WINDOW_DAYS = 30
 SEED_TAG = "e2e-drill-seed"
+# When SEED_OVERFLOW=1, insert enough rows so Total feedback > 500 and the
+# drill sheet must clamp its rendered rows at 500 and show the overflow note.
+OVERFLOW_ENABLED = os.environ.get("SEED_OVERFLOW") == "1"
+OVERFLOW_TARGET = 520
+OVERFLOW_TAG = "e2e-drill-overflow"
+DRILL_RENDER_CAP = 500
+
 
 
 def seed_drill_window() -> None:
@@ -119,6 +126,92 @@ def seed_drill_window() -> None:
         sys.exit(2)
     print(f"seed: inserted rows across last {WINDOW_DAYS} days "
           f"[{start} .. {end}]")
+
+
+def seed_overflow_rows() -> None:
+    """Insert enough rows so the Total-feedback drill exceeds DRILL_RENDER_CAP.
+
+    Gated on SEED_OVERFLOW=1 because it grows the table by hundreds of rows
+    per run and the sandbox psql has no DELETE. When disabled, the >500
+    branch below asserts *conditionally* on ambient data instead.
+    """
+    if not OVERFLOW_ENABLED:
+        print("seed(overflow): SEED_OVERFLOW!=1, skipping overflow seed")
+        return
+    if not os.environ.get("PGHOST"):
+        print("seed(overflow): PGHOST not set, skipping")
+        return
+
+    # Only top up what's missing so re-runs converge instead of doubling.
+    check = subprocess.run(
+        ["psql", "-Atqc",
+         f"select count(*) from feedback where created_at >= now() "
+         f"- interval '{WINDOW_DAYS} days'"],
+        capture_output=True, text=True,
+    )
+    if check.returncode != 0:
+        print("seed(overflow): count query failed:", check.stderr.strip())
+        return
+    try:
+        current = int((check.stdout or "0").strip())
+    except ValueError:
+        current = 0
+    needed = max(0, OVERFLOW_TARGET - current)
+    if needed == 0:
+        print(f"seed(overflow): already {current} rows in window, no top-up needed")
+        return
+
+    sql = f"""
+    WITH agent_pool AS (
+      SELECT id, row_number() OVER (ORDER BY id) AS rn FROM agents
+    ),
+    creator AS (
+      SELECT created_by FROM feedback GROUP BY created_by
+      ORDER BY count(*) DESC LIMIT 1
+    ),
+    series AS (
+      SELECT gs AS i,
+             (now() - ((gs % {WINDOW_DAYS}) * interval '1 hour')
+                    - (gs * interval '31 seconds')) AS ts
+      FROM generate_series(1, {needed}) gs
+    )
+    INSERT INTO feedback (
+      agent_id, title, category, feedback_type, severity, status, score,
+      summary, tags, created_by,
+      created_at, updated_at, sent_at, delivered_at, acknowledged_at,
+      overall_score, overall_percentage, performance_label
+    )
+    SELECT
+      (SELECT id FROM agent_pool
+        WHERE rn = ((s.i - 1) % (SELECT count(*) FROM agent_pool)) + 1),
+      'E2E overflow #' || s.i,
+      'Communication',
+      'constructive'::feedback_type,
+      'low'::feedback_severity,
+      'sent'::feedback_status,
+      70 + ((s.i * 7) % 25) + 0.25,
+      'Overflow row #' || s.i,
+      ARRAY['{OVERFLOW_TAG}']::text[],
+      (SELECT created_by FROM creator),
+      s.ts, s.ts,
+      s.ts + interval '2 minutes',
+      s.ts + interval '5 minutes',
+      NULL,
+      70 + ((s.i * 7) % 25) + 0.25,
+      70 + ((s.i * 7) % 25) + 0.25,
+      'Good'
+    FROM series s;
+    """
+    result = subprocess.run(
+        ["psql", "-v", "ON_ERROR_STOP=1", "-q", "-c", sql],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        print("seed(overflow): psql failed:", result.stderr.strip())
+        sys.exit(2)
+    print(f"seed(overflow): topped up +{needed} rows "
+          f"(target={OVERFLOW_TARGET}, previous={current})")
+
 
 KPI_LABELS = [
     "Total feedback",
@@ -287,16 +380,78 @@ async def drill_and_verify(page, label: str) -> dict:
             f"{expected_count} but drill sheet shows {sheet_count}"
         )
 
-    # Count rows and Open links inside the dialog. Sheet renders first 500.
+    # Rendered rows in the drill sheet are capped at DRILL_RENDER_CAP (500).
+    # There is no pagination or virtualization: overflow spills into the
+    # overflow-note footer instead. Verify both branches explicitly.
     tbody_rows = await dialog.locator("tbody tr").count()
     open_links = dialog.locator('tbody a:has-text("Open")')
     open_count = await open_links.count()
-    expected_rendered = min(sheet_count, 500) if sheet_count > 0 else 1  # 1 = empty-state row
-    if tbody_rows != expected_rendered:
-        fail(
-            f"rendered tbody rows ({tbody_rows}) != expected ({expected_rendered}) "
-            f"for '{label}' with sheet_count={sheet_count}"
-        )
+    overflow_note = dialog.locator('[data-testid="drill-overflow-note"]')
+    overflow_present = await overflow_note.count() > 0
+
+    if sheet_count == 0:
+        # Empty-state placeholder row.
+        if tbody_rows != 1:
+            fail(f"empty drill '{label}' rendered {tbody_rows} tbody rows, expected 1")
+        if overflow_present:
+            fail(f"overflow note visible on empty '{label}' drill")
+        expected_rendered = 1
+    elif sheet_count <= DRILL_RENDER_CAP:
+        expected_rendered = sheet_count
+        if tbody_rows != expected_rendered:
+            fail(
+                f"'{label}' rendered {tbody_rows} rows but sheet_count={sheet_count} "
+                f"(<= cap {DRILL_RENDER_CAP}); expected {expected_rendered}"
+            )
+        if overflow_present:
+            fail(
+                f"overflow note visible for '{label}' at sheet_count={sheet_count} "
+                f"(<= cap {DRILL_RENDER_CAP})"
+            )
+        if open_count != expected_rendered:
+            fail(
+                f"'{label}' rendered {expected_rendered} rows but only "
+                f"{open_count} Open links"
+            )
+    else:
+        # sheet_count > DRILL_RENDER_CAP: enforce the cap + overflow note.
+        expected_rendered = DRILL_RENDER_CAP
+        if tbody_rows != DRILL_RENDER_CAP:
+            fail(
+                f"'{label}' at sheet_count={sheet_count} rendered {tbody_rows} rows; "
+                f"expected exactly {DRILL_RENDER_CAP} (no pagination/virtualization)"
+            )
+        if open_count != DRILL_RENDER_CAP:
+            fail(
+                f"'{label}' rendered {DRILL_RENDER_CAP} rows but {open_count} Open links "
+                f"— every rendered row must have an Open link"
+            )
+        if not overflow_present:
+            fail(
+                f"'{label}' at sheet_count={sheet_count} missing overflow note; "
+                f"drill-down must communicate the truncation"
+            )
+        note_total = await overflow_note.get_attribute("data-total") or ""
+        note_shown = await overflow_note.get_attribute("data-shown") or ""
+        try:
+            if int(note_total) != sheet_count:
+                fail(
+                    f"overflow-note data-total={note_total} != sheet_count "
+                    f"{sheet_count} for '{label}'"
+                )
+            if int(note_shown) != DRILL_RENDER_CAP:
+                fail(
+                    f"overflow-note data-shown={note_shown} != cap "
+                    f"{DRILL_RENDER_CAP} for '{label}'"
+                )
+        except ValueError:
+            fail(
+                f"overflow-note attrs not numeric: total={note_total!r} "
+                f"shown={note_shown!r}"
+            )
+        note_text = (await overflow_note.inner_text()).strip()
+        if f"Showing first {DRILL_RENDER_CAP} of" not in note_text:
+            fail(f"overflow-note text unexpected: {note_text!r}")
 
     await page.screenshot(path=str(SS / f"drill_{label.replace(' ', '_')}.png"))
 
@@ -322,6 +477,8 @@ async def drill_and_verify(page, label: str) -> dict:
         "kpi_card_count": expected_count,
         "sheet_count": sheet_count,
         "rendered_rows": tbody_rows,
+        "expected_rendered": expected_rendered,
+        "overflow_note": overflow_present,
         "open_links": open_count,
         "sample_href": open_href,
         "chip_kpi": chip_kpi_key,
@@ -331,10 +488,12 @@ async def drill_and_verify(page, label: str) -> dict:
 
 
 
+
 async def main() -> None:
     # Seed the exact date-range window used by the drill-down BEFORE the
     # browser session opens, so every KPI card has rows to click through.
     seed_drill_window()
+    seed_overflow_rows()
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
@@ -353,8 +512,20 @@ async def main() -> None:
         for label in KPI_LABELS:
             results.append(await drill_and_verify(page, label))
 
+        # When overflow seeding is on we insist that at least one KPI actually
+        # crossed the cap, otherwise the >500 branch never ran.
+        if OVERFLOW_ENABLED:
+            triggered = [r for r in results if r["sheet_count"] > DRILL_RENDER_CAP]
+            if not triggered:
+                fail(
+                    f"SEED_OVERFLOW=1 but no KPI exceeded {DRILL_RENDER_CAP} rows "
+                    f"— overflow assertions never ran. Counts: "
+                    f"{ {r['label']: r['sheet_count'] for r in results} }"
+                )
+
         print("PASS:", json.dumps(results, indent=2))
         await browser.close()
+
 
 
 if __name__ == "__main__":
