@@ -68,14 +68,22 @@ export function AuthShell({
       aria-label="Zenwork Performance Manager"
       className="mx-auto mb-6 flex w-full max-w-full items-center justify-center px-2 sm:mb-7"
     >
-      <img
-        src={zenworkLockup.url}
-        alt="Zenwork Performance Manager"
-        width={1500}
-        height={1000}
-        className="block h-auto w-auto max-w-full object-contain select-none dark:brightness-110 dark:contrast-110 max-h-[104px] sm:max-h-[120px] md:max-h-[132px] lg:max-h-[144px]"
-        draggable={false}
-      />
+      {/* Reserve space with fixed aspect-ratio box to prevent CLS.
+          Lockup image is 1500x1000 (3:2). */}
+      <div
+        className="relative w-[220px] sm:w-[260px] md:w-[300px] lg:w-[320px] max-w-full"
+        style={{ aspectRatio: "3 / 2" }}
+      >
+        <img
+          src={zenworkLockup.url}
+          alt="Zenwork Performance Manager"
+          width={1500}
+          height={1000}
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-contain select-none dark:brightness-110 dark:contrast-110"
+          draggable={false}
+        />
+      </div>
     </div>
   ) : null;
 
