@@ -87,8 +87,11 @@ export const saveFeedbackWithScores = createServerFn({ method: "POST" })
       display_order: idx + 1,
     }));
 
-    const status =
-      data.mode === "send" ? "ready_to_send" : data.mode === "submit" ? "submitted" : "draft";
+    const status = (data.mode === "send"
+      ? "ready_to_send"
+      : data.mode === "submit"
+        ? "submitted"
+        : "draft") as "ready_to_send" | "submitted" | "draft";
 
     const basePayload = {
       title: data.title,
