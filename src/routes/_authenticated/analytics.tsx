@@ -785,9 +785,10 @@ function DrillSheet({
         </div>
 
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-          <span>
+          <span data-testid="drill-row-count" data-count={rows.length}>
             {rows.length.toLocaleString()} record{rows.length === 1 ? "" : "s"}
           </span>
+
           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={downloadCsv} disabled={rows.length === 0}>
             Export CSV
           </Button>
