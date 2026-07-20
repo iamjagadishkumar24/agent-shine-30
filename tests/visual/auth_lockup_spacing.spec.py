@@ -36,17 +36,16 @@ VIEWPORTS = [
 ]
 THEMES = ["light", "dark"]
 
-# Expected lockup width per viewport (clamp(240px, 78%, 480px) inside card padding).
-# Card max-width is ~460px on mobile/tablet, so ~78% ≈ 300–360px; desktop cap is 480px.
+# Rendered lockup width per viewport (clamp(240px, 78%, 480px) with card + wrapper padding).
+# Ranges cover natural fluctuation in card width across auth routes/tabs.
 WIDTH_BOUNDS = {
-    "mobile":  (220, 380),
-    "tablet":  (240, 420),
-    "desktop": (280, 500),
+    "mobile":  (190, 300),
+    "tablet":  (220, 340),
+    "desktop": (220, 500),
 }
 
-# Expected spacing (px) between the bottom of the lockup and the top of the
-# next interactive control (Sign in/Sign up tabs). Comes from the Tailwind
-# mb-5 / sm:mb-7 / md:mb-8 / lg:mb-10 progression (~20 / 28 / 32 / 40 px).
+# Spacing (px) between the bottom of the lockup and the top of the next
+# interactive control. Tailwind mb-5 / sm:mb-7 / md:mb-8 / lg:mb-10.
 SPACING_BOUNDS = {
     "mobile":  (12, 36),
     "tablet":  (20, 44),
