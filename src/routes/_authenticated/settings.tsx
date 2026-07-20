@@ -230,7 +230,7 @@ function EmailConfig() {
             <div>
               <div className="text-sm font-semibold">Send test email</div>
               <div className="mt-0.5 text-xs text-muted-foreground">
-                Delivers the current Zenwork feedback template with sample data and the logo above so you can preview branding in a real inbox. Save changes first if you edited anything.
+                Delivers the current QualiPulse feedback template with sample data and the logo above so you can preview branding in a real inbox. Save changes first if you edited anything.
               </div>
             </div>
             {s.logo_url ? (
@@ -340,7 +340,7 @@ function EmailConfig() {
 // ---------------------------------------------------------------------------
 // Provider card — persistent connected-state pill + optional diagnostic
 // ---------------------------------------------------------------------------
-const LAST_VERIFIED_KEY = "zenwork.email.lastVerifiedAt";
+const LAST_VERIFIED_KEY = "qualipulse.email.lastVerifiedAt";
 
 function ProviderCard({
   s,

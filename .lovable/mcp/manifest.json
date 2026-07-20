@@ -11,9 +11,9 @@
   },
   "mcp": {
     "server": {
-      "name": "zenwork-performance-manager-mcp",
+      "name": "qualipulse-mcp",
       "version": "0.1.0",
-      "title": "Zenwork Performance Manager"
+      "title": "QualiPulse"
     },
     "tools": [
       {

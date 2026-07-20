@@ -1,7 +1,7 @@
 // Pure HTML email template — client-safe (no server imports).
 //
-// Zenwork Performance Manager — Performance Feedback Review email.
-// Follows the canonical Zenwork sample layout: branded header, greeting,
+// QualiPulse — Performance Feedback Review email.
+// Follows the canonical QualiPulse sample layout: branded header, greeting,
 // Feedback Summary, Overall Performance metrics table, star rating,
 // Performance Highlights, Areas for Improvement, Coaching Recommendations,
 // Manager's Comments, Next Steps, Need Assistance, and closing signature.
@@ -56,16 +56,16 @@ export type FeedbackEmailData = {
 };
 
 const BRAND = {
-  name: "Zenwork Performance Manager",
-  tagline: "Driving Customer Success Through Quality, Performance & Continuous Improvement",
-  supportEmail: "support@zenworkperformancemanager.com",
-  website: "https://www.zenworkperformancemanager.com",
-  websiteLabel: "www.zenworkperformancemanager.com",
-  privacyUrl: "https://www.zenworkperformancemanager.com/privacy",
-  termsUrl: "https://www.zenworkperformancemanager.com/terms",
-  supportUrl: "https://www.zenworkperformancemanager.com/support",
-  contactUrl: "https://www.zenworkperformancemanager.com/contact",
-  address: "Zenwork Inc. · Hyderabad, India",
+  name: "QualiPulse",
+  tagline: "Quality Feedback and Performance Management",
+  supportEmail: "support@qualipulse.app",
+  website: "https://www.qualipulse.app",
+  websiteLabel: "www.qualipulse.app",
+  privacyUrl: "https://www.qualipulse.app/privacy",
+  termsUrl: "https://www.qualipulse.app/terms",
+  supportUrl: "https://www.qualipulse.app/support",
+  contactUrl: "https://www.qualipulse.app/contact",
+  address: "QualiPulse Inc. · Hyderabad, India",
   gradient: "linear-gradient(135deg,#312e81 0%,#4338ca 40%,#6d28d9 100%)",
   gradientFallback: "#312e81",
   ink: "#0f172a",
@@ -258,7 +258,7 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
 
   const logoImg = d.logoUrl
     ? `<img src="${escape(d.logoUrl)}" alt="${escape(d.senderName ?? BRAND.name)}" height="44" style="display:block;height:44px;width:auto;max-width:200px;border:0;outline:none;text-decoration:none;background:transparent;" />`
-    : `<div style="font:800 20px/1 ${FONT};color:#ffffff;letter-spacing:.06em;">ZENWORK</div>`;
+    : `<div style="font:800 20px/1 ${FONT};color:#ffffff;letter-spacing:.06em;">QUALIPULSE</div>`;
   const logoHeader = `<a href="${escape(BRAND.website)}" target="_blank" style="display:inline-block;text-decoration:none;background:transparent;">${logoImg}</a>`;
 
   const reminderBanner = isReminder
@@ -492,7 +492,7 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
             Thank you for your continued dedication and commitment to delivering outstanding customer experiences. We appreciate your contributions and look forward to supporting your continued growth and success.
           </div>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="margin-top:18px;border-collapse:collapse;background-color:#ffffff;">
-            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:0;font-family:${FONT};font-size:15px;line-height:1.5;font-weight:600;color:#0f172a;mso-line-height-rule:exactly;">Kind Regards,</td></tr>
+            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:0;font-family:${FONT};font-size:15px;line-height:1.5;font-weight:600;color:#0f172a;mso-line-height-rule:exactly;">Regards,</td></tr>
             <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:2px 0 0;font-family:${FONT};font-size:15px;line-height:1.5;font-weight:700;color:#0f172a;mso-line-height-rule:exactly;">${escape(BRAND.name)} Team</td></tr>
             <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:4px 0 0;font-family:${FONT};font-size:12.5px;line-height:1.5;font-weight:500;font-style:italic;color:#475569;mso-line-height-rule:exactly;">${escape(BRAND.tagline)}.</td></tr>
             <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:12px 0 0;font-family:${FONT};font-size:13px;line-height:1.6;font-weight:600;color:#334155;mso-line-height-rule:exactly;">
@@ -626,7 +626,7 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
     "If you have questions or need clarification, please contact your manager or the Customer Success Operations team.",
     `${BRAND.supportEmail} · ${BRAND.supportUrl}`,
     "",
-    "Kind Regards,",
+    "Regards,",
     `${BRAND.name} Team`,
     `${BRAND.tagline}.`,
     `📧 ${BRAND.supportEmail}`,

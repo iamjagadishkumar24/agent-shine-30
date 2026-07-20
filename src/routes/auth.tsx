@@ -35,8 +35,8 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
-      { title: "Sign in — Zenwork Performance Manager" },
-      { name: "description", content: "Sign in to Zenwork Performance Manager." },
+      { title: "Sign in — QualiPulse" },
+      { name: "description", content: "Sign in to QualiPulse." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -612,7 +612,7 @@ function SignInMarketingPanel() {
         </span>
       </h2>
       <p className="mt-5 max-w-md text-sm text-muted-foreground">
-        Zenwork Performance Manager is the modern quality management platform for support,
+        QualiPulse is the modern quality management platform for support,
         sales, and success teams. Create feedback, track coaching, and see performance
         trends — all in one place.
       </p>
@@ -623,7 +623,7 @@ function SignInMarketingPanel() {
           <span className="h-2.5 w-2.5 rounded-full bg-amber-500/60" />
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/60" />
           <span className="ml-3 text-[11px] text-muted-foreground">
-            zenwork · performance
+            qualipulse · performance
           </span>
         </div>
         <div className="grid gap-3 p-4 sm:grid-cols-2">

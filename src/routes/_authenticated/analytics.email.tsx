@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/analytics/email")({
   component: EmailAnalyticsPage,
   head: () => ({
     meta: [
-      { title: "Email Analytics · Zenwork Performance Manager" },
+      { title: "Email Analytics · QualiPulse" },
       { name: "description", content: "Historical email delivery metrics, engagement trends, and full activity log." },
     ],
   }),

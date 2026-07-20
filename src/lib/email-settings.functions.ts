@@ -7,7 +7,7 @@ import {
   sampleVariableMap,
 } from "./feedback-email.variables";
 import { renderFeedbackEmail } from "./feedback-email.templates";
-import zenworkLogo from "@/assets/zenwork-logo.png.asset.json";
+import qualipulseMark from "@/assets/qualipulse-mark.png.asset.json";
 
 function getAppBaseUrl(): string {
   const envUrl = process.env.APP_BASE_URL;
@@ -179,10 +179,10 @@ export const sendTestEmail = createServerFn({ method: "POST" })
         to: data.to,
         replyTo: s.reply_to,
         subject: sanitizeHeader(`Test email from ${senderName}`),
-        text: `This is a test message from your Zenwork Performance Manager platform.\nProvider: ${provider.displayName}\nSent: ${timestamp}`,
+        text: `This is a test message from your QualiPulse platform.\nProvider: ${provider.displayName}\nSent: ${timestamp}`,
         html: `<!doctype html><body style="font:14px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;padding:24px;">
           <h2 style="margin:0 0 12px;font-size:18px;">Test email delivered</h2>
-          <p style="color:#3f3f46;">Zenwork Performance Manager sent this test message using <strong>${escapeHtml(provider.displayName)}</strong>.</p>
+          <p style="color:#3f3f46;">QualiPulse sent this test message using <strong>${escapeHtml(provider.displayName)}</strong>.</p>
           <p style="color:#71717a;font-size:12px;">Timestamp: ${escapeHtml(timestamp)}</p>
         </body>`,
       });
@@ -351,7 +351,7 @@ export const sendFeedbackTemplateTest = createServerFn({ method: "POST" })
 // as an intentional touch so `buildVariableMap` stays imported alongside the sample map).
 
 // ---------------------------------------------------------------------------
-// Branding test: sends the Zenwork feedback template with sample data and
+// Branding test: sends the QualiPulse feedback template with sample data and
 // the currently configured logo so admins can visually verify branding.
 // ---------------------------------------------------------------------------
 
@@ -395,7 +395,7 @@ export const sendBrandingTestEmail = createServerFn({ method: "POST" })
       dueDate: new Date(Date.now() + 7 * 86400_000).toISOString(),
       appBaseUrl,
       senderName: s.sender_name,
-      logoUrl: s.logo_url ?? `${appBaseUrl}${zenworkLogo.url}`,
+      logoUrl: s.logo_url ?? `${appBaseUrl}${qualipulseMark.url}`,
       signatureHtml: s.signature_html,
       confidentialityNotice: s.confidentiality_notice,
       attachmentLinks: [],

@@ -23,8 +23,8 @@ export const Route = createFileRoute("/reset-password")({
   component: ResetPasswordPage,
   head: () => ({
     meta: [
-      { title: "Reset password — Zenwork Performance Manager" },
-      { name: "description", content: "Set a new password for your Zenwork account." },
+      { title: "Reset password — QualiPulse" },
+      { name: "description", content: "Set a new password for your QualiPulse account." },
       { name: "robots", content: "noindex" },
     ],
   }),

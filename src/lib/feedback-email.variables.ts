@@ -37,9 +37,9 @@ export const FEEDBACK_TEMPLATE_VARIABLES: TemplateVariable[] = [
   { key: "Coaching_Recommendations", label: "Coaching focus areas", description: "Recommended coaching next steps.", sample: "Active Listening\nProduct Knowledge\nCustomer Empathy" },
   { key: "Next_Steps", label: "Next steps", description: "Clear actions for the recipient.", sample: "Acknowledge this review and complete the recommended coaching module by Friday." },
   { key: "Due_Date", label: "Acknowledgement due date", description: "SLA deadline for acknowledgement.", sample: "2026-07-25" },
-  { key: "Acknowledge_URL", label: "Acknowledge URL", description: "Tracked click-through link for the recipient.", sample: "https://app.zenwork.com/feedback/…" },
-  { key: "App_Base_URL", label: "App base URL", description: "Root URL of Zenwork Performance Manager.", sample: "https://app.zenwork.com" },
-  { key: "Sender_Name", label: "Sender name", description: "Configured email sender name.", sample: "Zenwork Performance Manager" },
+  { key: "Acknowledge_URL", label: "Acknowledge URL", description: "Tracked click-through link for the recipient.", sample: "https://app.qualipulse.app/feedback/…" },
+  { key: "App_Base_URL", label: "App base URL", description: "Root URL of QualiPulse.", sample: "https://app.qualipulse.app" },
+  { key: "Sender_Name", label: "Sender name", description: "Configured email sender name.", sample: "QualiPulse" },
 ];
 
 
@@ -69,7 +69,7 @@ export function buildVariableMap(d: FeedbackEmailVariables): Record<string, stri
               : "Needs Improvement";
   const priority = d.severity ? d.severity.charAt(0).toUpperCase() + d.severity.slice(1) : "";
   return {
-    // Zenwork-branded canonical keys
+    // QualiPulse-branded canonical keys
     Customer_Name: d.agentName ?? "",
     Agent_Name: d.agentName ?? "",
     Manager_Name: d.managerName ?? "",

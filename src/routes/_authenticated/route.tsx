@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
-import zenworkMark from "@/assets/zenwork-mark.png.asset.json";
+import qualipulseMark from "@/assets/qualipulse-mark.png.asset.json";
 
 import {
   LayoutDashboard,
@@ -136,12 +136,12 @@ function AuthedLayout() {
       >
         <div className={cn("relative flex h-16 items-center border-b border-sidebar-border/80", collapsed ? "justify-center px-2" : "gap-3 px-5")}>
           <div className="relative shrink-0">
-            <img src={zenworkMark.url} alt="Zenwork" className="h-8 w-8 object-contain" />
+            <img src={qualipulseMark.url} alt="QualiPulse" className="h-8 w-8 object-contain" />
             <span className="absolute -inset-1 rounded-full bg-primary/15 blur-md" aria-hidden="true" />
           </div>
           {!collapsed && (
             <div className="flex min-w-0 flex-col leading-tight">
-              <span className="truncate text-[15px] font-semibold tracking-tight text-sidebar-foreground">Zenwork</span>
+              <span className="truncate text-[15px] font-semibold tracking-tight text-sidebar-foreground">QualiPulse</span>
               <span className="truncate text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Performance Manager</span>
             </div>
           )}

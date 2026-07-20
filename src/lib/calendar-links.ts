@@ -52,7 +52,7 @@ const toIcsDate = (iso: string): string => {
 
 export function buildIcs(events: CalendarEvent[], opts?: { method?: "PUBLISH" | "REQUEST"; prodId?: string }): string {
   const method = opts?.method ?? "PUBLISH";
-  const prodId = opts?.prodId ?? "-//Zenwork Performance Manager//Coaching//EN";
+  const prodId = opts?.prodId ?? "-//QualiPulse//Coaching//EN";
   const now = toIcsDate(new Date().toISOString());
 
   const blocks: string[] = [
@@ -61,7 +61,7 @@ export function buildIcs(events: CalendarEvent[], opts?: { method?: "PUBLISH" | 
     `PRODID:${prodId}`,
     "CALSCALE:GREGORIAN",
     `METHOD:${method}`,
-    "X-WR-CALNAME:Zenwork Coaching",
+    "X-WR-CALNAME:QualiPulse Coaching",
     "X-WR-TIMEZONE:UTC",
   ];
 

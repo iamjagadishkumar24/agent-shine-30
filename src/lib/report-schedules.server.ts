@@ -30,14 +30,14 @@ function emailBody(schedule: ScheduleRow, subtitle: string, senderName: string):
   const html = `<!doctype html><html><body style="margin:0;background:#0b0b12;color:#e6e6ef;font-family:-apple-system,Segoe UI,Roboto,sans-serif">
     <div style="max-width:640px;margin:0 auto;padding:32px 24px">
       <div style="background:linear-gradient(135deg,#1a1330,#0b0b12);border:1px solid #2a2340;border-radius:12px;padding:28px">
-        <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#a996ff;font-weight:600">Zenwork Performance Manager · Scheduled Report</div>
+        <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#a996ff;font-weight:600">QualiPulse · Scheduled Report</div>
         <h1 style="margin:8px 0 4px;font-size:22px">${escapeHtml(schedule.name)}</h1>
         <div style="color:#9a94b5;font-size:14px">${escapeHtml(label)} · ${escapeHtml(subtitle)}</div>
         <hr style="border:none;border-top:1px solid #2a2340;margin:20px 0" />
         <p style="margin:0 0 12px;color:#c9c4de;font-size:14px;line-height:1.55">
           Your ${cadence} <b>${escapeHtml(label)}</b> report is attached. This was generated automatically on ${now}.
         </p>
-        <p style="margin:0;color:#7a748f;font-size:12px">Sent by ${escapeHtml(senderName)} · Zenwork Performance Manager automation</p>
+        <p style="margin:0;color:#7a748f;font-size:12px">Sent by ${escapeHtml(senderName)} · QualiPulse automation</p>
       </div>
     </div></body></html>`;
   const text = `${schedule.name}\n${label} · ${subtitle}\n\nYour ${cadence} ${label} report is attached. Generated ${now}.`;
@@ -88,7 +88,7 @@ export async function dispatchSchedule(scheduleId: string): Promise<{ ok: boolea
       uploads.push({ storage_path: path, file_name: `${s.report_type}-${stamp}.csv`, mime_type: "text/csv" });
     }
 
-    const { html, text } = emailBody(s, subtitle, settings.sender_name ?? "Zenwork Performance Manager");
+    const { html, text } = emailBody(s, subtitle, settings.sender_name ?? "QualiPulse");
     const subject = `[${s.cadence === "weekly" ? "Weekly" : "Monthly"}] ${REPORT_TYPE_LABEL[s.report_type]} — ${s.name}`;
 
     const jobs = s.recipients.map((to) => ({

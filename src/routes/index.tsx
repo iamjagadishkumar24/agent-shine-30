@@ -8,8 +8,8 @@ import { ArrowRight } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Zenwork Performance Manager" },
-      { name: "description", content: "Sign in to Zenwork Performance Manager." },
+      { title: "QualiPulse" },
+      { name: "description", content: "Sign in to QualiPulse." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -49,7 +49,7 @@ function Landing() {
       <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-12">
         <BrandLockup size="lg" tagline={false} />
         <p className="mt-6 text-center text-base text-muted-foreground">
-          Welcome to Zenwork Performance Manager
+          Welcome to QualiPulse
         </p>
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
           <Button asChild size="lg" className="min-w-[160px] rounded-lg">
@@ -67,7 +67,7 @@ function Landing() {
 
       <footer className="relative z-10 border-t border-border/50 bg-background/50 py-4 backdrop-blur">
         <div className="mx-auto max-w-6xl px-6 text-center text-xs text-muted-foreground">
-          &copy; {new Date().getFullYear()} Zenwork Performance Manager
+          &copy; {new Date().getFullYear()} QualiPulse
         </div>
       </footer>
     </div>

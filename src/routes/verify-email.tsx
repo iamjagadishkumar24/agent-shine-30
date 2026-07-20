@@ -15,8 +15,8 @@ export const Route = createFileRoute("/verify-email")({
   component: VerifyEmailPage,
   head: () => ({
     meta: [
-      { title: "Verify your email — Zenwork Performance Manager" },
-      { name: "description", content: "Confirm your email to activate your Zenwork account." },
+      { title: "Verify your email — QualiPulse" },
+      { name: "description", content: "Confirm your email to activate your QualiPulse account." },
       { name: "robots", content: "noindex" },
     ],
   }),

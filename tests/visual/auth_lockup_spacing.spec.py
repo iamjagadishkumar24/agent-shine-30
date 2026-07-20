@@ -1,4 +1,4 @@
-"""Visual regression: verify the Zenwork brand lockup on the auth page renders
+"""Visual regression: verify the QualiPulse brand lockup on the auth page renders
 correctly across viewports (mobile / tablet / desktop) and themes (light / dark).
 
 Checks per (viewport × theme):
@@ -72,7 +72,7 @@ async def prep(page, theme):
 
 
 async def measure(page):
-    img = page.locator('img[alt="Zenwork Performance Manager"]').first
+    img = page.locator('img[alt="QualiPulse"]').first
     await img.wait_for(state="visible", timeout=8000)
 
     # Wait for the natural image to actually finish loading.
