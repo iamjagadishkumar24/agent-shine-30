@@ -369,6 +369,8 @@ function AnalyticsPage() {
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <KpiCard
                 label="Total feedback"
+                drillKey="total"
+                count={metrics.total}
                 value={metrics.total.toLocaleString()}
                 hint={all ? "All time" : `${metrics.inWindow.toLocaleString()} in window`}
                 delta={all ? undefined : metrics.delta}
@@ -377,6 +379,8 @@ function AnalyticsPage() {
               />
               <KpiCard
                 label="Avg Quality score"
+                drillKey="scored"
+                count={feedback.filter((f) => f.score != null).length}
                 value={metrics.avgScore ? metrics.avgScore.toFixed(2) : "—"}
                 hint={`${feedback.filter((f) => f.score != null).length.toLocaleString()} scored`}
                 icon={<Target className="h-4 w-4" />}
@@ -384,6 +388,8 @@ function AnalyticsPage() {
               />
               <KpiCard
                 label="Delivery rate"
+                drillKey="delivered"
+                count={metrics.delivered}
                 value={`${pct(metrics.delivered, metrics.sent)}%`}
                 hint={`${metrics.delivered.toLocaleString()} / ${metrics.sent.toLocaleString()} sent`}
                 icon={<TrendingUp className="h-4 w-4" />}
@@ -391,12 +397,15 @@ function AnalyticsPage() {
               />
               <KpiCard
                 label="Acknowledgement rate"
+                drillKey="acknowledged"
+                count={metrics.acknowledged}
                 value={`${pct(metrics.acknowledged, metrics.delivered)}%`}
                 hint={`${metrics.acknowledged.toLocaleString()} acknowledged`}
                 icon={<Users className="h-4 w-4" />}
                 onClick={() => setDrill("acknowledged")}
               />
             </div>
+
 
             <Suspense fallback={<Skeleton className="h-72 rounded-xl" />}>
               <Charts monthly={trend} byType={byType} bySeverity={bySeverity} />
@@ -583,6 +592,8 @@ function KpiCard({
   delta,
   icon,
   onClick,
+  drillKey,
+  count,
 }: {
   label: string;
   value: string;
@@ -590,6 +601,8 @@ function KpiCard({
   delta?: number;
   icon?: React.ReactNode;
   onClick?: () => void;
+  drillKey?: string;
+  count?: number;
 }) {
   const trendPositive = (delta ?? 0) >= 0;
   return (
@@ -597,6 +610,9 @@ function KpiCard({
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
+      data-testid="kpi-card"
+      data-kpi={drillKey}
+      data-count={count ?? ""}
       onKeyDown={(e) => {
         if (!onClick) return;
         if (e.key === "Enter" || e.key === " ") {
@@ -609,6 +625,7 @@ function KpiCard({
         onClick && "cursor-pointer hover:border-primary/40 hover:bg-card/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary",
       )}
     >
+
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>{label}</span>
         {icon}
@@ -768,9 +785,10 @@ function DrillSheet({
         </div>
 
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-          <span>
+          <span data-testid="drill-row-count" data-count={rows.length}>
             {rows.length.toLocaleString()} record{rows.length === 1 ? "" : "s"}
           </span>
+
           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={downloadCsv} disabled={rows.length === 0}>
             Export CSV
           </Button>

@@ -201,7 +201,12 @@ async def open_analytics(page) -> None:
 
 
 async def kpi_card(page, label: str):
-    # KPI card = clickable Card with role='button' containing the label span.
+    # Prefer the new data-testid locator; fall back to role=button + label.
+    by_testid = page.locator(
+        f'[data-testid="kpi-card"][data-kpi="{KPI_TO_DRILL_KEY[label]}"]'
+    )
+    if await by_testid.count() > 0:
+        return by_testid.first
     return page.locator('[role="button"]', has_text=label).first
 
 
@@ -210,7 +215,16 @@ async def drill_and_verify(page, label: str) -> dict:
     if await card.count() == 0:
         skip(f"KPI card '{label}' not present — analytics likely empty")
 
+    # Capture the count the KPI card is advertising BEFORE clicking, so we
+    # can compare it against the drill-sheet row count below.
+    card_count_attr = await card.get_attribute("data-count") or ""
+    try:
+        expected_count = int(card_count_attr)
+    except ValueError:
+        fail(f"KPI card '{label}' missing/invalid data-count={card_count_attr!r}")
+
     await card.click()
+
     dialog = page.locator('[role="dialog"]').last
 
     expected_title = KPI_TO_SHEET_TITLE[label]
@@ -258,11 +272,31 @@ async def drill_and_verify(page, label: str) -> dict:
              f"{range_start_attr!r} / {range_end_attr!r}")
 
 
-    # Count rows and Open links inside the dialog.
-    row_count = await dialog.locator("tbody tr").count()
-    # Filter rows that actually have data (skip the "No matching records" cell).
+    # ── Drill row count must match the KPI card's advertised count ────────
+    row_count_badge = dialog.locator('[data-testid="drill-row-count"]')
+    await row_count_badge.wait_for(timeout=3000)
+    badge_count_attr = await row_count_badge.get_attribute("data-count") or ""
+    try:
+        sheet_count = int(badge_count_attr)
+    except ValueError:
+        fail(f"drill-row-count missing/invalid data-count={badge_count_attr!r}")
+    if sheet_count != expected_count:
+        await page.screenshot(path=str(SS / f"count_mismatch_{label.replace(' ', '_')}.png"))
+        fail(
+            f"row-count mismatch for '{label}': KPI card advertises "
+            f"{expected_count} but drill sheet shows {sheet_count}"
+        )
+
+    # Count rows and Open links inside the dialog. Sheet renders first 500.
+    tbody_rows = await dialog.locator("tbody tr").count()
     open_links = dialog.locator('tbody a:has-text("Open")')
     open_count = await open_links.count()
+    expected_rendered = min(sheet_count, 500) if sheet_count > 0 else 1  # 1 = empty-state row
+    if tbody_rows != expected_rendered:
+        fail(
+            f"rendered tbody rows ({tbody_rows}) != expected ({expected_rendered}) "
+            f"for '{label}' with sheet_count={sheet_count}"
+        )
 
     await page.screenshot(path=str(SS / f"drill_{label.replace(' ', '_')}.png"))
 
@@ -285,13 +319,16 @@ async def drill_and_verify(page, label: str) -> dict:
 
     return {
         "label": label,
-        "rows": row_count,
+        "kpi_card_count": expected_count,
+        "sheet_count": sheet_count,
+        "rendered_rows": tbody_rows,
         "open_links": open_count,
         "sample_href": open_href,
         "chip_kpi": chip_kpi_key,
         "chip_preset": preset_attr,
         "chip_range": [range_start_attr, range_end_attr],
     }
+
 
 
 async def main() -> None:
