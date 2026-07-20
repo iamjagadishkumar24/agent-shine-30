@@ -71,10 +71,10 @@ export function AuthShell({
       <img
         src={zenworkLockup.url}
         alt="Zenwork Performance Manager"
-        width={1500}
-        height={1000}
+        width={690}
+        height={614}
         style={{ width: "clamp(240px, 78%, 480px)" }}
-        className="block h-auto object-contain select-none dark:brightness-110 dark:contrast-110"
+        className="block h-auto object-contain select-none"
         draggable={false}
       />
     </div>

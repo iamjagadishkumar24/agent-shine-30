@@ -148,7 +148,7 @@ async def run():
                 loaded_ok = bool(m["complete"]) and m["naturalWidth"] > 0
                 # Aspect ratio ≈ 3:2 (natural 1500x1000). Rendered height/width should be ~0.66.
                 ratio = (m["imgHeight"] / m["imgWidth"]) if m["imgWidth"] else 0
-                ratio_ok = 0.55 <= ratio <= 0.78  # allow slight variance
+                ratio_ok = 0.75 <= ratio <= 1.05  # cropped lockup ≈ 614/690 = 0.89
 
                 spacing = None
                 spacing_ok = True
