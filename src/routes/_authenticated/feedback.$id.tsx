@@ -961,6 +961,129 @@ function FeedbackDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Raise dispute dialog */}
+      <Dialog open={raiseOpen} onOpenChange={setRaiseOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Scale className="h-4 w-4 text-amber-500" /> Dispute this feedback</DialogTitle>
+            <DialogDescription>
+              Explain what you disagree with. A Quality Analyst will review the scores and evidence, then respond.
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label htmlFor="dispute-reason">Reason</Label>
+            <Textarea
+              id="dispute-reason"
+              className="mt-1.5"
+              rows={6}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Cite specific parameters, moments in the interaction, or evidence you'd like reviewed."
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {reason.trim().length}/2000 characters · minimum 10
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRaiseOpen(false)} disabled={raiseM.isPending}>Cancel</Button>
+            <Button
+              onClick={() => raiseM.mutate()}
+              disabled={raiseM.isPending || reason.trim().length < 10}
+            >
+              {raiseM.isPending ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Submitting…</> : "Submit dispute"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Resolve / reject dialog (staff) */}
+      <Dialog open={resolveOpen} onOpenChange={setResolveOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gavel className="h-4 w-4 text-primary" /> {resolveAction === "resolve" ? "Resolve dispute" : "Reject dispute"}
+            </DialogTitle>
+            <DialogDescription>
+              {resolveAction === "resolve"
+                ? "Adjust parameter scores if warranted, then post a resolution note. Overall score will recalculate automatically."
+                : "Reject this dispute with a note explaining the outcome. Scores stay unchanged."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {openDispute && (
+            <div className="rounded-lg border border-border/60 bg-muted/30 p-3 text-xs">
+              <div className="font-semibold uppercase tracking-wider text-muted-foreground">Agent's reason</div>
+              <p className="mt-1 whitespace-pre-wrap">{openDispute.reason}</p>
+            </div>
+          )}
+
+          {resolveAction === "resolve" && scoreRows.length > 0 && (
+            <div className="overflow-hidden rounded-lg border border-border/60">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium">Parameter</th>
+                    <th className="px-3 py-2 text-right font-medium">Max</th>
+                    <th className="px-3 py-2 text-right font-medium">Current %</th>
+                    <th className="px-3 py-2 text-right font-medium">Revised %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {scoreRows.map((r) => (
+                    <tr key={r.parameter_name} className="border-t border-border/60">
+                      <td className="px-3 py-2 font-medium">{r.parameter_name}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{Number(r.max_points).toFixed(0)}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
+                        {Number(r.selected_percentage).toFixed(0)}%
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          className="ml-auto w-24 text-right"
+                          placeholder={String(Number(r.selected_percentage).toFixed(0))}
+                          value={revised[r.parameter_name] ?? ""}
+                          onChange={(e) => setRevised((s) => ({ ...s, [r.parameter_name]: e.target.value }))}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="border-t border-border/60 bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
+                Leave a field blank to keep the current score. Values 0–100.
+              </p>
+            </div>
+          )}
+
+          <div>
+            <Label htmlFor="resolution-note">Resolution note</Label>
+            <Textarea
+              id="resolution-note"
+              className="mt-1.5"
+              rows={4}
+              value={resolutionNote}
+              onChange={(e) => setResolutionNote(e.target.value)}
+              placeholder={resolveAction === "resolve"
+                ? "Summarize what was reviewed and what changed."
+                : "Explain why the original score stands."}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResolveOpen(false)} disabled={resolveM.isPending}>Cancel</Button>
+            <Button
+              onClick={() => resolveM.mutate()}
+              disabled={resolveM.isPending || resolutionNote.trim().length < 5}
+              variant={resolveAction === "reject" ? "outline" : "default"}
+            >
+              {resolveM.isPending ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Saving…</> : resolveAction === "resolve" ? "Resolve dispute" : "Reject dispute"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
