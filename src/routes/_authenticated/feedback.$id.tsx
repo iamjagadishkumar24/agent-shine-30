@@ -55,6 +55,8 @@ function FeedbackDetail() {
   useRealtimeInvalidate("feedback", [["feedback", id]], { filter: `id=eq.${id}` });
   useRealtimeInvalidate("feedback_audit_log", [["feedback", id]], { filter: `feedback_id=eq.${id}` });
   useRealtimeInvalidate("email_queue", [["feedback-queue", id]], { filter: `feedback_id=eq.${id}` });
+  useRealtimeInvalidate("feedback_disputes", [["feedback-disputes", id], ["feedback-audit", id]], { filter: `feedback_id=eq.${id}` });
+  useRealtimeInvalidate("feedback_score_revisions", [["feedback-disputes", id], ["feedback-scores", id]], { filter: `feedback_id=eq.${id}` });
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [ackNote, setAckNote] = useState("");
