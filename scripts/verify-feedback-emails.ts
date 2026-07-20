@@ -150,10 +150,26 @@ console.log("\n=== Feedback Email Verification ===");
 for (const row of summaryRows) console.log(row);
 console.log("");
 
+// Machine-readable summary for CI consumers.
+writeFileSync(
+  `${OUT_DIR}/summary.json`,
+  JSON.stringify(
+    {
+      totalCases: cases.length,
+      failed: failures.length,
+      passed: cases.length - new Set(failures.map((f) => f.case)).size,
+      failures,
+      cases: summaryRows,
+    },
+    null,
+    2,
+  ),
+);
+
 if (failures.length) {
   console.error(`\n✗ ${failures.length} assertion(s) failed:\n`);
   for (const f of failures) console.error(`  [${f.case}] ${f.message}`);
   process.exit(1);
 }
 
-console.log(`✓ All ${cases.length} cases passed. Artifacts: /mnt/documents/feedback-email-verification/`);
+console.log(`✓ All ${cases.length} cases passed. Artifacts: ${OUT_DIR}/`);
