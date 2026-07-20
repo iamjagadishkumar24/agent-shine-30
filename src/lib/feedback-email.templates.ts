@@ -492,7 +492,7 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
             Thank you for your continued dedication and commitment to delivering outstanding customer experiences. We appreciate your contributions and look forward to supporting your continued growth and success.
           </div>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="margin-top:18px;border-collapse:collapse;background-color:#ffffff;">
-            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:0;font-family:${FONT};font-size:15px;line-height:1.5;font-weight:600;color:#0f172a;mso-line-height-rule:exactly;">Kind Regards,</td></tr>
+            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:0;font-family:${FONT};font-size:15px;line-height:1.5;font-weight:600;color:#0f172a;mso-line-height-rule:exactly;">Regards,</td></tr>
             <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:2px 0 0;font-family:${FONT};font-size:15px;line-height:1.5;font-weight:700;color:#0f172a;mso-line-height-rule:exactly;">${escape(BRAND.name)} Team</td></tr>
             <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:4px 0 0;font-family:${FONT};font-size:12.5px;line-height:1.5;font-weight:500;font-style:italic;color:#475569;mso-line-height-rule:exactly;">${escape(BRAND.tagline)}.</td></tr>
             <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:12px 0 0;font-family:${FONT};font-size:13px;line-height:1.6;font-weight:600;color:#334155;mso-line-height-rule:exactly;">
@@ -626,7 +626,7 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
     "If you have questions or need clarification, please contact your manager or the Customer Success Operations team.",
     `${BRAND.supportEmail} · ${BRAND.supportUrl}`,
     "",
-    "Kind Regards,",
+    "Regards,",
     `${BRAND.name} Team`,
     `${BRAND.tagline}.`,
     `📧 ${BRAND.supportEmail}`,
