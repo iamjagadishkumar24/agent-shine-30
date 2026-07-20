@@ -78,7 +78,7 @@ function VerifyEmailPage() {
   };
 
   return (
-    <AuthShell loading={resending} loadingLabel="Resending verification email…">
+    <AuthShell sidePanel={<AuthHero variant="verify" />} loading={resending} loadingLabel="Resending verification email…">
       {status === "verified" ? (
         <div className="text-center">
           <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-emerald-500/15 text-emerald-500">
