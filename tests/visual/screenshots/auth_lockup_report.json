@@ -11,7 +11,7 @@
     "wrapperBg": "rgba(0, 0, 0, 0)",
     "loaded_ok": true,
     "width_ok": true,
-    "ratio_ok": true,
+    "ratio_ok": false,
     "spacing_ok": true,
     "theme_bg_ok": true,
     "wrapper_transparent": true
@@ -28,7 +28,7 @@
     "wrapperBg": "rgba(0, 0, 0, 0)",
     "loaded_ok": true,
     "width_ok": true,
-    "ratio_ok": true,
+    "ratio_ok": false,
     "spacing_ok": true,
     "theme_bg_ok": true,
     "wrapper_transparent": true
@@ -45,7 +45,7 @@
     "wrapperBg": "rgba(0, 0, 0, 0)",
     "loaded_ok": true,
     "width_ok": true,
-    "ratio_ok": true,
+    "ratio_ok": false,
     "spacing_ok": true,
     "theme_bg_ok": true,
     "wrapper_transparent": true
@@ -62,7 +62,7 @@
     "wrapperBg": "rgba(0, 0, 0, 0)",
     "loaded_ok": true,
     "width_ok": true,
-    "ratio_ok": true,
+    "ratio_ok": false,
     "spacing_ok": true,
     "theme_bg_ok": true,
     "wrapper_transparent": true
@@ -79,7 +79,7 @@
     "wrapperBg": "rgba(0, 0, 0, 0)",
     "loaded_ok": true,
     "width_ok": true,
-    "ratio_ok": true,
+    "ratio_ok": false,
     "spacing_ok": true,
     "theme_bg_ok": true,
     "wrapper_transparent": true
@@ -96,7 +96,7 @@
     "wrapperBg": "rgba(0, 0, 0, 0)",
     "loaded_ok": true,
     "width_ok": true,
-    "ratio_ok": true,
+    "ratio_ok": false,
     "spacing_ok": true,
     "theme_bg_ok": true,
     "wrapper_transparent": true
