@@ -382,6 +382,61 @@ function FeedbackDetail() {
             <Section title="Recommended actions" body={data.recommended_actions} />
           </Card>
 
+          {scoreRows.length > 0 && (
+            <Card className="rounded-xl border-border/60 bg-card/60 p-6">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Quality Evaluation</div>
+                  <div className="mt-1 text-xs text-muted-foreground">Weighted breakdown across seven parameters</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold tabular-nums">
+                    {Number(data.overall_score ?? 0).toFixed(2)}
+                    <span className="text-base font-normal text-muted-foreground"> / 100</span>
+                  </div>
+                  <div className={cn("text-sm font-semibold", labelTone(data.performance_label as any))}>
+                    {Number(data.overall_percentage ?? 0).toFixed(2)}% · {data.performance_label ?? "—"}
+                  </div>
+                </div>
+              </div>
+              <Progress value={Number(data.overall_percentage ?? 0)} className="h-2" />
+              <div className="mt-5 overflow-hidden rounded-lg border border-border/60">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium">Parameter</th>
+                      <th className="px-3 py-2 text-right font-medium">Max</th>
+                      <th className="px-3 py-2 text-right font-medium">Selected %</th>
+                      <th className="px-3 py-2 text-right font-medium">Earned</th>
+                      <th className="px-3 py-2 text-left font-medium">Note</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scoreRows.map((r) => (
+                      <tr key={r.parameter_name} className="border-t border-border/60">
+                        <td className="px-3 py-2 font-medium">{r.parameter_name}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{Number(r.max_points).toFixed(0)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{Number(r.selected_percentage).toFixed(0)}%</td>
+                        <td className="px-3 py-2 text-right font-semibold tabular-nums">{Number(r.earned_points).toFixed(2)}</td>
+                        <td className="px-3 py-2 text-xs text-muted-foreground">{r.evaluator_note ?? ""}</td>
+                      </tr>
+                    ))}
+                    <tr className="border-t-2 border-border/60 bg-muted/30 font-semibold">
+                      <td className="px-3 py-2">Total</td>
+                      <td className="px-3 py-2 text-right tabular-nums">100</td>
+                      <td className="px-3 py-2 text-right tabular-nums">
+                        {Number(data.overall_percentage ?? 0).toFixed(2)}%
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums">{Number(data.overall_score ?? 0).toFixed(2)}</td>
+                      <td className="px-3 py-2"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+
+
           {data.status === "failed" && (
             <Card className="rounded-xl border-destructive/40 bg-destructive/5 p-6">
               <div className="flex items-center gap-2 text-sm font-medium text-destructive">
