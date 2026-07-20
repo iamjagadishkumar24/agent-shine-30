@@ -135,6 +135,14 @@ KPI_TO_SHEET_TITLE = {
     "Acknowledgement rate": "Acknowledged feedback",
 }
 
+# Chip data-kpi attribute matches the DrillKey union in analytics.tsx.
+KPI_TO_DRILL_KEY = {
+    "Total feedback": "total",
+    "Avg Quality score": "scored",
+    "Delivery rate": "delivered",
+    "Acknowledgement rate": "acknowledged",
+}
+
 
 def skip(msg: str) -> None:
     print(f"SKIP: {msg}")
