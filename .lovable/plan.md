@@ -1,60 +1,92 @@
 
-## Scope decisions
+# Incremental QA Platform Buildout
 
-Three asks, each handled at the right depth:
+Keep every existing surface (feedback CRUD, coaching, notifications, email pipeline, AI draft, realtime, RLS, audit log). Layer the missing pieces on top in ordered phases so each phase ships value on its own.
 
-1. **"QA" → "Customer Success"** — global rename in code copy, DB agent department, and email/report exports. Straightforward and I'll do it in full.
-2. **Schedule Session "not working"** — quick investigation showed the save/update/delete/drag-drop paths are wired correctly (`SessionDialog` → `supabase.from("coaching_sessions").insert/update`, overlap trigger active, realtime invalidation subscribed). The DB has 0 sessions because none have been created yet, not because it's broken. I'll add a diagnostic path (surface the exact error text from the overlap trigger and RLS) and run an end-to-end smoke test to confirm it works from your seat. If a real bug shows up I fix it.
-3. **Real calendar integration** — your own closing note is correct: a web app cannot drive desktop Outlook without a per-user OAuth integration. I'll ship the pragmatic universal path now and gate the full OAuth path behind an explicit follow-up.
+## Role mapping (rename in place, no data migration risk)
 
-## What I'll build
+- `super_admin` → **Admin** (label only)
+- `qa_admin` → **Quality Analyst**
+- `team_manager` → **Team Leader**
+- `agent` → **Agent**
 
-### A. QA → Customer Success rename
-- **Copy sweep**: `agents.tsx` (`QA Score` column), `dashboard.tsx` (KPI + gauge labels), `analytics.tsx`, `feedback.$id.tsx`, `portal.$id.tsx`, `reports.tsx`, `feedback.new.tsx`, `settings.tsx` (default subject + signature placeholder), `heavy-charts.tsx`, `analytics-charts.tsx`, `command-palette.tsx` keywords, `account.tsx` placeholder, marketing (`index.tsx`, `auth.tsx` copy), AI prompt (`ai-feedback.functions.ts`), template variables (`feedback-email.variables.ts`), reports server (`reports.server.ts`), email test template (`email-settings.functions.ts` sample recommendations).
-- **DB**: `UPDATE public.agents SET department = 'Customer Success' WHERE department = 'QA'`.
-- **Preserve column name** `qa_score` (schema stability) but label it "Quality Score" everywhere in the UI/exports.
+Only UI labels + a `roleLabels` map change; RLS policies stay on existing role names.
 
-### B. Schedule Session hardening + smoke test
-- Improve error surfacing in `SessionDialog.save.onError` so trigger errors (overlap, RLS) show the real reason.
-- Ensure the "Schedule Session" entry point on `/coaching` and the "New session" quick action are both wired to open the dialog with sensible defaults.
-- Live smoke test via Playwright against `/coaching`: create → edit → drag-drop reschedule → cancel → verify realtime propagation to dashboard.
+## Phase 1 — Data model additions (one migration)
 
-### C. "Add to calendar" export menu (universal, no OAuth)
-When a session is saved (and from a menu on every session card), offer:
-- **Outlook Web** — deep link to `outlook.office.com/calendar/0/deeplink/compose` with subject/body/start/end/location.
-- **Outlook.com (consumer)** — deep link to `outlook.live.com/calendar/0/deeplink/compose`.
-- **Google Calendar** — deep link to `calendar.google.com/calendar/render?action=TEMPLATE&...`.
-- **Download .ics** — RFC-5545 file, works with desktop Outlook, Apple Calendar, and every other client. Set `METHOD:REQUEST` with `ATTENDEE` lines so it acts as an invite.
-- **Copy iCal feed URL** — per-user signed feed URL (see D below).
+New tables:
+- `teams` (name, description, leader_user_id)
+- `scorecard_templates` (name, is_active, version)
+- `scorecard_parameters` (template_id, name, max_points, order) — seeded with the 7 required parameters totalling 100
+- `feedback_scores` (feedback_id, parameter_name snapshot, max_points snapshot, selected_percentage, earned_points, evaluator_note) — historical snapshot per feedback
+- `feedback_disputes` (feedback_id, raised_by, reason, status, resolution_note, resolved_by, resolved_at)
+- `feedback_score_revisions` (dispute_id, parameter_name, original_percentage, revised_percentage, original_earned, revised_earned) — full re-evaluation history
 
-Component: `src/components/coaching/add-to-calendar-menu.tsx`. Wires from `SessionDialog` after save and from each session card's kebab menu.
+Column additions:
+- `agents.team_id` (FK teams)
+- `feedback.interaction_type` (chat|case), `interaction_reference`, `interaction_date`, `evaluator_id`, `team_id`, `tags text[]`, `internal_notes`, `agent_visible_notes`, `overall_score numeric`, `overall_percentage numeric`, `performance_label`
+- Extend `feedback_status` enum with: `submitted`, `finalized`, `disputed`, `resolved`, `archived`
 
-### D. Personal iCal subscription feed
-- New public route: `src/routes/api/public/calendar/$token.ics.ts` — returns all upcoming sessions for the agent/coach behind the token.
-- New table `calendar_feed_tokens (user_id, token, created_at)` with per-user token minting from `/account`.
-- Users paste the URL into Outlook/Google/Apple as a subscribed calendar; it stays synced without OAuth.
+All new tables: GRANT + RLS (agent sees own; team leader sees team; analyst sees all; admin all). Trigger recalculates overall_score/label server-side on feedback_scores insert/update, rejects totals > 100, and blocks client-supplied overall_score drift.
 
-### E. Notifications
-Already wired in DB triggers (`tg_coaching_session_notifications`) — I'll verify the create/reschedule/cancel branches fire and hook the "reminder due" email to the existing `pg_cron` dispatcher.
+## Phase 2 — Scorecard-driven New Feedback form
 
-## What I'm NOT doing (needs your explicit go-ahead)
+Rework `/feedback/new`:
+- Add Interaction Type, Interaction Reference, Interaction Date, Team (auto from agent, editable), Tags, Evaluator (defaults to current user).
+- New "Quality Evaluation" section: 7 parameter cards, each with synced slider + numeric input, live earned points, optional note.
+- Live Overall Score card with points/100, %, progress bar, performance label.
+- Split notes into Internal Notes + Agent-Visible Notes.
+- AI Draft: pass all 7 scores + notes + tags into `generateFeedbackDraft`; add Regenerate / Make Concise / Make Detailed / Insert into Form controls. Keep existing template picker.
+- Actions: Save Draft, Preview, Submit, Submit and Send Email. Server recomputes earned points + overall from percentages before persisting.
 
-- **Google Calendar App User Connector** (per-user OAuth for direct event create/update via Google API). Requires you to create a Google OAuth client in Google Cloud Console and link it via App User Connectors. If you want this, say so and I'll walk you through the client setup.
-- **Microsoft Graph App User Connector** (same story for Outlook 365 / Exchange).
-- **Recurring meetings / Google Meet auto-generation** — these depend on the OAuth path above.
-- **Desktop Outlook auto-open** — impossible from a web app; .ics is the correct substitute.
+## Phase 3 — Detail, History, Email
 
-## Order of execution
+- Feedback Detail: render 7-parameter table (max / % / earned / note), overall bar, performance label, dispute panel, audit timeline (already exists — extend with revisions).
+- Feedback History: add columns for Interaction Type, Team, Evaluator, Email Status; add filters for team / interaction type / evaluator / score range; keep existing responsive card fallback.
+- Email template: replace freeform body block with the 7-row score table + totals row, keep existing branded header/footer and tracking.
 
-1. DB migration (`agents.department = 'Customer Success'`, new `calendar_feed_tokens` table) — one migration, needs your approval.
-2. QA→Customer Success code sweep.
-3. Session dialog error-surfacing + smoke test.
-4. `.ics` generator + deep-link menu.
-5. iCal feed route + token minting UI.
-6. Playwright end-to-end verification, screenshots.
+## Phase 4 — Disputes with re-scoring
 
-## Files touched (est.)
+- Agent portal: "Dispute" action on Sent/Acknowledged feedback → dialog with reason → status `disputed`, notification to evaluator + analysts.
+- Analyst view: dispute inbox in feedback detail — can adjust each of the 7 percentages; each change writes a `feedback_score_revisions` row; on save, recompute overall + set status `resolved`; notify agent with diff.
+- Full history rendered in audit timeline: original vs revised per parameter.
 
-~18 files edited, 3 new files, 1 migration. No breaking changes to schema column names or the coaching_sessions API.
+## Phase 5 — Teams + User Management + Scorecard Settings
 
-Reply **"go"** to execute A–E as above, or **"go + oauth"** if you also want me to start the Google/Microsoft App User Connector setup (I'll ask for the OAuth client details when we get there).
+- `/teams` (Admin/Analyst): CRUD teams, assign leader, list members.
+- `/settings/users` (Admin): list auth users, assign roles, deactivate, resend invite.
+- `/settings/scorecard` (Admin): view active template + 7 parameters, edit names/weights, must sum to 100 (server-enforced). Editing creates a new version; existing feedback keeps its snapshot.
+
+## Phase 6 — Global dashboard with date range + server-side aggregation
+
+- Add sticky date-range bar (From / To / Apply / Reset + presets: 7d / 30d / This Month / This Year) at top of `/dashboard`, `/analytics`, `/analytics/email`. Persist to URL search params.
+- New `dashboard-metrics.functions.ts` server functions doing SQL aggregation for every KPI/chart (no full-table client reads):
+  - KPIs: Total Feedback, Avg Overall Score, Pass Rate (≥70), Failed Evaluations (<70), Critical Feedback, Agents Evaluated, Feedback Sent, Acknowledgement Rate, Open Disputes, per-parameter averages.
+  - Charts: Quality Score Trend, Volume Trend, Score Distribution, Interaction Type/Severity Distribution, Parameter Performance, Agent Rankings, Team Performance, Low-Scoring Parameters, Status Funnel.
+- All charts reuse existing chart primitives; realtime invalidation on `feedback`, `feedback_scores`, `feedback_disputes`.
+
+## Phase 7 — Tests
+
+Extend existing Playwright/Vitest suites:
+- Unit: weighted calc (`earned = max * pct / 100`, overall sum, label thresholds).
+- Server: reject totals > 100, reject client-supplied overall, RLS matrix per role.
+- E2E: submit feedback → email score table renders → agent acknowledges → dispute → re-score → dashboard KPIs update.
+
+## Technical details
+
+- Migrations: single Supabase migration per phase (Phase 1 is the largest). All new public tables get GRANTs + RLS in the same migration.
+- Server-side scoring: DB trigger on `feedback_scores` recomputes and writes `feedback.overall_score`, `overall_percentage`, `performance_label`; blocks inserts where sum(max_points) ≠ 100 for the active template.
+- Aggregation: PostgreSQL views / RPCs called from `createServerFn` under `requireSupabaseAuth`; results cached in TanStack Query keyed by `[metric, from, to, filters]`.
+- AI Draft: extend the existing `generateFeedbackDraft` input schema with `scores` array; prompt updated to ground strengths on top-3 parameters and improvements on bottom-3.
+- Realtime: extend `useRealtimeInvalidate` calls to include new tables.
+- Role labels: single `src/lib/roles.ts` map — no policy changes.
+
+## What is intentionally NOT in scope
+
+- No rebuild of auth, coaching, email provider layer, notification system, or existing tests — they already meet the spec.
+- No badge/branding changes.
+- Coaching-actions linkage to feedback stays as-is (already wired).
+
+## Rollout order
+
+Phase 1 → 2 → 3 in the first pass (unlocks the weighted scorecard end-to-end). Phases 4–7 land as follow-up turns so each is reviewable.
