@@ -39,6 +39,13 @@ SS.mkdir(parents=True, exist_ok=True)
 # navigate to below so seed rows are guaranteed to fall inside the range.
 WINDOW_DAYS = 30
 SEED_TAG = "e2e-drill-seed"
+# When SEED_OVERFLOW=1, insert enough rows so Total feedback > 500 and the
+# drill sheet must clamp its rendered rows at 500 and show the overflow note.
+OVERFLOW_ENABLED = os.environ.get("SEED_OVERFLOW") == "1"
+OVERFLOW_TARGET = 520
+OVERFLOW_TAG = "e2e-drill-overflow"
+DRILL_RENDER_CAP = 500
+
 
 
 def seed_drill_window() -> None:
