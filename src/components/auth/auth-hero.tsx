@@ -113,12 +113,16 @@ function FloatingCard({
   children: React.ReactNode;
   delay?: number;
 }) {
+  // Outer div positions + rotates via Tailwind classes; inner wrapper handles
+  // the float animation so the two transforms don't collide.
   return (
-    <div
-      className={`absolute rounded-2xl border border-white/70 bg-white/85 shadow-2xl backdrop-blur-md dark:border-white/10 dark:bg-white/[0.08] motion-safe:animate-[authfloat_6s_ease-in-out_infinite] ${className ?? ""}`}
-      style={{ animationDelay: `${delay}s` }}
-    >
-      {children}
+    <div className={`absolute ${className ?? ""}`}>
+      <div
+        className="h-full w-full rounded-2xl border border-white/70 bg-white/85 p-inherit shadow-2xl backdrop-blur-md dark:border-white/10 dark:bg-white/[0.08] motion-safe:animate-[authfloat_6s_ease-in-out_infinite]"
+        style={{ animationDelay: `${delay}s`, padding: "inherit" }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
