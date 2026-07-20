@@ -270,6 +270,7 @@ function AnalyticsPage() {
   }, [feedback, agents]);
 
   type S = z.infer<typeof searchSchema>;
+  const [drill, setDrill] = useState<DrillKey | null>(null);
   const setPreset = (key: string) => {
     navigate({ search: (prev: S) => ({ ...prev, preset: key, from: "", to: "" }) });
   };
