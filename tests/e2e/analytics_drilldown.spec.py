@@ -201,7 +201,12 @@ async def open_analytics(page) -> None:
 
 
 async def kpi_card(page, label: str):
-    # KPI card = clickable Card with role='button' containing the label span.
+    # Prefer the new data-testid locator; fall back to role=button + label.
+    by_testid = page.locator(
+        f'[data-testid="kpi-card"][data-kpi="{KPI_TO_DRILL_KEY[label]}"]'
+    )
+    if await by_testid.count() > 0:
+        return by_testid.first
     return page.locator('[role="button"]', has_text=label).first
 
 
@@ -210,7 +215,16 @@ async def drill_and_verify(page, label: str) -> dict:
     if await card.count() == 0:
         skip(f"KPI card '{label}' not present — analytics likely empty")
 
+    # Capture the count the KPI card is advertising BEFORE clicking, so we
+    # can compare it against the drill-sheet row count below.
+    card_count_attr = await card.get_attribute("data-count") or ""
+    try:
+        expected_count = int(card_count_attr)
+    except ValueError:
+        fail(f"KPI card '{label}' missing/invalid data-count={card_count_attr!r}")
+
     await card.click()
+
     dialog = page.locator('[role="dialog"]').last
 
     expected_title = KPI_TO_SHEET_TITLE[label]
