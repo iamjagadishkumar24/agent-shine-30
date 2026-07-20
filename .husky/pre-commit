@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+# Rebrand guard — blocks commits that reintroduce the legacy brand name
+# (including case variations, separator tricks, zero-width chars, and Unicode
+# confusables). Scoped to staged text files for speed; falls back to a full
+# scan if the staged-file mode is skipped.
+
+# Allow bypass with: git commit --no-verify
+if [ "$REBRAND_GUARD_SKIP" = "1" ]; then
+  echo "⚠  Rebrand guard skipped via REBRAND_GUARD_SKIP=1"
+  exit 0
+fi
+
+# Collect staged files (added / copied / modified / renamed), NUL-delimited.
+staged=$(git diff --cached --name-only --diff-filter=ACMR -z)
+
+if [ -z "$staged" ]; then
+  exit 0
+fi
+
+# Delegate to the shared scanner in staged-only mode.
+printf '%s' "$staged" | REBRAND_GUARD_STAGED=1 node scripts/check-rebrand.mjs --stdin-null
