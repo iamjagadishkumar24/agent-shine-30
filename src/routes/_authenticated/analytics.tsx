@@ -592,6 +592,8 @@ function KpiCard({
   delta,
   icon,
   onClick,
+  drillKey,
+  count,
 }: {
   label: string;
   value: string;
@@ -599,6 +601,8 @@ function KpiCard({
   delta?: number;
   icon?: React.ReactNode;
   onClick?: () => void;
+  drillKey?: string;
+  count?: number;
 }) {
   const trendPositive = (delta ?? 0) >= 0;
   return (
@@ -606,6 +610,9 @@ function KpiCard({
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
+      data-testid="kpi-card"
+      data-kpi={drillKey}
+      data-count={count ?? ""}
       onKeyDown={(e) => {
         if (!onClick) return;
         if (e.key === "Enter" || e.key === " ") {
@@ -618,6 +625,7 @@ function KpiCard({
         onClick && "cursor-pointer hover:border-primary/40 hover:bg-card/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary",
       )}
     >
+
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>{label}</span>
         {icon}
