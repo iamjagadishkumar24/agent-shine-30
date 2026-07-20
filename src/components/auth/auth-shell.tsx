@@ -73,7 +73,8 @@ export function AuthShell({
         alt="Zenwork Performance Manager"
         width={1500}
         height={1000}
-        className="block h-auto w-full max-w-[520px] object-contain select-none dark:brightness-110 dark:contrast-110 sm:max-w-[560px] md:max-w-[600px] lg:max-w-[640px]"
+        style={{ width: "clamp(240px, 78%, 480px)" }}
+        className="block h-auto object-contain select-none dark:brightness-110 dark:contrast-110"
         draggable={false}
       />
     </div>
