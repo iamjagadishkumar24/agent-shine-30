@@ -78,8 +78,6 @@ export function AuthShell({
       />
     </div>
   ) : null;
-    </div>
-  ) : null;
 
   return (
     <div className="auth-shell relative flex min-h-dvh flex-col text-foreground">
