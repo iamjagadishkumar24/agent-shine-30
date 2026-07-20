@@ -34,10 +34,14 @@ import { useTheme, type ThemeMode } from "@/lib/theme";
 const APP_VERSION = "v1.0.0";
 
 /**
- * Shared enterprise authentication shell used across sign in, sign up,
- * forgot password, reset password, and verify email. Provides the top bar
- * (brand + theme toggle), centered glass card, on-demand Learn More modal,
- * and legal footer with app version.
+ * Premium light-themed authentication shell.
+ *
+ * A single unified frame used by Sign In, Sign Up, Forgot Password,
+ * Reset Password and Verify Email. On lg+ viewports it renders a
+ * split-screen frosted-glass container: a floating auth card on the
+ * left (~42%) and a branded illustration hero on the right (~58%).
+ * On smaller screens the hero collapses and the card takes the full
+ * viewport.
  */
 export function AuthShell({
   children,
@@ -58,26 +62,24 @@ export function AuthShell({
   error?: string | null;
   onDismissError?: () => void;
 }) {
-
   const brandBlock = showBrand ? (
     <div
       role="group"
       aria-label="Zenwork Performance Manager"
-      className="mx-auto mb-4 flex w-full max-w-full flex-col items-center gap-2 px-2 sm:mb-5 sm:gap-3 lg:mb-3 lg:gap-2"
+      className="mx-auto mb-5 flex w-full max-w-full flex-col items-center gap-2 px-2 sm:mb-6"
     >
       <img
         src={zenworkLogo.url}
         alt=""
         aria-hidden="true"
-        className="block h-14 w-14 shrink-0 object-contain bg-transparent sm:h-16 sm:w-16 md:h-20 md:w-20 lg:h-16 lg:w-16 xl:h-20 xl:w-20"
+        className="block h-12 w-12 shrink-0 object-contain bg-transparent sm:h-14 sm:w-14"
       />
       <h1
         style={{ fontWeight: 800 }}
         className={cn(
           "font-display leading-[1.05] tracking-tight text-center whitespace-nowrap",
-          "text-[16px] sm:text-[20px] md:text-[22px] lg:text-[20px] xl:text-[22px]",
-          // Brand green — accessible in both light and dark themes.
-          "text-emerald-600 dark:text-emerald-400",
+          "text-[17px] sm:text-[19px] md:text-[20px]",
+          "text-slate-900 dark:text-white",
         )}
       >
         Zenwork Performance Manager
@@ -86,33 +88,38 @@ export function AuthShell({
   ) : null;
 
   return (
-    <div className="auth-shell relative flex min-h-dvh flex-col text-foreground lg:h-dvh lg:min-h-0 lg:overflow-hidden">
+    <div className="auth-shell relative flex min-h-dvh flex-col text-foreground">
+      {/* Ambient gradient background */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-48 -left-40 h-[560px] w-[560px] rounded-full bg-emerald-500/10 blur-[140px] dark:bg-emerald-400/10" />
-        <div className="absolute top-1/3 -right-40 h-[560px] w-[560px] rounded-full bg-indigo-500/10 blur-[140px] dark:bg-indigo-400/10" />
-        <div className="absolute bottom-[-180px] left-1/3 h-[440px] w-[440px] rounded-full bg-slate-400/10 blur-[140px] dark:bg-slate-500/10" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,#e0f2fe_0%,transparent_45%),radial-gradient(ellipse_at_bottom_right,#ede9fe_0%,transparent_45%),linear-gradient(180deg,#f6f9ff,#eef4ff)] dark:bg-[radial-gradient(ellipse_at_top_left,rgba(56,189,248,0.08)_0%,transparent_45%),radial-gradient(ellipse_at_bottom_right,rgba(167,139,250,0.10)_0%,transparent_45%),linear-gradient(180deg,#0b1220,#0a1020)]" />
+        <div className="absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full bg-cyan-300/25 blur-[140px] dark:bg-cyan-400/10 animate-[authblob_18s_ease-in-out_infinite]" />
+        <div className="absolute top-1/3 -right-40 h-[560px] w-[560px] rounded-full bg-violet-300/25 blur-[150px] dark:bg-violet-400/10 animate-[authblob_22s_ease-in-out_infinite_reverse]" />
+        <div className="absolute bottom-[-180px] left-1/3 h-[440px] w-[440px] rounded-full bg-emerald-300/20 blur-[140px] dark:bg-emerald-500/10 animate-[authblob_26s_ease-in-out_infinite]" />
       </div>
 
-      <header className="relative z-10 flex items-center justify-end px-5 py-3 sm:px-8 lg:py-1.5">
+      <header className="relative z-10 flex items-center justify-end px-5 py-3 sm:px-8">
         <ThemeToggle />
       </header>
 
-      <main className="relative z-10 flex-1 lg:min-h-0 lg:overflow-y-auto">
-        <div className="flex min-h-full items-center justify-center px-5 py-5 sm:px-8 lg:py-3">
+      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-6 sm:px-8">
         {sidePanel ? (
-          <div className="grid w-full max-w-6xl items-center gap-10 lg:grid-cols-2">
-            <div className="mx-auto w-full min-w-0 max-w-[460px] lg:mx-0 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
-              <AuthCard loading={loading} loadingLabel={loadingLabel} error={error} onDismissError={onDismissError}>
-                {brandBlock}
-                {children}
-              </AuthCard>
-              {showLearnMore && (
-                <div className="mt-4 flex justify-center lg:justify-start">
-                  <LearnMoreDialog />
-                </div>
-              )}
+          <div className="mx-auto grid w-full max-w-6xl overflow-hidden rounded-[28px] border border-white/60 bg-white/50 shadow-[0_30px_80px_-30px_rgba(15,23,42,0.25)] backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.04] lg:grid-cols-[minmax(0,42fr)_minmax(0,58fr)]">
+            <div className="flex items-center justify-center p-6 sm:p-10">
+              <div className="w-full max-w-[440px] motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
+                <AuthCard loading={loading} loadingLabel={loadingLabel} error={error} onDismissError={onDismissError}>
+                  {brandBlock}
+                  {children}
+                </AuthCard>
+                {showLearnMore && (
+                  <div className="mt-4 flex justify-center">
+                    <LearnMoreDialog />
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="hidden min-w-0 lg:block motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-700">{sidePanel}</div>
+            <div className="relative hidden min-h-[560px] overflow-hidden lg:block motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-700">
+              <HeroFrame>{sidePanel}</HeroFrame>
+            </div>
           </div>
         ) : (
           <div className="w-full max-w-[460px] motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
@@ -127,11 +134,10 @@ export function AuthShell({
             )}
           </div>
         )}
-        </div>
       </main>
 
-      <footer className="relative z-10 border-t border-border/50 bg-background/50 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:flex-row sm:px-8 lg:py-1.5">
+      <footer className="relative z-10 border-t border-white/50 bg-white/40 backdrop-blur dark:border-white/10 dark:bg-white/[0.03]">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:flex-row sm:px-8">
           <p>&copy; {new Date().getFullYear()} Zenwork · {APP_VERSION}</p>
           <nav className="flex items-center gap-4">
             <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
@@ -140,7 +146,21 @@ export function AuthShell({
           </nav>
         </div>
       </footer>
+    </div>
+  );
+}
 
+function HeroFrame({ children }: { children: ReactNode }) {
+  return (
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-white/70 via-sky-50/60 to-violet-50/70 p-10 dark:from-white/[0.03] dark:via-white/[0.02] dark:to-white/[0.03]">
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-20 -right-20 h-[400px] w-[400px] rounded-full bg-cyan-300/30 blur-[110px] dark:bg-cyan-400/15" />
+        <div className="absolute -bottom-16 -left-16 h-[420px] w-[420px] rounded-full bg-violet-300/30 blur-[110px] dark:bg-violet-400/15" />
+        <div className="absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-200/20 blur-[130px] dark:bg-emerald-400/10" />
+      </div>
+      <div className="relative z-10 flex h-full w-full items-center justify-center">
+        {children}
+      </div>
     </div>
   );
 }
@@ -160,14 +180,14 @@ function AuthCard({
 }) {
   return (
     <div
-      className="auth-card relative overflow-hidden rounded-[20px] p-7 pt-8 sm:p-9 sm:pt-10 lg:p-6 lg:pt-6"
+      className={cn(
+        "auth-card relative overflow-hidden rounded-[24px] border border-white/70 bg-white/80 p-7 shadow-[0_20px_60px_-25px_rgba(15,23,42,0.25)] backdrop-blur-xl",
+        "dark:border-white/10 dark:bg-white/[0.06] sm:p-8",
+      )}
       aria-busy={loading || undefined}
     >
       {loading && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-0.5 overflow-hidden"
-        >
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-0.5 overflow-hidden">
           <div className="h-full w-1/3 animate-[authshimmer_1.2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-primary to-transparent" />
         </div>
       )}
@@ -194,21 +214,14 @@ function AuthCard({
         </div>
       )}
 
-
       <div className={cn("relative transition-opacity duration-200", loading && "opacity-70")}>
         {children}
       </div>
 
       {loading && (
-        <div
-          aria-live="polite"
-          className="pointer-events-none absolute inset-0 flex items-end justify-center pb-3"
-        >
+        <div aria-live="polite" className="pointer-events-none absolute inset-0 flex items-end justify-center pb-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/85 px-3 py-1.5 text-xs font-medium text-foreground shadow-sm backdrop-blur">
-            <span
-              className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"
-              aria-hidden
-            />
+            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" aria-hidden />
             {loadingLabel}
           </div>
         </div>
@@ -216,8 +229,6 @@ function AuthCard({
     </div>
   );
 }
-
-
 
 function ThemeToggle() {
   const { prefs, update } = useTheme();
