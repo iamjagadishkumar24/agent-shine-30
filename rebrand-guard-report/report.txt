@@ -1,3 +1,0 @@
-✖ Rebrand guard failed — found 1 residual "zenwork" reference(s) (including confusables/separators):
-
-.husky/pre-commit:2:# Rebrand guard — blocks commits that reintroduce legacy "Zenwork" references
