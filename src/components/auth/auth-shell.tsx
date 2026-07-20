@@ -66,7 +66,7 @@ export function AuthShell({
     <div
       role="group"
       aria-label="Zenwork Performance Manager"
-      className="mx-auto -mt-2 mb-6 flex w-full max-w-full items-center justify-center px-2 sm:mb-8"
+      className="mx-auto mb-6 mt-1 flex w-full items-center justify-center px-4 sm:mb-8 sm:mt-2 sm:px-6"
     >
       <img
         src={zenworkLockup.url}
