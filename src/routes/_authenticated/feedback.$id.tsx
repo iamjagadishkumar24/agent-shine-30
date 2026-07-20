@@ -16,7 +16,10 @@ import { formatDistanceToNow } from "date-fns";
 import { sendFeedbackEmail, previewFeedbackEmail, sendFeedbackTestEmail } from "@/lib/feedback-email.functions";
 import { createUploadUrl, deleteAttachment } from "@/lib/feedback-attachments.functions";
 // review workflow retired — feedback flows draft → ready_to_send → sent
-import { completeFeedback } from "@/lib/agent-portal.functions";
+import { completeFeedback, getMyRoles } from "@/lib/agent-portal.functions";
+import { listDisputes, raiseDispute, resolveDispute } from "@/lib/disputes.functions";
+import { Label } from "@/components/ui/label";
+import { Gavel, Scale } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { analyzeEmailForSpamRisk } from "@/lib/email-spam-check";
