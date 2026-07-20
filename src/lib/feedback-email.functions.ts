@@ -31,6 +31,18 @@ async function assertStaff(_supabase: unknown, _userId: string) {
   return;
 }
 
+// Load per-parameter scores in canonical order for the email body.
+async function loadMetrics(supabase: any, feedbackId: string) {
+  const { data } = await supabase
+    .from("feedback_scores")
+    .select("parameter_name, selected_percentage, display_order")
+    .eq("feedback_id", feedbackId)
+    .order("display_order", { ascending: true });
+  return (data ?? [])
+    .filter((r: any) => r.selected_percentage != null)
+    .map((r: any) => ({ label: r.parameter_name as string, score: Number(r.selected_percentage) }));
+}
+
 
 // Enqueue a feedback email. The background drainer sends it and updates
 // feedback.status = "sent" once the provider accepts it.
