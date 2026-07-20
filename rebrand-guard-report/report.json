@@ -1,0 +1,13 @@
+{
+  "term": "zenwork",
+  "total_matches": 1,
+  "generated_at": "2026-07-20T23:32:43.755Z",
+  "detection": "case-insensitive + unicode-confusables + separator-insertions + zero-width-stripped",
+  "matches": [
+    {
+      "file": ".husky/pre-commit",
+      "line": 2,
+      "content": "# Rebrand guard — blocks commits that reintroduce legacy \"Zenwork\" references"
+    }
+  ]
+}

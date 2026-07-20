@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "check:rebrand": "node scripts/check-rebrand.mjs",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepare": "husky"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.12",
