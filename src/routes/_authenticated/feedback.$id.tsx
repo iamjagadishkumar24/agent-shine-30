@@ -509,6 +509,129 @@ function FeedbackDetail() {
             </Card>
           )}
 
+          {(disputes.length > 0 || data.status === "disputed" || data.status === "resolved") && (
+            <Card className={cn(
+              "rounded-xl p-6",
+              openDispute ? "border-amber-500/40 bg-amber-500/5" : "border-emerald-500/30 bg-emerald-500/5",
+            )}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  {openDispute ? <Scale className="h-4 w-4 text-amber-600 dark:text-amber-400" /> : <Gavel className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />}
+                  <div>
+                    <div className="text-sm font-semibold">
+                      {openDispute ? "Dispute open" : "Dispute history"}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {openDispute
+                        ? "Waiting for a Quality Analyst to review this dispute."
+                        : `${disputes.length} closed dispute${disputes.length === 1 ? "" : "s"} on this feedback.`}
+                    </div>
+                  </div>
+                </div>
+                {openDispute && canResolve && (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setResolveAction("reject");
+                        setResolveOpen(true);
+                      }}
+                    >
+                      Reject
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setResolveAction("resolve");
+                        setResolveOpen(true);
+                      }}
+                    >
+                      Review & resolve
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <ul className="mt-4 space-y-4">
+                {disputes.map((d) => (
+                  <li key={d.id} className="rounded-lg border border-border/60 bg-background/40 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className={cn(
+                          "rounded-md px-2 py-0.5 font-medium capitalize",
+                          d.status === "open" && "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+                          d.status === "resolved" && "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+                          d.status === "rejected" && "bg-muted text-muted-foreground",
+                        )}>{d.status}</span>
+                        <span className="text-muted-foreground">
+                          Raised by {d.raised_by_name || "agent"} · {safeTimeAgo(d.created_at) ?? "—"}
+                        </span>
+                      </div>
+                      {d.resolved_at && (
+                        <span className="text-muted-foreground">
+                          Closed by {d.resolved_by_name || "analyst"} · {safeTimeAgo(d.resolved_at) ?? "—"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-2">
+                      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Reason</div>
+                      <p className="mt-1 whitespace-pre-wrap text-sm">{d.reason}</p>
+                    </div>
+                    {d.resolution_note && (
+                      <div className="mt-3">
+                        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Resolution note</div>
+                        <p className="mt-1 whitespace-pre-wrap text-sm">{d.resolution_note}</p>
+                      </div>
+                    )}
+                    {d.revisions.length > 0 && (
+                      <div className="mt-3 overflow-hidden rounded-md border border-border/60">
+                        <table className="w-full text-xs">
+                          <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <tr>
+                              <th className="px-2 py-1 text-left font-medium">Parameter</th>
+                              <th className="px-2 py-1 text-right font-medium">Original %</th>
+                              <th className="px-2 py-1 text-right font-medium">Revised %</th>
+                              <th className="px-2 py-1 text-right font-medium">Earned Δ</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {d.revisions.map((r) => {
+                              const delta = Number(r.revised_earned) - Number(r.original_earned);
+                              return (
+                                <tr key={r.id} className="border-t border-border/60">
+                                  <td className="px-2 py-1 font-medium">{r.parameter_name}</td>
+                                  <td className="px-2 py-1 text-right tabular-nums text-muted-foreground line-through">{Number(r.original_percentage).toFixed(0)}%</td>
+                                  <td className="px-2 py-1 text-right tabular-nums font-semibold">{Number(r.revised_percentage).toFixed(0)}%</td>
+                                  <td className={cn(
+                                    "px-2 py-1 text-right tabular-nums font-semibold",
+                                    delta > 0 && "text-emerald-600 dark:text-emerald-400",
+                                    delta < 0 && "text-red-600 dark:text-red-400",
+                                  )}>
+                                    {delta > 0 ? "+" : ""}{delta.toFixed(2)}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+
+          {!openDispute && !isStaff && (data.status === "sent" || data.status === "acknowledged") && (
+            <div>
+              <Button variant="outline" size="sm" onClick={() => setRaiseOpen(true)}>
+                <Scale className="mr-1.5 h-3.5 w-3.5" /> Dispute this feedback
+              </Button>
+            </div>
+          )}
+
+
 
           {data.status === "failed" && (
             <Card className="rounded-xl border-destructive/40 bg-destructive/5 p-6">
