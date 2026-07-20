@@ -74,6 +74,15 @@ export const Route = createFileRoute("/api/public/hooks/feedback-escalations")({
             queueAttachments.push({ storage_path: a.storage_path, file_name: a.file_name, mime_type: a.mime_type });
           }
 
+          const { data: scoreRows } = await supabaseAdmin
+            .from("feedback_scores")
+            .select("parameter_name, selected_percentage, display_order")
+            .eq("feedback_id", fb.id)
+            .order("display_order", { ascending: true });
+          const metrics = (scoreRows ?? [])
+            .filter((r: any) => r.selected_percentage != null)
+            .map((r: any) => ({ label: r.parameter_name as string, score: Number(r.selected_percentage) }));
+
           const { subject, html, text } = renderFeedbackEmail({
             feedbackId: fb.id,
             title: fb.title,
@@ -82,6 +91,7 @@ export const Route = createFileRoute("/api/public/hooks/feedback-escalations")({
             category: fb.category,
             feedbackType: fb.feedback_type,
             severity: fb.severity,
+            interactionType: (fb as any).interaction_type,
             score: fb.score as number | null,
             summary: fb.summary,
             strengths: fb.strengths,
@@ -96,6 +106,7 @@ export const Route = createFileRoute("/api/public/hooks/feedback-escalations")({
             signatureHtml: settings.signature_html,
             confidentialityNotice: settings.confidentiality_notice,
             attachmentLinks,
+            metrics,
           });
 
           await supabaseAdmin.from("email_queue").insert({
