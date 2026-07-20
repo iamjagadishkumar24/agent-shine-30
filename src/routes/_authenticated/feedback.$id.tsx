@@ -168,6 +168,13 @@ function FeedbackDetail() {
     },
   });
 
+  const getScoresFn = useServerFn(getFeedbackScores);
+  const { data: scoreRows = [] } = useQuery({
+    queryKey: ["feedback-scores", id],
+    queryFn: () => getScoresFn({ data: { feedbackId: id } }),
+  });
+  useRealtimeInvalidate("feedback_scores", [["feedback-scores", id]], { filter: `feedback_id=eq.${id}` });
+
   const { data: latestQueue } = useQuery({
     queryKey: ["feedback-queue", id],
     queryFn: async () => {
