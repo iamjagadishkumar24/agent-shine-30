@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "check:rebrand": "node scripts/check-rebrand.mjs",
+    "verify:feedback-emails": "bunx tsx scripts/verify-feedback-emails.ts",
+    "test:feedback-emails": "bunx vitest run tests/unit/feedback-email.snapshot.test.ts tests/unit/feedback-email.narratives.test.ts",
     "format": "prettier --write .",
     "prepare": "husky"
   },

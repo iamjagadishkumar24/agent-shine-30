@@ -50,7 +50,10 @@ type Failure = { case: string; message: string };
 const failures: Failure[] = [];
 const summaryRows: string[] = [];
 
-mkdirSync("/mnt/documents/feedback-email-verification", { recursive: true });
+const OUT_DIR =
+  process.env.FEEDBACK_EMAIL_VERIFY_OUT_DIR ??
+  "/mnt/documents/feedback-email-verification";
+mkdirSync(OUT_DIR, { recursive: true });
 
 for (const c of cases) {
   const metrics: FeedbackMetric[] = QUALITY_PARAMETERS.map((label, i) => ({ label, score: c.scores[i] }));
@@ -135,8 +138,8 @@ for (const c of cases) {
   }
 
   // Write artifacts for human inspection
-  writeFileSync(`/mnt/documents/feedback-email-verification/${c.id}.html`, html);
-  writeFileSync(`/mnt/documents/feedback-email-verification/${c.id}.txt`, rendered.text);
+  writeFileSync(`${OUT_DIR}/${c.id}.html`, html);
+  writeFileSync(`${OUT_DIR}/${c.id}.txt`, rendered.text);
 
   summaryRows.push(
     `${c.id.padEnd(14)}  interaction=${c.interaction.padEnd(4)}  scores=[${c.scores.join(",")}]  expected=${expectedOverallLabel}  status=${failures.filter((f) => f.case === c.id).length === 0 ? "PASS" : "FAIL"}`,
@@ -147,10 +150,26 @@ console.log("\n=== Feedback Email Verification ===");
 for (const row of summaryRows) console.log(row);
 console.log("");
 
+// Machine-readable summary for CI consumers.
+writeFileSync(
+  `${OUT_DIR}/summary.json`,
+  JSON.stringify(
+    {
+      totalCases: cases.length,
+      failed: failures.length,
+      passed: cases.length - new Set(failures.map((f) => f.case)).size,
+      failures,
+      cases: summaryRows,
+    },
+    null,
+    2,
+  ),
+);
+
 if (failures.length) {
   console.error(`\n✗ ${failures.length} assertion(s) failed:\n`);
   for (const f of failures) console.error(`  [${f.case}] ${f.message}`);
   process.exit(1);
 }
 
-console.log(`✓ All ${cases.length} cases passed. Artifacts: /mnt/documents/feedback-email-verification/`);
+console.log(`✓ All ${cases.length} cases passed. Artifacts: ${OUT_DIR}/`);

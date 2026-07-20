@@ -1,0 +1,76 @@
+name: Feedback Email Contract
+
+on:
+  pull_request:
+    paths:
+      - "src/lib/feedback-email.templates.ts"
+      - "src/lib/feedback-email.functions.ts"
+      - "src/lib/brand.ts"
+      - "scripts/verify-feedback-emails.ts"
+      - "tests/unit/feedback-email.*.test.ts"
+      - "package.json"
+      - ".github/workflows/feedback-email-contract.yml"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Verify rendered feedback emails
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      # Redirect artifact output away from the local /mnt/documents path.
+      FEEDBACK_EMAIL_VERIFY_OUT_DIR: ${{ github.workspace }}/feedback-email-verification
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Snapshot & narrative unit tests
+        id: unit
+        run: bun run test:feedback-emails
+
+      - name: Render & assert feedback emails
+        id: verify
+        run: bun run verify:feedback-emails
+
+      - name: Upload verification artifacts
+        # Always try to upload — most useful on failure, but pass runs are handy too.
+        if: always() && hashFiles(format('{0}/summary.json', env.FEEDBACK_EMAIL_VERIFY_OUT_DIR)) != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: feedback-email-verification
+          path: ${{ env.FEEDBACK_EMAIL_VERIFY_OUT_DIR }}
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Annotate failure summary
+        if: failure()
+        run: |
+          {
+            echo "## Feedback Email Contract failed"
+            echo ""
+            echo "- Unit tests: ${{ steps.unit.outcome }}"
+            echo "- Render/assert: ${{ steps.verify.outcome }}"
+            echo ""
+            if [ -f "$FEEDBACK_EMAIL_VERIFY_OUT_DIR/summary.json" ]; then
+              echo '<details><summary>summary.json</summary>'
+              echo ''
+              echo '```json'
+              cat "$FEEDBACK_EMAIL_VERIFY_OUT_DIR/summary.json"
+              echo '```'
+              echo '</details>'
+            fi
+            echo ""
+            echo "Download the \`feedback-email-verification\` artifact for full HTML/text renders."
+          } >> "$GITHUB_STEP_SUMMARY"
