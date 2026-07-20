@@ -443,6 +443,12 @@ function AnalyticsPage() {
           </>
         )}
       </div>
+      <DrillSheet
+        drill={drill}
+        onClose={() => setDrill(null)}
+        feedback={feedback}
+        agents={agents}
+      />
     </div>
   );
 }
