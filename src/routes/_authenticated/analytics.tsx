@@ -859,10 +859,16 @@ function DrillSheet({
           </Table>
         </div>
         {rows.length > 500 && (
-          <div className="mt-2 text-center text-[11px] text-muted-foreground">
+          <div
+            data-testid="drill-overflow-note"
+            data-total={rows.length}
+            data-shown={500}
+            className="mt-2 text-center text-[11px] text-muted-foreground"
+          >
             Showing first 500 of {rows.length.toLocaleString()}. Export CSV for the full list.
           </div>
         )}
+
       </SheetContent>
     </Sheet>
   );
