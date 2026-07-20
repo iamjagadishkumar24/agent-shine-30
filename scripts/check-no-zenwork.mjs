@@ -28,6 +28,8 @@ const EXCLUDES = [
   "src/routeTree.gen.ts",
   "scripts/check-no-zenwork.mjs",
   "tests/unit/no-zenwork.test.ts",
+  ".github/workflows/rebrand-guard.yml",
+  "rebrand-guard-report",
 ];
 
 function run(cmd, args) {
