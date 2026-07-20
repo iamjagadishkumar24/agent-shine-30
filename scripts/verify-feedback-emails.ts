@@ -50,7 +50,10 @@ type Failure = { case: string; message: string };
 const failures: Failure[] = [];
 const summaryRows: string[] = [];
 
-mkdirSync("/mnt/documents/feedback-email-verification", { recursive: true });
+const OUT_DIR =
+  process.env.FEEDBACK_EMAIL_VERIFY_OUT_DIR ??
+  "/mnt/documents/feedback-email-verification";
+mkdirSync(OUT_DIR, { recursive: true });
 
 for (const c of cases) {
   const metrics: FeedbackMetric[] = QUALITY_PARAMETERS.map((label, i) => ({ label, score: c.scores[i] }));
