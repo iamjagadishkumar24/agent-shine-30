@@ -135,6 +135,14 @@ KPI_TO_SHEET_TITLE = {
     "Acknowledgement rate": "Acknowledged feedback",
 }
 
+# Chip data-kpi attribute matches the DrillKey union in analytics.tsx.
+KPI_TO_DRILL_KEY = {
+    "Total feedback": "total",
+    "Avg Quality score": "scored",
+    "Delivery rate": "delivered",
+    "Acknowledgement rate": "acknowledged",
+}
+
 
 def skip(msg: str) -> None:
     print(f"SKIP: {msg}")
@@ -212,6 +220,44 @@ async def drill_and_verify(page, label: str) -> dict:
         await page.screenshot(path=str(SS / f"fail_{label.replace(' ', '_')}.png"))
         fail(f"drill sheet did not show title '{expected_title}' for '{label}'")
 
+    # ── Filter chip assertions ────────────────────────────────────────────
+    # KPI chip must match the card that was clicked.
+    kpi_chip = dialog.locator('[data-testid="drill-chip-kpi"]')
+    await kpi_chip.wait_for(timeout=3000)
+    chip_kpi_key = await kpi_chip.get_attribute("data-kpi") or ""
+    expected_key = KPI_TO_DRILL_KEY[label]
+    if chip_kpi_key != expected_key:
+        fail(f"KPI chip data-kpi={chip_kpi_key!r} != expected {expected_key!r} "
+             f"for '{label}'")
+    chip_kpi_text = (await kpi_chip.inner_text()).strip()
+    if expected_title not in chip_kpi_text:
+        fail(f"KPI chip text {chip_kpi_text!r} missing title {expected_title!r}")
+
+    # Range chip must match the seeded WINDOW_DAYS window (30d preset).
+    range_chip = dialog.locator('[data-testid="drill-chip-range"]')
+    await range_chip.wait_for(timeout=3000)
+    preset_attr = await range_chip.get_attribute("data-preset") or ""
+    if preset_attr != "30d":
+        fail(f"range chip data-preset={preset_attr!r} != '30d' "
+             f"— URL/preset drifted from seed window")
+    range_start_attr = await range_chip.get_attribute("data-range-start") or ""
+    range_end_attr = await range_chip.get_attribute("data-range-end") or ""
+    if range_start_attr in ("", "all") or range_end_attr in ("", "all"):
+        fail(f"range chip missing start/end attrs "
+             f"(start={range_start_attr!r}, end={range_end_attr!r})")
+    # Sanity-check the window width matches WINDOW_DAYS ± 1 day.
+    try:
+        rs = datetime.fromisoformat(range_start_attr.replace("Z", "+00:00"))
+        re = datetime.fromisoformat(range_end_attr.replace("Z", "+00:00"))
+        span_days = (re - rs).total_seconds() / 86400
+        if not (WINDOW_DAYS - 1.5 <= span_days <= WINDOW_DAYS + 0.5):
+            fail(f"range chip span={span_days:.2f}d != seeded {WINDOW_DAYS}d "
+                 f"({range_start_attr} .. {range_end_attr})")
+    except ValueError:
+        fail(f"range chip attrs not ISO datetimes: "
+             f"{range_start_attr!r} / {range_end_attr!r}")
+
+
     # Count rows and Open links inside the dialog.
     row_count = await dialog.locator("tbody tr").count()
     # Filter rows that actually have data (skip the "No matching records" cell).
@@ -237,7 +283,15 @@ async def drill_and_verify(page, label: str) -> dict:
         if await dialog.is_visible():
             fail(f"drill sheet for '{label}' did not close on Escape")
 
-    return {"label": label, "rows": row_count, "open_links": open_count, "sample_href": open_href}
+    return {
+        "label": label,
+        "rows": row_count,
+        "open_links": open_count,
+        "sample_href": open_href,
+        "chip_kpi": chip_kpi_key,
+        "chip_preset": preset_attr,
+        "chip_range": [range_start_attr, range_end_attr],
+    }
 
 
 async def main() -> None:

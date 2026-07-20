@@ -448,7 +448,12 @@ function AnalyticsPage() {
         onClose={() => setDrill(null)}
         feedback={feedback}
         agents={agents}
+        rangeStart={start}
+        rangeEnd={end}
+        rangeAll={all}
+        preset={search.preset}
       />
+
     </div>
   );
 }
@@ -667,16 +672,33 @@ function DrillSheet({
   onClose,
   feedback,
   agents,
+  rangeStart,
+  rangeEnd,
+  rangeAll,
+  preset,
 }: {
   drill: DrillKey | null;
   onClose: () => void;
   feedback: FeedbackRow[];
   agents: AgentRow[];
+  rangeStart: Date;
+  rangeEnd: Date;
+  rangeAll: boolean;
+  preset: string;
 }) {
   const open = drill !== null;
   const nameById = useMemo(() => new Map(agents.map((a) => [a.id, a.full_name ?? "Unassigned"])), [agents]);
   const rows = useMemo(() => (drill ? filterDrill(feedback, drill) : []), [feedback, drill]);
   const meta = drill ? DRILL_META[drill] : null;
+
+  const presetLabel = useMemo(() => {
+    const p = PRESETS.find((x) => x.key === preset);
+    return p?.label ?? "Custom";
+  }, [preset]);
+  const rangeLabel = rangeAll
+    ? "All time"
+    : `${format(rangeStart, "MMM d, yyyy")} – ${format(rangeEnd, "MMM d, yyyy")}`;
+
 
   const downloadCsv = () => {
     const header = [
@@ -723,6 +745,28 @@ function DrillSheet({
           <SheetTitle>{meta?.title ?? "Feedback"}</SheetTitle>
           <SheetDescription>{meta?.description}</SheetDescription>
         </SheetHeader>
+        <div
+          data-testid="drill-chips"
+          className="mt-3 flex flex-wrap items-center gap-2"
+        >
+          <Badge
+            variant="secondary"
+            data-testid="drill-chip-kpi"
+            data-kpi={drill ?? ""}
+          >
+            KPI: {meta?.title ?? "—"}
+          </Badge>
+          <Badge
+            variant="outline"
+            data-testid="drill-chip-range"
+            data-preset={preset}
+            data-range-start={rangeAll ? "all" : rangeStart.toISOString()}
+            data-range-end={rangeAll ? "all" : rangeEnd.toISOString()}
+          >
+            Range: {presetLabel} · {rangeLabel}
+          </Badge>
+        </div>
+
         <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
           <span>
             {rows.length.toLocaleString()} record{rows.length === 1 ? "" : "s"}
