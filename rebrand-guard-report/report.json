@@ -556,7 +556,7 @@
     }
   ],
   "per_file": {},
-  "generated_at": "2026-07-20T23:37:15.481Z",
+  "generated_at": "2026-07-20T23:42:29.679Z",
   "detection": "case-insensitive + unicode-confusables + separator-insertions + zero-width-stripped",
   "matches": []
 }
