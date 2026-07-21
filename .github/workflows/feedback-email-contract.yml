@@ -94,6 +94,46 @@ jobs:
           path: ${{ github.workspace }}/feedback-email-baseline
           if_no_artifact_found: warn
 
+      - name: Resolve baseline run metadata
+        if: failure() && github.event_name == 'schedule'
+        id: baseline_meta
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const outDir = process.env.FEEDBACK_EMAIL_VERIFY_OUT_DIR;
+            const meta = { found: false };
+            try {
+              const { data } = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: context.workflow,
+                branch: context.payload.repository.default_branch,
+                status: 'success',
+                per_page: 5,
+              });
+              const run = (data.workflow_runs || []).find(r => r.id !== context.runId);
+              if (run) {
+                Object.assign(meta, {
+                  found: true,
+                  run_id: run.id,
+                  run_url: run.html_url,
+                  head_sha: run.head_sha,
+                  head_branch: run.head_branch,
+                  event: run.event,
+                  created_at: run.created_at,
+                  updated_at: run.updated_at,
+                });
+              }
+            } catch (e) {
+              core.warning(`Could not resolve baseline run: ${e.message}`);
+            }
+            fs.mkdirSync(`${outDir}/diffs`, { recursive: true });
+            fs.writeFileSync(`${outDir}/diffs/baseline-meta.json`, JSON.stringify(meta, null, 2));
+            core.setOutput('found', String(meta.found));
+
+
+
       - name: Compute HTML/text diffs vs baseline
         if: failure() && github.event_name == 'schedule'
         id: diffs
@@ -200,6 +240,19 @@ jobs:
               body += `\n<details><summary>summary.json</summary>\n\n\`\`\`json\n${JSON.stringify(summary, null, 2).slice(0, 30000)}\n\`\`\`\n</details>\n`;
             }
 
+            // Baseline provenance so the diff comparison is auditable.
+            let baselineMeta = null;
+            try { baselineMeta = JSON.parse(fs.readFileSync(`${outDir}/diffs/baseline-meta.json`, 'utf8')); } catch {}
+            if (baselineMeta?.found) {
+              body +=
+                `\n**Baseline compared against**\n` +
+                `- Run: [${baselineMeta.run_id}](${baselineMeta.run_url}) (event: \`${baselineMeta.event}\`)\n` +
+                `- Commit: \`${baselineMeta.head_sha}\` on \`${baselineMeta.head_branch}\`\n` +
+                `- Finished: \`${baselineMeta.updated_at}\` (started \`${baselineMeta.created_at}\`)\n`;
+            } else {
+              body += `\n_No previous successful nightly run found — diff comparison unavailable._\n`;
+            }
+
             // Inline HTML/text diffs vs the previous successful nightly artifact.
             try {
               const diff = fs.readFileSync(`${outDir}/diffs/combined.md`, 'utf8');
@@ -207,8 +260,11 @@ jobs:
                 body += `\n<details open><summary>HTML / text diff vs last green nightly</summary>\n\n${diff.slice(0, 55000)}\n</details>\n`;
               }
             } catch {
-              body += `\n_No baseline artifact was available to diff against._\n`;
+              if (baselineMeta?.found) {
+                body += `\n_Baseline run resolved but no diff file was produced._\n`;
+              }
             }
+
 
 
             const title = `Feedback email contract drift (${new Date().toISOString().slice(0,10)})`;
