@@ -24,12 +24,12 @@ import {
 import { cn } from "@/lib/utils";
 
 
-type AuthSearch = { next?: string; mode?: "signin" | "signup" };
+type AuthSearch = { next?: string; mode?: "signin" | "signup" | "forgot" };
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): AuthSearch => {
     const out: AuthSearch = {};
     if (typeof s.next === "string") out.next = s.next;
-    if (s.mode === "signup" || s.mode === "signin") out.mode = s.mode;
+    if (s.mode === "signup" || s.mode === "signin" || s.mode === "forgot") out.mode = s.mode;
     return out;
   },
   component: AuthPage,
