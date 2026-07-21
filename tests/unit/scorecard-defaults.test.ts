@@ -7,13 +7,13 @@ import {
 import { computeOverall, computeEarnedPoints } from "@/lib/scorecard";
 
 const EXPECTED = [
-  { name: "Accuracy", max_points: 20 },
-  { name: "Understanding Customer Issues", max_points: 25 },
-  { name: "Customer Satisfaction", max_points: 5 },
+  { name: "Accuracy & Quality", max_points: 20 },
+  { name: "Understanding Customer Requirements", max_points: 25 },
+  { name: "Customer Satisfaction (CSAT)", max_points: 5 },
   { name: "Product Knowledge & Resolution", max_points: 20 },
-  { name: "Average Handling Time", max_points: 10 },
-  { name: "Compliance", max_points: 10 },
-  { name: "Technical Accuracy / IHD", max_points: 10 },
+  { name: "Average Handling Time (AHT)", max_points: 10 },
+  { name: "Policy & Process Compliance", max_points: 10 },
+  { name: "Technical Accuracy / Issue Handling", max_points: 10 },
 ] as const;
 
 describe("default active scorecard", () => {
@@ -62,13 +62,13 @@ describe("weighted score calculation", () => {
   });
 
   it("weights the higher-max parameters more than the lower-max ones", () => {
-    // Only "Understanding Customer Issues" (weight 25) scored 100, rest 0.
+    // Only "Understanding Customer Requirements" (weight 25) scored 100, rest 0.
     const scoresA = EXPECTED.map((p) =>
-      p.name === "Understanding Customer Issues" ? 100 : 0,
+      p.name === "Understanding Customer Requirements" ? 100 : 0,
     );
-    // Only "Customer Satisfaction" (weight 5) scored 100, rest 0.
+    // Only "Customer Satisfaction (CSAT)" (weight 5) scored 100, rest 0.
     const scoresB = EXPECTED.map((p) =>
-      p.name === "Customer Satisfaction" ? 100 : 0,
+      p.name === "Customer Satisfaction (CSAT)" ? 100 : 0,
     );
     expect(computeOverallScore(scoresA)).toBeCloseTo(25, 6);
     expect(computeOverallScore(scoresB)).toBeCloseTo(5, 6);
