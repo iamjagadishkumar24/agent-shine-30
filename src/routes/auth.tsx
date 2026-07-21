@@ -310,7 +310,7 @@ export function AuthPage({ initialMode, next, initialEmail }: { initialMode: Mod
               {mode === "forgot" && (
                 <button
                   type="button"
-                  onClick={() => { setMode("signin"); setResetSent(false); }}
+                  onClick={() => { setResetSent(false); navigate({ to: "/auth/signin", search: next ? { next } : {} }); }}
                   className="mb-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" /> Back to sign in
