@@ -175,7 +175,7 @@ export const listAgentReportFeedback = createServerFn({ method: "GET" })
 
     if (data.from) q = q.gte("created_at", data.from);
     if (data.to) q = q.lte("created_at", data.to);
-    if (data.status) q = q.eq("status", data.status);
+    if (data.status) q = q.eq("status", data.status as any);
     if (data.ackStatus) q = q.eq("acknowledgement_status", data.ackStatus);
     if (data.interactionType) q = q.eq("interaction_type", data.interactionType);
     if (typeof data.minScore === "number") q = q.gte("score", data.minScore);
