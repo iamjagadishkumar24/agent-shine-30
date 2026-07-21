@@ -182,7 +182,7 @@ jobs:
 
 
       - name: Compute SHA256 checksums for baseline + current artifacts
-        if: failure() && github.event_name == 'schedule'
+        if: always() && github.event_name == 'schedule'
         id: checksums
         run: |
           set -e
