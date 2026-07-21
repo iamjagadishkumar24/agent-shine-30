@@ -428,27 +428,35 @@ export const sendFeedbackTestEmail = createServerFn({ method: "POST" })
 
     const appBaseUrl = getAppBaseUrl();
     const metrics = await loadMetrics(supabase, fb.id);
+    const { teamName, evaluatorName } = await loadRelatedNames(supabase, fb);
     const rendered = renderFeedbackEmail({
       feedbackId: fb.id,
+      caseNumber: (fb as any).case_number ?? null,
       title: fb.title,
       agentName: fb.agent?.full_name ?? "Agent",
+      teamName,
+      evaluatorName,
       managerName: fb.agent?.manager_name ?? undefined,
       category: fb.category,
       feedbackType: fb.feedback_type,
       severity: fb.severity,
       interactionType: (fb as any).interaction_type,
+      interactionReference: (fb as any).interaction_reference ?? null,
+      interactionDate: (fb as any).interaction_date ?? null,
       score: fb.score as number | null,
       summary: fb.summary,
       strengths: fb.strengths,
       improvements: fb.improvements,
       recommendedActions: fb.recommended_actions,
       dueDate: fb.due_date,
+      acknowledgementDueAt: (fb as any).acknowledgement_due_at ?? null,
       appBaseUrl,
       senderName: settings.sender_name,
       logoUrl: settings.logo_url ?? `${appBaseUrl}${qualipulseMark.url}`,
       signatureHtml: settings.signature_html,
       confidentialityNotice: settings.confidentiality_notice,
       metrics,
+      replyToEmail: settings.reply_to ?? "itsjack2025@gmail.com",
     });
 
     const { getProvider } = await import("@/lib/email/providers.server");
