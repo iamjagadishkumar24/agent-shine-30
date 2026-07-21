@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getAgentReport, listAgentReportFeedback, listAgentFeedbackEmails } from "@/lib/agent-reports.functions";
-import { ArrowLeft, FileText, FileSpreadsheet, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, FileText, FileSpreadsheet, ArrowUpDown, ChevronLeft, ChevronRight, Download, Loader2 } from "lucide-react";
 import { toCsv, toPdf } from "@/lib/reports";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend } from "recharts";
