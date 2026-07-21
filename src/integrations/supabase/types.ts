@@ -668,7 +668,7 @@ export type Database = {
           agent_response_received_at?: string | null
           agent_visible_notes?: string | null
           case_id?: string | null
-          case_number: string
+          case_number?: string
           category: string
           click_count?: number
           clicked_at?: string | null
