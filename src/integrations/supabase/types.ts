@@ -1463,6 +1463,33 @@ export type Database = {
         }
         Relationships: []
       }
+      security_definer_audit: {
+        Row: {
+          checked_at: string
+          details: Json | null
+          function_name: string
+          granted_role: string
+          id: string
+          status: string
+        }
+        Insert: {
+          checked_at?: string
+          details?: Json | null
+          function_name: string
+          granted_role: string
+          id?: string
+          status: string
+        }
+        Update: {
+          checked_at?: string
+          details?: Json | null
+          function_name?: string
+          granted_role?: string
+          id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       teams: {
         Row: {
           created_at: string
@@ -1569,6 +1596,14 @@ export type Database = {
         Returns: boolean
       }
       recalc_agent_qa_score: { Args: { _agent_id: string }; Returns: undefined }
+      run_security_definer_audit: {
+        Args: never
+        Returns: {
+          function_name: string
+          granted_role: string
+          status: string
+        }[]
+      }
     }
     Enums: {
       action_item_status: "open" | "in_progress" | "done" | "blocked"
