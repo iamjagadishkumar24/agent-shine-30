@@ -94,6 +94,46 @@ jobs:
           path: ${{ github.workspace }}/feedback-email-baseline
           if_no_artifact_found: warn
 
+      - name: Resolve baseline run metadata
+        if: failure() && github.event_name == 'schedule'
+        id: baseline_meta
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const outDir = process.env.FEEDBACK_EMAIL_VERIFY_OUT_DIR;
+            const meta = { found: false };
+            try {
+              const { data } = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: context.workflow,
+                branch: context.payload.repository.default_branch,
+                status: 'success',
+                per_page: 5,
+              });
+              const run = (data.workflow_runs || []).find(r => r.id !== context.runId);
+              if (run) {
+                Object.assign(meta, {
+                  found: true,
+                  run_id: run.id,
+                  run_url: run.html_url,
+                  head_sha: run.head_sha,
+                  head_branch: run.head_branch,
+                  event: run.event,
+                  created_at: run.created_at,
+                  updated_at: run.updated_at,
+                });
+              }
+            } catch (e) {
+              core.warning(`Could not resolve baseline run: ${e.message}`);
+            }
+            fs.mkdirSync(`${outDir}/diffs`, { recursive: true });
+            fs.writeFileSync(`${outDir}/diffs/baseline-meta.json`, JSON.stringify(meta, null, 2));
+            core.setOutput('found', String(meta.found));
+
+
+
       - name: Compute HTML/text diffs vs baseline
         if: failure() && github.event_name == 'schedule'
         id: diffs
