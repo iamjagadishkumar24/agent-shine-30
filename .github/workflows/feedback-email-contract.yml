@@ -181,6 +181,52 @@ jobs:
           echo "no_baseline=0" >> "$GITHUB_OUTPUT"
 
 
+      - name: Compute SHA256 checksums for baseline + current artifacts
+        if: failure() && github.event_name == 'schedule'
+        id: checksums
+        run: |
+          set -e
+          CUR="$FEEDBACK_EMAIL_VERIFY_OUT_DIR"
+          BASE="${{ github.workspace }}/feedback-email-baseline"
+          OUT="$CUR/diffs"
+          mkdir -p "$OUT"
+
+          hash_dir() {
+            local dir="$1"
+            [ -d "$dir" ] || { echo "[]"; return; }
+            ( cd "$dir" && find . -maxdepth 1 -type f \( -name '*.html' -o -name '*.txt' -o -name 'summary.json' \) \
+              | sort | while read -r f; do
+                  name="${f#./}"
+                  sha=$(sha256sum "$f" | awk '{print $1}')
+                  size=$(wc -c < "$f" | tr -d ' ')
+                  printf '{"name":"%s","sha256":"%s","bytes":%s}\n' "$name" "$sha" "$size"
+                done | jq -s '.'
+            )
+          }
+
+          CUR_JSON=$(hash_dir "$CUR")
+          BASE_JSON=$(hash_dir "$BASE")
+          jq -n --argjson current "$CUR_JSON" --argjson baseline "$BASE_JSON" \
+            '{current:$current, baseline:$baseline}' > "$OUT/checksums.json"
+
+          # Compact markdown table joined by filename (baseline sha | current sha | match?).
+          {
+            echo "| File | Baseline SHA256 | Current SHA256 | Match |"
+            echo "| --- | --- | --- | --- |"
+            jq -r '
+              ((.baseline // []) | map({key:.name, value:.sha256}) | from_entries) as $b
+              | ((.current  // []) | map({key:.name, value:.sha256}) | from_entries) as $c
+              | (($b | keys) + ($c | keys)) | unique | .[] as $n
+              | ($b[$n] // "—") as $bs
+              | ($c[$n] // "—") as $cs
+              | "| `\($n)` | `\(($bs|tostring)[0:12])…` | `\(($cs|tostring)[0:12])…` | \(if ($bs==$cs and $bs!="—") then "✅" elif ($bs=="—" or $cs=="—") then "➕/➖" else "❌" end) |"
+            ' "$OUT/checksums.json"
+          } > "$OUT/checksums.md"
+
+
+
+
+
       - name: Open drift issue (scheduled runs only)
         if: failure() && github.event_name == 'schedule'
         uses: actions/github-script@v7
