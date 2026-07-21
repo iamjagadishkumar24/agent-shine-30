@@ -561,7 +561,7 @@ export function AuthPage({ initialMode, next, initialEmail }: { initialMode: Mod
                 <button
                   type="button"
                   className="font-semibold text-primary hover:underline"
-                  onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setTouched({}); setConfirmPassword(""); }}
+                  onClick={() => { setTouched({}); setConfirmPassword(""); navigate({ to: mode === "signin" ? "/auth/signup" : "/auth/signin", search: next ? { next } : {} }); }}
                 >
                   {mode === "signin" ? "Sign up" : "Sign in"}
                 </button>
