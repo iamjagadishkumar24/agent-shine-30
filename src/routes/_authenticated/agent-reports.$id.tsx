@@ -291,22 +291,25 @@ function AgentReportDetail() {
     if (!agent) return;
     try {
       setExporting("em-csv");
-      const rows = await fetchAllEmails();
-      toCsv(rows.map((e) => ({
-        Subject: e.subject ?? "",
-        Recipient: e.to_email ?? "",
-        Status: e.status ?? "",
-        Provider: e.provider ?? "",
-        "Provider Message ID": e.provider_message_id ?? "",
-        "Provider Status": e.provider_status ?? "",
-        Attempts: `${e.attempts}/${e.max_attempts}`,
-        "Last Error": e.last_error ?? "",
-        Sent: e.sent_at ? format(new Date(e.sent_at), "yyyy-MM-dd HH:mm") : "",
-        Delivered: e.delivered_at ? format(new Date(e.delivered_at), "yyyy-MM-dd HH:mm") : "",
-        Bounced: e.bounced_at ? format(new Date(e.bounced_at), "yyyy-MM-dd HH:mm") : "",
-        "Bounce Reason": e.bounce_reason ?? "",
-        Created: e.created_at ? format(new Date(e.created_at), "yyyy-MM-dd HH:mm") : "",
-      })), `agent-${safeName()}-emails.csv`);
+      await enqueueFn({
+        data: {
+          kind: "agent_emails",
+          label: `Email delivery — ${agent.full_name}`,
+          params: {
+            agentId: id,
+            agentSlug: safeName(),
+            from: range.from,
+            to: range.to,
+            search: emailSearch || undefined,
+            status: emailStatus !== "all" ? emailStatus : undefined,
+            sortBy: emailSortBy,
+            sortDir: emailSortDir,
+          },
+        },
+      });
+      toast.success("Export started", { description: "We'll notify you when it's ready — check the Exports menu." });
+    } catch (e: any) {
+      toast.error("Could not start export", { description: e?.message ?? "" });
     } finally { setExporting(null); }
   };
 
