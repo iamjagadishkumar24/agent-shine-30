@@ -39,10 +39,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Playwright
+      - name: Install Playwright + imaging deps
         run: |
           python -m pip install --upgrade pip
-          python -m pip install playwright==1.48.0
+          python -m pip install playwright==1.48.0 Pillow==10.4.0 numpy==2.1.1
           python -m playwright install --with-deps chromium
 
       - name: Run badge DOM + screenshot guard
@@ -50,11 +50,21 @@ jobs:
           BASE_URL: ${{ github.event.inputs.base_url || matrix.target.url }}
         run: python3 tests/e2e/no_lovable_badge.spec.py
 
+      - name: Run visual diff guard (screenshot vs baseline)
+        env:
+          BASE_URL: ${{ github.event.inputs.base_url || matrix.target.url }}
+          TARGET: ${{ matrix.target.name }}
+          DIFF_THRESHOLD: "8.0"
+        run: python3 tests/e2e/badge_visual_diff.py
+
       - name: Upload badge guard screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: no-lovable-badge-${{ matrix.target.name }}
-          path: tests/e2e/screenshots/no_lovable_badge/**
+          path: |
+            tests/e2e/screenshots/no_lovable_badge/**
+            tests/e2e/screenshots/no_lovable_badge_actual/${{ matrix.target.name }}/**
+            tests/e2e/screenshots/no_lovable_badge_diff/${{ matrix.target.name }}/**
           if-no-files-found: ignore
           retention-days: 14
