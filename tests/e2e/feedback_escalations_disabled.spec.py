@@ -46,6 +46,7 @@ def count(table: str, where: str) -> int:
 
 
 def post(headers: dict[str, str]) -> tuple[int, dict]:
+    headers = {"User-Agent": "qualipulse-e2e/1.0", **headers}
     req = urllib.request.Request(ENDPOINT, data=b"{}", method="POST",
                                  headers={"Content-Type": "application/json", **headers})
     with urllib.request.urlopen(req, timeout=15) as resp:
