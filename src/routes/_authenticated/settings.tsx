@@ -23,6 +23,7 @@ import {
   previewFeedbackTemplate,
   sendFeedbackTemplateTest,
 } from "@/lib/email-settings.functions";
+import { getActiveScorecard, saveActiveScorecard } from "@/lib/scorecard.functions";
 import {
   listEmailQueue,
   emailQueueSummary,
