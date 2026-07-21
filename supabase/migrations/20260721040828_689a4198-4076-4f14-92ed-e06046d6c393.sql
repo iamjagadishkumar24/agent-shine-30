@@ -1,0 +1,1 @@
+revoke execute on function public.tg_export_job_notify() from public, anon, authenticated;

@@ -10,8 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getAgentReport, listAgentReportFeedback, listAgentFeedbackEmails } from "@/lib/agent-reports.functions";
+import { enqueueExport } from "@/lib/export-jobs.functions";
 import { ArrowLeft, FileText, FileSpreadsheet, ArrowUpDown, ChevronLeft, ChevronRight, Download, Loader2 } from "lucide-react";
 import { toCsv, toPdf } from "@/lib/reports";
+import { toast } from "sonner";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend } from "recharts";
 
@@ -227,25 +229,34 @@ function AgentReportDetail() {
 
   const safeName = () => (agent?.full_name ?? "agent").replace(/\s+/g, "-");
 
+  const enqueueFn = useServerFn(enqueueExport);
+
   const exportFeedbackCsv = async () => {
     if (!agent) return;
     try {
       setExporting("fb-csv");
-      const rows = await fetchAllFeedback();
-      toCsv(rows.map((f) => ({
-        Case: f.case_number ?? "",
-        Title: f.title ?? "",
-        Type: f.interaction_type ?? "",
-        Score: f.score ?? "",
-        "Overall %": f.overall_percentage ?? "",
-        Status: f.status ?? "",
-        Acknowledgement: f.acknowledgement_status ?? "",
-        Category: f.category ?? "",
-        Sent: f.sent_at ? format(new Date(f.sent_at), "yyyy-MM-dd HH:mm") : "",
-        Delivered: f.delivered_at ? format(new Date(f.delivered_at), "yyyy-MM-dd HH:mm") : "",
-        Acknowledged: f.acknowledged_at ? format(new Date(f.acknowledged_at), "yyyy-MM-dd HH:mm") : "",
-        Created: f.created_at ? format(new Date(f.created_at), "yyyy-MM-dd HH:mm") : "",
-      })), `agent-${safeName()}-feedback.csv`);
+      await enqueueFn({
+        data: {
+          kind: "agent_feedback",
+          label: `Feedback — ${agent.full_name}`,
+          params: {
+            agentId: id,
+            agentSlug: safeName(),
+            from: range.from,
+            to: range.to,
+            search: search || undefined,
+            status: status !== "all" ? status : undefined,
+            ackStatus: ackStatus !== "all" ? ackStatus : undefined,
+            interactionType: interaction !== "all" ? interaction : undefined,
+            minScore: minScore ? Number(minScore) : undefined,
+            maxScore: maxScore ? Number(maxScore) : undefined,
+            sortBy, sortDir,
+          },
+        },
+      });
+      toast.success("Export started", { description: "We'll notify you when it's ready — check the Exports menu." });
+    } catch (e: any) {
+      toast.error("Could not start export", { description: e?.message ?? "" });
     } finally { setExporting(null); }
   };
 
@@ -280,22 +291,25 @@ function AgentReportDetail() {
     if (!agent) return;
     try {
       setExporting("em-csv");
-      const rows = await fetchAllEmails();
-      toCsv(rows.map((e) => ({
-        Subject: e.subject ?? "",
-        Recipient: e.to_email ?? "",
-        Status: e.status ?? "",
-        Provider: e.provider ?? "",
-        "Provider Message ID": e.provider_message_id ?? "",
-        "Provider Status": e.provider_status ?? "",
-        Attempts: `${e.attempts}/${e.max_attempts}`,
-        "Last Error": e.last_error ?? "",
-        Sent: e.sent_at ? format(new Date(e.sent_at), "yyyy-MM-dd HH:mm") : "",
-        Delivered: e.delivered_at ? format(new Date(e.delivered_at), "yyyy-MM-dd HH:mm") : "",
-        Bounced: e.bounced_at ? format(new Date(e.bounced_at), "yyyy-MM-dd HH:mm") : "",
-        "Bounce Reason": e.bounce_reason ?? "",
-        Created: e.created_at ? format(new Date(e.created_at), "yyyy-MM-dd HH:mm") : "",
-      })), `agent-${safeName()}-emails.csv`);
+      await enqueueFn({
+        data: {
+          kind: "agent_emails",
+          label: `Email delivery — ${agent.full_name}`,
+          params: {
+            agentId: id,
+            agentSlug: safeName(),
+            from: range.from,
+            to: range.to,
+            search: emailSearch || undefined,
+            status: emailStatus !== "all" ? emailStatus : undefined,
+            sortBy: emailSortBy,
+            sortDir: emailSortDir,
+          },
+        },
+      });
+      toast.success("Export started", { description: "We'll notify you when it's ready — check the Exports menu." });
+    } catch (e: any) {
+      toast.error("Could not start export", { description: e?.message ?? "" });
     } finally { setExporting(null); }
   };
 

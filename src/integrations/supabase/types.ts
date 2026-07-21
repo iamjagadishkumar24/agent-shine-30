@@ -695,6 +695,66 @@ export type Database = {
           },
         ]
       }
+      export_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          file_name: string | null
+          file_path: string | null
+          format: string
+          id: string
+          kind: Database["public"]["Enums"]["export_job_kind"]
+          label: string | null
+          params: Json
+          progress: number
+          row_count: number | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["export_job_status"]
+          total: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          format?: string
+          id?: string
+          kind: Database["public"]["Enums"]["export_job_kind"]
+          label?: string | null
+          params?: Json
+          progress?: number
+          row_count?: number | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["export_job_status"]
+          total?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          format?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["export_job_kind"]
+          label?: string | null
+          params?: Json
+          progress?: number
+          row_count?: number | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["export_job_status"]
+          total?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           acknowledged_at: string | null
@@ -1637,6 +1697,13 @@ export type Database = {
         | "in_progress"
         | "missed"
         | "rescheduled"
+      export_job_kind: "agent_feedback" | "agent_emails"
+      export_job_status:
+        | "queued"
+        | "processing"
+        | "completed"
+        | "failed"
+        | "canceled"
       feedback_severity: "low" | "medium" | "high" | "critical"
       feedback_status:
         | "draft"
@@ -1824,6 +1891,14 @@ export const Constants = {
         "in_progress",
         "missed",
         "rescheduled",
+      ],
+      export_job_kind: ["agent_feedback", "agent_emails"],
+      export_job_status: [
+        "queued",
+        "processing",
+        "completed",
+        "failed",
+        "canceled",
       ],
       feedback_severity: ["low", "medium", "high", "critical"],
       feedback_status: [

@@ -44,6 +44,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
+import { ExportsMenu } from "@/components/exports/exports-menu";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -291,6 +292,7 @@ function AuthedLayout() {
             <span className="mx-1 hidden h-6 w-px bg-border/70 sm:block" aria-hidden="true" />
 
 
+            <ExportsMenu />
             <NotificationsBell userId={user.id} />
 
             <DropdownMenu>

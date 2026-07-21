@@ -45,6 +45,7 @@ import { Route as AuthenticatedAgentReportsIdRouteImport } from './routes/_authe
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicWebhooksInboundEmailRouteImport } from './routes/api/public/webhooks/inbound-email'
+import { Route as ApiPublicHooksProcessExportsRouteImport } from './routes/api/public/hooks/process-exports'
 import { Route as ApiPublicHooksFeedbackEscalationsRouteImport } from './routes/api/public/hooks/feedback-escalations'
 import { Route as ApiPublicHooksDrainEmailQueueRouteImport } from './routes/api/public/hooks/drain-email-queue'
 import { Route as ApiPublicHooksDispatchScheduledReportsRouteImport } from './routes/api/public/hooks/dispatch-scheduled-reports'
@@ -249,6 +250,12 @@ const ApiPublicWebhooksInboundEmailRoute =
     path: '/api/public/webhooks/inbound-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksProcessExportsRoute =
+  ApiPublicHooksProcessExportsRouteImport.update({
+    id: '/api/public/hooks/process-exports',
+    path: '/api/public/hooks/process-exports',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksFeedbackEscalationsRoute =
   ApiPublicHooksFeedbackEscalationsRouteImport.update({
     id: '/api/public/hooks/feedback-escalations',
@@ -342,6 +349,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
+  '/api/public/hooks/process-exports': typeof ApiPublicHooksProcessExportsRoute
   '/api/public/webhooks/inbound-email': typeof ApiPublicWebhooksInboundEmailRoute
   '/api/public/calendar/$token/ics': typeof ApiPublicCalendarTokenIcsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
@@ -388,6 +396,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
+  '/api/public/hooks/process-exports': typeof ApiPublicHooksProcessExportsRoute
   '/api/public/webhooks/inbound-email': typeof ApiPublicWebhooksInboundEmailRoute
   '/api/public/calendar/$token/ics': typeof ApiPublicCalendarTokenIcsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
@@ -436,6 +445,7 @@ export interface FileRoutesById {
   '/api/public/hooks/dispatch-scheduled-reports': typeof ApiPublicHooksDispatchScheduledReportsRoute
   '/api/public/hooks/drain-email-queue': typeof ApiPublicHooksDrainEmailQueueRoute
   '/api/public/hooks/feedback-escalations': typeof ApiPublicHooksFeedbackEscalationsRoute
+  '/api/public/hooks/process-exports': typeof ApiPublicHooksProcessExportsRoute
   '/api/public/webhooks/inbound-email': typeof ApiPublicWebhooksInboundEmailRoute
   '/api/public/calendar/$token/ics': typeof ApiPublicCalendarTokenIcsRoute
   '/api/public/track/click/$id': typeof ApiPublicTrackClickIdRoute
@@ -484,6 +494,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
+    | '/api/public/hooks/process-exports'
     | '/api/public/webhooks/inbound-email'
     | '/api/public/calendar/$token/ics'
     | '/api/public/track/click/$id'
@@ -530,6 +541,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
+    | '/api/public/hooks/process-exports'
     | '/api/public/webhooks/inbound-email'
     | '/api/public/calendar/$token/ics'
     | '/api/public/track/click/$id'
@@ -577,6 +589,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/dispatch-scheduled-reports'
     | '/api/public/hooks/drain-email-queue'
     | '/api/public/hooks/feedback-escalations'
+    | '/api/public/hooks/process-exports'
     | '/api/public/webhooks/inbound-email'
     | '/api/public/calendar/$token/ics'
     | '/api/public/track/click/$id'
@@ -600,6 +613,7 @@ export interface RootRouteChildren {
   ApiPublicHooksDispatchScheduledReportsRoute: typeof ApiPublicHooksDispatchScheduledReportsRoute
   ApiPublicHooksDrainEmailQueueRoute: typeof ApiPublicHooksDrainEmailQueueRoute
   ApiPublicHooksFeedbackEscalationsRoute: typeof ApiPublicHooksFeedbackEscalationsRoute
+  ApiPublicHooksProcessExportsRoute: typeof ApiPublicHooksProcessExportsRoute
   ApiPublicWebhooksInboundEmailRoute: typeof ApiPublicWebhooksInboundEmailRoute
   ApiPublicCalendarTokenIcsRoute: typeof ApiPublicCalendarTokenIcsRoute
   ApiPublicTrackClickIdRoute: typeof ApiPublicTrackClickIdRoute
@@ -861,6 +875,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksInboundEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/process-exports': {
+      id: '/api/public/hooks/process-exports'
+      path: '/api/public/hooks/process-exports'
+      fullPath: '/api/public/hooks/process-exports'
+      preLoaderRoute: typeof ApiPublicHooksProcessExportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/feedback-escalations': {
       id: '/api/public/hooks/feedback-escalations'
       path: '/api/public/hooks/feedback-escalations'
@@ -1058,6 +1079,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksDrainEmailQueueRoute: ApiPublicHooksDrainEmailQueueRoute,
   ApiPublicHooksFeedbackEscalationsRoute:
     ApiPublicHooksFeedbackEscalationsRoute,
+  ApiPublicHooksProcessExportsRoute: ApiPublicHooksProcessExportsRoute,
   ApiPublicWebhooksInboundEmailRoute: ApiPublicWebhooksInboundEmailRoute,
   ApiPublicCalendarTokenIcsRoute: ApiPublicCalendarTokenIcsRoute,
   ApiPublicTrackClickIdRoute: ApiPublicTrackClickIdRoute,
