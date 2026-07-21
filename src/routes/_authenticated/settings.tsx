@@ -1055,3 +1055,194 @@ function TemplatePreview({
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Scorecard editor tab
+// ---------------------------------------------------------------------------
+function ScorecardEditor() {
+  const qc = useQueryClient();
+  const loadFn = useServerFn(
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require("@/lib/scorecard.functions").getActiveScorecard,
+  );
+  const saveFn = useServerFn(
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require("@/lib/scorecard.functions").saveActiveScorecard,
+  );
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["active-scorecard"],
+    queryFn: () => loadFn(),
+  });
+
+  const [name, setName] = useState("");
+  const [rows, setRows] = useState<{ name: string; max_points: number }[]>([]);
+
+  useEffect(() => {
+    if (!data) return;
+    setName(data.template?.name ?? "Default scorecard");
+    setRows(
+      (data.parameters ?? []).map((p) => ({
+        name: p.name,
+        max_points: Number(p.max_points) || 0,
+      })),
+    );
+  }, [data]);
+
+  const total = rows.reduce((s, r) => s + (Number(r.max_points) || 0), 0);
+  const balanced = total === 100;
+  const duplicateNames = (() => {
+    const seen = new Set<string>();
+    for (const r of rows) {
+      const key = r.name.trim().toLowerCase();
+      if (!key) continue;
+      if (seen.has(key)) return true;
+      seen.add(key);
+    }
+    return false;
+  })();
+  const hasEmptyName = rows.some((r) => !r.name.trim());
+  const canSave = balanced && !duplicateNames && !hasEmptyName && rows.length > 0;
+
+  const save = useMutation({
+    mutationFn: () => saveFn({ data: { name, parameters: rows } }),
+    onSuccess: () => {
+      toast.success("Scorecard saved");
+      qc.invalidateQueries({ queryKey: ["active-scorecard"] });
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "Failed to save scorecard";
+      toast.error(msg);
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <Card className="p-6">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading scorecard…
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-6 space-y-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-base font-semibold">Active scorecard</h3>
+          <p className="text-sm text-muted-foreground">
+            Parameter weights must total exactly 100. Saving is disabled otherwise.
+          </p>
+        </div>
+        <div
+          className={cn(
+            "rounded-md px-3 py-1.5 text-sm font-semibold tabular-nums",
+            balanced
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+              : "bg-destructive/10 text-destructive",
+          )}
+          aria-live="polite"
+        >
+          Total: {total} / 100
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="sc-name">Scorecard name</Label>
+        <Input
+          id="sc-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={120}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <div className="grid grid-cols-[1fr_120px_40px] gap-2 px-1 text-xs uppercase tracking-wide text-muted-foreground">
+          <div>Parameter</div>
+          <div>Weight</div>
+          <div />
+        </div>
+        {rows.map((r, idx) => (
+          <div key={idx} className="grid grid-cols-[1fr_120px_40px] gap-2 items-center">
+            <Input
+              value={r.name}
+              onChange={(e) => {
+                const next = [...rows];
+                next[idx] = { ...next[idx], name: e.target.value };
+                setRows(next);
+              }}
+              placeholder="Parameter name"
+              maxLength={100}
+            />
+            <Input
+              type="number"
+              min={1}
+              max={100}
+              step={1}
+              value={r.max_points}
+              onChange={(e) => {
+                const next = [...rows];
+                next[idx] = { ...next[idx], max_points: Math.max(0, Math.floor(Number(e.target.value) || 0)) };
+                setRows(next);
+              }}
+              className="tabular-nums"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setRows(rows.filter((_, i) => i !== idx))}
+              aria-label={`Remove ${r.name || "parameter"}`}
+            >
+              <Ban className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            setRows([...rows, { name: "", max_points: Math.max(0, 100 - total) }])
+          }
+        >
+          Add parameter
+        </Button>
+      </div>
+
+      {!balanced && (
+        <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            Weights must sum to exactly <strong>100</strong>. Current total is{" "}
+            <strong>{total}</strong> ({total > 100 ? total - 100 : 100 - total}{" "}
+            {total > 100 ? "over" : "under"}).
+          </div>
+        </div>
+      )}
+      {duplicateNames && (
+        <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          Parameter names must be unique.
+        </div>
+      )}
+      {hasEmptyName && (
+        <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          Every parameter needs a name.
+        </div>
+      )}
+
+      <div className="flex justify-end">
+        <Button onClick={() => save.mutate()} disabled={!canSave || save.isPending}>
+          {save.isPending ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</>
+          ) : (
+            "Save scorecard"
+          )}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
