@@ -280,25 +280,6 @@ function AuthedLayout() {
 
             <span className="mx-1 hidden h-6 w-px bg-border/70 sm:block" aria-hidden="true" />
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground" aria-label="Toggle theme">
-                  <ModeIcon className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Theme</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => update({ mode: "light" })}>
-                  <Sun className="mr-2 h-4 w-4" /> Light
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => update({ mode: "dark" })}>
-                  <Moon className="mr-2 h-4 w-4" /> Dark
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => update({ mode: "system" })}>
-                  <Monitor className="mr-2 h-4 w-4" /> System
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
 
             <NotificationsBell userId={user.id} />
 

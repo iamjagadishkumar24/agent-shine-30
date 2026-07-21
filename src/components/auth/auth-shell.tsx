@@ -89,7 +89,7 @@ export function AuthShell({
       </div>
 
       <header className="relative z-10 flex items-center justify-end px-5 py-3 sm:px-8">
-        <ThemeToggle />
+        
       </header>
 
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-6 sm:px-8">
@@ -222,34 +222,7 @@ function AuthCard({
 }
 
 function ThemeToggle() {
-  const { prefs, update } = useTheme();
-  const Icon = prefs.mode === "light" ? Sun : prefs.mode === "dark" ? Moon : Monitor;
-  const options: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
-    { value: "light", label: "Light", icon: Sun },
-    { value: "dark", label: "Dark", icon: Moon },
-    { value: "system", label: "System", icon: Monitor },
-  ];
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Change theme" className="rounded-lg">
-          <Icon className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-36">
-        {options.map(({ value, label, icon: I }) => (
-          <DropdownMenuItem
-            key={value}
-            onClick={() => update({ mode: value })}
-            className={cn("gap-2", prefs.mode === value && "font-medium")}
-          >
-            <I className="h-4 w-4" />
-            {label}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+  return null;
 }
 
 function LearnMoreDialog() {

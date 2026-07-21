@@ -35,13 +35,33 @@ async function assertStaff(_supabase: unknown, _userId: string) {
 async function loadMetrics(supabase: any, feedbackId: string) {
   const { data } = await supabase
     .from("feedback_scores")
-    .select("parameter_name, selected_percentage, display_order")
+    .select("parameter_name, max_points, selected_percentage, earned_points, evaluator_note, display_order")
     .eq("feedback_id", feedbackId)
     .order("display_order", { ascending: true });
-  return (data ?? [])
-    .filter((r: any) => r.selected_percentage != null)
-    .map((r: any) => ({ label: r.parameter_name as string, score: Number(r.selected_percentage) }));
+  return (data ?? []).map((r: any) => ({
+    label: r.parameter_name as string,
+    score: Number(r.selected_percentage ?? 0),
+    maxPoints: Number(r.max_points ?? 0),
+    earnedPoints: Number(r.earned_points ?? 0),
+    note: r.evaluator_note ?? null,
+  }));
 }
+
+async function loadRelatedNames(supabase: any, fb: any) {
+  let teamName: string | null = null;
+  let evaluatorName: string | null = null;
+  if (fb.team_id) {
+    const { data } = await supabase.from("teams").select("name").eq("id", fb.team_id).maybeSingle();
+    teamName = data?.name ?? null;
+  }
+  const evalUser = fb.evaluator_id || fb.created_by;
+  if (evalUser) {
+    const { data } = await supabase.from("profiles").select("full_name").eq("id", evalUser).maybeSingle();
+    evaluatorName = data?.full_name ?? null;
+  }
+  return { teamName, evaluatorName };
+}
+
 
 
 // Enqueue a feedback email. The background drainer sends it and updates
@@ -113,21 +133,30 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
 
     const appBaseUrl = getAppBaseUrl();
     const metrics = await loadMetrics(supabase, fb.id);
+    const { teamName, evaluatorName } = await loadRelatedNames(supabase, fb);
+    const overdueDays = Number((settings as any).overdue_after_days ?? 7) || 7;
+    const ackDueAt = new Date(Date.now() + overdueDays * 86_400_000).toISOString();
     const defaults = renderFeedbackEmail({
       feedbackId: fb.id,
+      caseNumber: (fb as any).case_number ?? null,
       title: fb.title,
       agentName: fb.agent.full_name,
+      teamName,
+      evaluatorName,
       managerName: fb.agent.manager_name ?? undefined,
       category: fb.category,
       feedbackType: fb.feedback_type,
       severity: fb.severity,
       interactionType: (fb as any).interaction_type,
+      interactionReference: (fb as any).interaction_reference ?? null,
+      interactionDate: (fb as any).interaction_date ?? null,
       score: fb.score as number | null,
       summary: fb.summary,
       strengths: fb.strengths,
       improvements: fb.improvements,
       recommendedActions: fb.recommended_actions,
       dueDate: fb.due_date,
+      acknowledgementDueAt: ackDueAt,
       appBaseUrl,
       senderName: settings.sender_name,
       logoUrl: settings.logo_url ?? `${appBaseUrl}${qualipulseMark.url}`,
@@ -135,7 +164,9 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       confidentialityNotice: settings.confidentiality_notice,
       attachmentLinks,
       metrics,
+      replyToEmail: settings.reply_to ?? "itsjack2025@gmail.com",
     });
+
 
     let subject = defaults.subject;
     let html = defaults.html;
@@ -187,7 +218,12 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
     const nowIso = new Date().toISOString();
     const { data: transitioned, error: txErr } = await supabaseAdmin
       .from("feedback")
-      .update({ status: "ready_to_send", sent_at: null, email_error: null })
+      .update({
+        status: "ready_to_send",
+        sent_at: null,
+        email_error: null,
+        acknowledgement_due_at: ackDueAt,
+      })
       .eq("id", fb.id)
       .eq("status", sourceStatus as never)
       .select("id")
@@ -305,27 +341,35 @@ export const previewFeedbackEmail = createServerFn({ method: "POST" })
 
     const appBaseUrl = getAppBaseUrl();
     const metrics = await loadMetrics(supabase, fb.id);
+    const { teamName, evaluatorName } = await loadRelatedNames(supabase, fb);
     const rendered = renderFeedbackEmail({
       feedbackId: fb.id,
+      caseNumber: (fb as any).case_number ?? null,
       title: fb.title,
       agentName: fb.agent?.full_name ?? "Agent",
+      teamName,
+      evaluatorName,
       managerName: fb.agent?.manager_name ?? undefined,
       category: fb.category,
       feedbackType: fb.feedback_type,
       severity: fb.severity,
       interactionType: (fb as any).interaction_type,
+      interactionReference: (fb as any).interaction_reference ?? null,
+      interactionDate: (fb as any).interaction_date ?? null,
       score: fb.score as number | null,
       summary: fb.summary,
       strengths: fb.strengths,
       improvements: fb.improvements,
       recommendedActions: fb.recommended_actions,
       dueDate: fb.due_date,
+      acknowledgementDueAt: (fb as any).acknowledgement_due_at ?? null,
       appBaseUrl,
       senderName: settings?.sender_name,
       logoUrl: settings?.logo_url ?? `${appBaseUrl}${qualipulseMark.url}`,
       signatureHtml: settings?.signature_html,
       confidentialityNotice: settings?.confidentiality_notice,
       metrics,
+      replyToEmail: settings?.reply_to ?? "itsjack2025@gmail.com",
     });
     return {
       subject: rendered.subject,
@@ -384,27 +428,35 @@ export const sendFeedbackTestEmail = createServerFn({ method: "POST" })
 
     const appBaseUrl = getAppBaseUrl();
     const metrics = await loadMetrics(supabase, fb.id);
+    const { teamName, evaluatorName } = await loadRelatedNames(supabase, fb);
     const rendered = renderFeedbackEmail({
       feedbackId: fb.id,
+      caseNumber: (fb as any).case_number ?? null,
       title: fb.title,
       agentName: fb.agent?.full_name ?? "Agent",
+      teamName,
+      evaluatorName,
       managerName: fb.agent?.manager_name ?? undefined,
       category: fb.category,
       feedbackType: fb.feedback_type,
       severity: fb.severity,
       interactionType: (fb as any).interaction_type,
+      interactionReference: (fb as any).interaction_reference ?? null,
+      interactionDate: (fb as any).interaction_date ?? null,
       score: fb.score as number | null,
       summary: fb.summary,
       strengths: fb.strengths,
       improvements: fb.improvements,
       recommendedActions: fb.recommended_actions,
       dueDate: fb.due_date,
+      acknowledgementDueAt: (fb as any).acknowledgement_due_at ?? null,
       appBaseUrl,
       senderName: settings.sender_name,
       logoUrl: settings.logo_url ?? `${appBaseUrl}${qualipulseMark.url}`,
       signatureHtml: settings.signature_html,
       confidentialityNotice: settings.confidentiality_notice,
       metrics,
+      replyToEmail: settings.reply_to ?? "itsjack2025@gmail.com",
     });
 
     const { getProvider } = await import("@/lib/email/providers.server");
