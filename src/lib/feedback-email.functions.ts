@@ -35,13 +35,33 @@ async function assertStaff(_supabase: unknown, _userId: string) {
 async function loadMetrics(supabase: any, feedbackId: string) {
   const { data } = await supabase
     .from("feedback_scores")
-    .select("parameter_name, selected_percentage, display_order")
+    .select("parameter_name, max_points, selected_percentage, earned_points, evaluator_note, display_order")
     .eq("feedback_id", feedbackId)
     .order("display_order", { ascending: true });
-  return (data ?? [])
-    .filter((r: any) => r.selected_percentage != null)
-    .map((r: any) => ({ label: r.parameter_name as string, score: Number(r.selected_percentage) }));
+  return (data ?? []).map((r: any) => ({
+    label: r.parameter_name as string,
+    score: Number(r.selected_percentage ?? 0),
+    maxPoints: Number(r.max_points ?? 0),
+    earnedPoints: Number(r.earned_points ?? 0),
+    note: r.evaluator_note ?? null,
+  }));
 }
+
+async function loadRelatedNames(supabase: any, fb: any) {
+  let teamName: string | null = null;
+  let evaluatorName: string | null = null;
+  if (fb.team_id) {
+    const { data } = await supabase.from("teams").select("name").eq("id", fb.team_id).maybeSingle();
+    teamName = data?.name ?? null;
+  }
+  const evalUser = fb.evaluator_id || fb.created_by;
+  if (evalUser) {
+    const { data } = await supabase.from("profiles").select("full_name").eq("id", evalUser).maybeSingle();
+    evaluatorName = data?.full_name ?? null;
+  }
+  return { teamName, evaluatorName };
+}
+
 
 
 // Enqueue a feedback email. The background drainer sends it and updates
