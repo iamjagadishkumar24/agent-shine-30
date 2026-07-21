@@ -89,7 +89,7 @@ export function AuthShell({
       </div>
 
       <header className="relative z-10 flex items-center justify-end px-5 py-3 sm:px-8">
-        <ThemeToggle />
+        
       </header>
 
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-6 sm:px-8">
