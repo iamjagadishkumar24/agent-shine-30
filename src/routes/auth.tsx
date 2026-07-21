@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -24,25 +24,36 @@ import {
 import { cn } from "@/lib/utils";
 
 
-type AuthSearch = { next?: string; mode?: "signin" | "signup" };
+export type AuthSearch = { next?: string; email?: string };
+
+export function parseAuthSearch(s: Record<string, unknown>): AuthSearch {
+  const out: AuthSearch = {};
+  if (typeof s.next === "string") out.next = s.next;
+  if (typeof s.email === "string") out.email = s.email;
+  return out;
+}
+
+// The bare `/auth` URL redirects to the canonical `/auth/signin` page so
+// every entry point lands on a dedicated route rather than an intermediate
+// mode picker.
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>): AuthSearch => {
-    const out: AuthSearch = {};
-    if (typeof s.next === "string") out.next = s.next;
+  validateSearch: (s: Record<string, unknown>): AuthSearch & { mode?: "signin" | "signup" } => {
+    const out: AuthSearch & { mode?: "signin" | "signup" } = parseAuthSearch(s);
     if (s.mode === "signup" || s.mode === "signin") out.mode = s.mode;
     return out;
   },
-  component: AuthPage,
-  head: () => ({
-    meta: [
-      { title: "Sign in — QualiPulse" },
-      { name: "description", content: "Sign in to QualiPulse." },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  beforeLoad: ({ search }) => {
+    const mode = search.mode;
+    const target =
+      mode === "signup" ? "/auth/signup" : "/auth/signin";
+    const passthrough: AuthSearch = {};
+    if (search.next) passthrough.next = search.next;
+    if (search.email) passthrough.email = search.email;
+    throw redirect({ to: target, search: passthrough });
+  },
 });
 
-function safeNext(next: string | undefined): string {
+export function safeNext(next: string | undefined): string {
   if (!next || !next.startsWith("/") || next.startsWith("//")) return "/dashboard";
   return next;
 }
@@ -52,7 +63,7 @@ const REMEMBER_KEY = "signal.auth.remember-email";
 const DRAFT_KEY = "signal.auth.draft";
 
 
-type Mode = "signin" | "signup" | "forgot";
+export type Mode = "signin" | "signup" | "forgot";
 
 function passwordStrength(pw: string): { score: number; label: string; tone: string } {
   let score = 0;
@@ -73,10 +84,12 @@ function passwordStrength(pw: string): { score: number; label: string; tone: str
   return { score: clamped, label: labels[clamped], tone: tones[clamped] };
 }
 
-function AuthPage() {
-  const { next, mode: initialMode } = Route.useSearch();
-  const [mode, setMode] = useState<Mode>(initialMode === "signup" ? "signup" : "signin");
-  const [email, setEmail] = useState("");
+export function AuthPage({ initialMode, next, initialEmail }: { initialMode: Mode; next?: string; initialEmail?: string }) {
+  const navigate = useNavigate();
+  const [mode, setMode] = useState<Mode>(initialMode);
+  useEffect(() => { setMode(initialMode); }, [initialMode]);
+  const [email, setEmail] = useState(initialEmail ?? "");
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
