@@ -62,6 +62,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: no-lovable-badge-${{ matrix.target.name }}
-          path: tests/e2e/screenshots/no_lovable_badge/**
+          path: |
+            tests/e2e/screenshots/no_lovable_badge/**
+            tests/e2e/screenshots/no_lovable_badge_actual/${{ matrix.target.name }}/**
+            tests/e2e/screenshots/no_lovable_badge_diff/${{ matrix.target.name }}/**
           if-no-files-found: ignore
           retention-days: 14
