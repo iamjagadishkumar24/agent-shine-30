@@ -1452,6 +1452,11 @@ export type Database = {
         | "team_manager"
         | "read_only"
         | "agent"
+        | "master_admin"
+        | "admin"
+        | "qa_evaluator"
+        | "manager"
+        | "viewer"
       coaching_goal_status: "on_track" | "at_risk" | "achieved" | "missed"
       coaching_plan_status: "active" | "completed" | "archived"
       coaching_priority: "low" | "medium" | "high" | "urgent"
@@ -1632,6 +1637,11 @@ export const Constants = {
         "team_manager",
         "read_only",
         "agent",
+        "master_admin",
+        "admin",
+        "qa_evaluator",
+        "manager",
+        "viewer",
       ],
       coaching_goal_status: ["on_track", "at_risk", "achieved", "missed"],
       coaching_plan_status: ["active", "completed", "archived"],
