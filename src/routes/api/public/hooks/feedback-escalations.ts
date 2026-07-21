@@ -169,7 +169,7 @@ export const Route = createFileRoute("/api/public/hooks/feedback-escalations")({
 
           const nowIso = new Date().toISOString();
           const isOverdue = (now - sentAt) / 86_400_000 >= overdueDays;
-          const patch: Record<string, unknown> = {
+          const patch: any = {
             reminder_count: nextCount,
             last_reminder_at: nowIso,
             last_reminder_sent_at: nowIso,
