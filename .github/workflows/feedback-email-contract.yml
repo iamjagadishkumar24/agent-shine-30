@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      issues: write
     env:
       # Redirect artifact output away from the local /mnt/documents path.
       FEEDBACK_EMAIL_VERIFY_OUT_DIR: ${{ github.workspace }}/feedback-email-verification
