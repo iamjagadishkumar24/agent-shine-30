@@ -231,8 +231,6 @@ const ACCENTS: { value: AccentColor; label: string; swatch: string }[] = [
 
 const MODES: { value: ThemeMode; label: string; Icon: typeof Sun }[] = [
   { value: "light", label: "Light", Icon: Sun },
-  { value: "dark", label: "Dark", Icon: Moon },
-  { value: "system", label: "System", Icon: Monitor },
 ];
 
 function AppearanceTab() {
