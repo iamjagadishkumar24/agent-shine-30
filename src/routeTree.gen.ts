@@ -26,8 +26,10 @@ import { Route as AuthenticatedCoachingRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedApprovalsRouteImport } from './routes/_authenticated/approvals'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated/agents'
+import { Route as AuthenticatedAgentReportsRouteImport } from './routes/_authenticated/agent-reports'
 import { Route as AuthenticatedAcknowledgementsRouteImport } from './routes/_authenticated/acknowledgements'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedFeedbackIndexRouteImport } from './routes/_authenticated/feedback.index'
@@ -39,6 +41,7 @@ import { Route as AuthenticatedCoachingPlansRouteImport } from './routes/_authen
 import { Route as AuthenticatedCoachingNewRouteImport } from './routes/_authenticated/coaching.new'
 import { Route as AuthenticatedCoachingIdRouteImport } from './routes/_authenticated/coaching.$id'
 import { Route as AuthenticatedAnalyticsEmailRouteImport } from './routes/_authenticated/analytics.email'
+import { Route as AuthenticatedAgentReportsIdRouteImport } from './routes/_authenticated/agent-reports.$id'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicWebhooksInboundEmailRouteImport } from './routes/api/public/webhooks/inbound-email'
@@ -137,6 +140,12 @@ const AuthenticatedAgentsRoute = AuthenticatedAgentsRouteImport.update({
   path: '/agents',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAgentReportsRoute =
+  AuthenticatedAgentReportsRouteImport.update({
+    id: '/agent-reports',
+    path: '/agent-reports',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAcknowledgementsRoute =
   AuthenticatedAcknowledgementsRouteImport.update({
     id: '/acknowledgements',
@@ -148,6 +157,12 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAccessManagementRoute =
+  AuthenticatedAccessManagementRouteImport.update({
+    id: '/access-management',
+    path: '/access-management',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const Char91DotwellKnownChar93OauthProtectedResourceRoute =
   Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
     id: '/.well-known/oauth-protected-resource',
@@ -210,6 +225,12 @@ const AuthenticatedAnalyticsEmailRoute =
     id: '/email',
     path: '/email',
     getParentRoute: () => AuthenticatedAnalyticsRoute,
+  } as any)
+const AuthenticatedAgentReportsIdRoute =
+  AuthenticatedAgentReportsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAgentReportsRoute,
   } as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
@@ -291,8 +312,10 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/access-management': typeof AuthenticatedAccessManagementRoute
   '/account': typeof AuthenticatedAccountRoute
   '/acknowledgements': typeof AuthenticatedAcknowledgementsRoute
+  '/agent-reports': typeof AuthenticatedAgentReportsRouteWithChildren
   '/agents': typeof AuthenticatedAgentsRoute
   '/analytics': typeof AuthenticatedAnalyticsRouteWithChildren
   '/approvals': typeof AuthenticatedApprovalsRoute
@@ -304,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/agent-reports/$id': typeof AuthenticatedAgentReportsIdRoute
   '/analytics/email': typeof AuthenticatedAnalyticsEmailRoute
   '/coaching/$id': typeof AuthenticatedCoachingIdRoute
   '/coaching/new': typeof AuthenticatedCoachingNewRoute
@@ -334,8 +358,10 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/access-management': typeof AuthenticatedAccessManagementRoute
   '/account': typeof AuthenticatedAccountRoute
   '/acknowledgements': typeof AuthenticatedAcknowledgementsRoute
+  '/agent-reports': typeof AuthenticatedAgentReportsRouteWithChildren
   '/agents': typeof AuthenticatedAgentsRoute
   '/analytics': typeof AuthenticatedAnalyticsRouteWithChildren
   '/approvals': typeof AuthenticatedApprovalsRoute
@@ -347,6 +373,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/agent-reports/$id': typeof AuthenticatedAgentReportsIdRoute
   '/analytics/email': typeof AuthenticatedAnalyticsEmailRoute
   '/coaching/$id': typeof AuthenticatedCoachingIdRoute
   '/coaching/new': typeof AuthenticatedCoachingNewRoute
@@ -379,8 +406,10 @@ export interface FileRoutesById {
   '/verify-email': typeof VerifyEmailRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/_authenticated/access-management': typeof AuthenticatedAccessManagementRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/acknowledgements': typeof AuthenticatedAcknowledgementsRoute
+  '/_authenticated/agent-reports': typeof AuthenticatedAgentReportsRouteWithChildren
   '/_authenticated/agents': typeof AuthenticatedAgentsRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRouteWithChildren
   '/_authenticated/approvals': typeof AuthenticatedApprovalsRoute
@@ -392,6 +421,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/_authenticated/agent-reports/$id': typeof AuthenticatedAgentReportsIdRoute
   '/_authenticated/analytics/email': typeof AuthenticatedAnalyticsEmailRoute
   '/_authenticated/coaching/$id': typeof AuthenticatedCoachingIdRoute
   '/_authenticated/coaching/new': typeof AuthenticatedCoachingNewRoute
@@ -424,8 +454,10 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/access-management'
     | '/account'
     | '/acknowledgements'
+    | '/agent-reports'
     | '/agents'
     | '/analytics'
     | '/approvals'
@@ -437,6 +469,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/agent-reports/$id'
     | '/analytics/email'
     | '/coaching/$id'
     | '/coaching/new'
@@ -467,8 +500,10 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/access-management'
     | '/account'
     | '/acknowledgements'
+    | '/agent-reports'
     | '/agents'
     | '/analytics'
     | '/approvals'
@@ -480,6 +515,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/agent-reports/$id'
     | '/analytics/email'
     | '/coaching/$id'
     | '/coaching/new'
@@ -511,8 +547,10 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/_authenticated/access-management'
     | '/_authenticated/account'
     | '/_authenticated/acknowledgements'
+    | '/_authenticated/agent-reports'
     | '/_authenticated/agents'
     | '/_authenticated/analytics'
     | '/_authenticated/approvals'
@@ -524,6 +562,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/_authenticated/agent-reports/$id'
     | '/_authenticated/analytics/email'
     | '/_authenticated/coaching/$id'
     | '/_authenticated/coaching/new'
@@ -689,6 +728,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/agent-reports': {
+      id: '/_authenticated/agent-reports'
+      path: '/agent-reports'
+      fullPath: '/agent-reports'
+      preLoaderRoute: typeof AuthenticatedAgentReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/acknowledgements': {
       id: '/_authenticated/acknowledgements'
       path: '/acknowledgements'
@@ -701,6 +747,13 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/access-management': {
+      id: '/_authenticated/access-management'
+      path: '/access-management'
+      fullPath: '/access-management'
+      preLoaderRoute: typeof AuthenticatedAccessManagementRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/.well-known/oauth-protected-resource': {
@@ -779,6 +832,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/analytics/email'
       preLoaderRoute: typeof AuthenticatedAnalyticsEmailRouteImport
       parentRoute: typeof AuthenticatedAnalyticsRoute
+    }
+    '/_authenticated/agent-reports/$id': {
+      id: '/_authenticated/agent-reports/$id'
+      path: '/$id'
+      fullPath: '/agent-reports/$id'
+      preLoaderRoute: typeof AuthenticatedAgentReportsIdRouteImport
+      parentRoute: typeof AuthenticatedAgentReportsRoute
     }
     '/.mcp/invoke-tool/$tool': {
       id: '/.mcp/invoke-tool/$tool'
@@ -867,6 +927,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAgentReportsRouteChildren {
+  AuthenticatedAgentReportsIdRoute: typeof AuthenticatedAgentReportsIdRoute
+}
+
+const AuthenticatedAgentReportsRouteChildren: AuthenticatedAgentReportsRouteChildren =
+  {
+    AuthenticatedAgentReportsIdRoute: AuthenticatedAgentReportsIdRoute,
+  }
+
+const AuthenticatedAgentReportsRouteWithChildren =
+  AuthenticatedAgentReportsRoute._addFileChildren(
+    AuthenticatedAgentReportsRouteChildren,
+  )
+
 interface AuthenticatedAnalyticsRouteChildren {
   AuthenticatedAnalyticsEmailRoute: typeof AuthenticatedAnalyticsEmailRoute
 }
@@ -937,8 +1011,10 @@ const AuthenticatedReportsRouteWithChildren =
   AuthenticatedReportsRoute._addFileChildren(AuthenticatedReportsRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAccessManagementRoute: typeof AuthenticatedAccessManagementRoute
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedAcknowledgementsRoute: typeof AuthenticatedAcknowledgementsRoute
+  AuthenticatedAgentReportsRoute: typeof AuthenticatedAgentReportsRouteWithChildren
   AuthenticatedAgentsRoute: typeof AuthenticatedAgentsRoute
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRouteWithChildren
   AuthenticatedApprovalsRoute: typeof AuthenticatedApprovalsRoute
@@ -954,8 +1030,10 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAccessManagementRoute: AuthenticatedAccessManagementRoute,
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedAcknowledgementsRoute: AuthenticatedAcknowledgementsRoute,
+  AuthenticatedAgentReportsRoute: AuthenticatedAgentReportsRouteWithChildren,
   AuthenticatedAgentsRoute: AuthenticatedAgentsRoute,
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRouteWithChildren,
   AuthenticatedApprovalsRoute: AuthenticatedApprovalsRoute,
