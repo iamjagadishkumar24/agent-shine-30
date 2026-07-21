@@ -182,7 +182,7 @@ export const Route = createFileRoute("/api/public/webhooks/inbound-email")({
         const { error: insErr } = await supabaseAdmin.from("feedback_email_responses").insert({
           feedback_id: fb.id,
           case_number: parsed.caseNumber,
-          sender_email: parsed.from,
+          sender_email: parsed.from ?? "unknown@unknown",
           recipient_email: parsed.to,
           subject: parsed.subject,
           message_body: messageBody,
