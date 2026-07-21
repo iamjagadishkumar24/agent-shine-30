@@ -133,21 +133,30 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
 
     const appBaseUrl = getAppBaseUrl();
     const metrics = await loadMetrics(supabase, fb.id);
+    const { teamName, evaluatorName } = await loadRelatedNames(supabase, fb);
+    const overdueDays = Number((settings as any).overdue_after_days ?? 7) || 7;
+    const ackDueAt = new Date(Date.now() + overdueDays * 86_400_000).toISOString();
     const defaults = renderFeedbackEmail({
       feedbackId: fb.id,
+      caseNumber: (fb as any).case_number ?? null,
       title: fb.title,
       agentName: fb.agent.full_name,
+      teamName,
+      evaluatorName,
       managerName: fb.agent.manager_name ?? undefined,
       category: fb.category,
       feedbackType: fb.feedback_type,
       severity: fb.severity,
       interactionType: (fb as any).interaction_type,
+      interactionReference: (fb as any).interaction_reference ?? null,
+      interactionDate: (fb as any).interaction_date ?? null,
       score: fb.score as number | null,
       summary: fb.summary,
       strengths: fb.strengths,
       improvements: fb.improvements,
       recommendedActions: fb.recommended_actions,
       dueDate: fb.due_date,
+      acknowledgementDueAt: ackDueAt,
       appBaseUrl,
       senderName: settings.sender_name,
       logoUrl: settings.logo_url ?? `${appBaseUrl}${qualipulseMark.url}`,
@@ -155,7 +164,9 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
       confidentialityNotice: settings.confidentiality_notice,
       attachmentLinks,
       metrics,
+      replyToEmail: settings.reply_to ?? "itsjack2025@gmail.com",
     });
+
 
     let subject = defaults.subject;
     let html = defaults.html;
