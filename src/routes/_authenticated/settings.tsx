@@ -55,11 +55,13 @@ function SettingsPage() {
           <TabsList>
             <TabsTrigger value="email">Email configuration</TabsTrigger>
             <TabsTrigger value="template">Feedback template</TabsTrigger>
+            <TabsTrigger value="scorecard">Scorecard</TabsTrigger>
             <TabsTrigger value="queue">Queue</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
           <TabsContent value="email" className="mt-4"><EmailConfig /></TabsContent>
           <TabsContent value="template" className="mt-4"><FeedbackTemplateEditor /></TabsContent>
+          <TabsContent value="scorecard" className="mt-4"><ScorecardEditor /></TabsContent>
           <TabsContent value="queue" className="mt-4"><QueueMonitor /></TabsContent>
           <TabsContent value="history" className="mt-4"><EmailHistory /></TabsContent>
         </Tabs>
