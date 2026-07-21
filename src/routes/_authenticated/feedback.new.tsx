@@ -306,15 +306,15 @@ function NewFeedback() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Quality Evaluation</h2>
-              <p className="mt-1 text-xs text-muted-foreground">Score each parameter 0–100%. Points are weighted by parameter.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Enter earned points for each parameter. Overall score updates automatically out of 100.</p>
             </div>
             <div className="text-right">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Overall Score</div>
               <div className="text-2xl font-bold tabular-nums">
-                {overall.earned.toFixed(2)}<span className="text-base font-normal text-muted-foreground"> / {overall.max}</span>
+                {overall.earned.toFixed(0)}<span className="text-base font-normal text-muted-foreground"> / 100</span>
               </div>
               <div className={cn("text-sm font-semibold", labelTone(overall.label))}>
-                {overall.percentage.toFixed(2)}% · {overall.label ?? "—"}
+                {overall.label ?? "—"}
               </div>
             </div>
           </div>
@@ -329,53 +329,46 @@ function NewFeedback() {
               No active scorecard configured. An admin must set one up in Settings.
             </div>
           ) : (
-            <div className="mt-6 grid gap-4">
+            <div className="mt-6 divide-y divide-border/60 rounded-lg border border-border/60 bg-background/40">
               {scores.map((s, idx) => {
-                const earned = computeEarnedPoints(s.max_points, s.selected_percentage);
+                const remaining = Math.max(0, s.max_points - s.points);
                 return (
-                  <div key={s.parameter_name} className="rounded-lg border border-border/60 bg-background/40 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <div className="text-sm font-semibold">{s.parameter_name}</div>
-                        <div className="text-xs text-muted-foreground">Max {s.max_points} pts</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min={0}
-                          max={100}
-                          value={s.selected_percentage}
-                          onChange={(e) => updateScore(idx, { selected_percentage: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })}
-                          className="h-8 w-20 text-right tabular-nums"
-                        />
-                        <span className="text-sm text-muted-foreground">%</span>
-                        <div className="w-24 rounded-md bg-muted px-2 py-1 text-right text-sm font-semibold tabular-nums">
-                          {earned.toFixed(2)} pts
-                        </div>
+                  <div key={s.parameter_name} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium">{s.parameter_name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        Max {s.max_points} pts{s.points > 0 && remaining > 0 ? ` · ${remaining} remaining` : ""}
                       </div>
                     </div>
-                    <div className="mt-3">
-                      <Slider
-                        value={[s.selected_percentage]}
-                        onValueChange={([v]) => updateScore(idx, { selected_percentage: v })}
-                        max={100}
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        max={s.max_points}
                         step={1}
+                        value={s.points}
+                        onChange={(e) => {
+                          const raw = Number(e.target.value);
+                          const clamped = Number.isFinite(raw)
+                            ? Math.max(0, Math.min(s.max_points, Math.round(raw)))
+                            : 0;
+                          updateScore(idx, { points: clamped });
+                        }}
+                        className="h-9 w-20 text-right tabular-nums"
+                        aria-label={`${s.parameter_name} score`}
                       />
+                      <span className="text-sm font-medium tabular-nums text-muted-foreground">/ {s.max_points}</span>
                     </div>
-                    <Textarea
-                      className="mt-3 resize-none"
-                      rows={2}
-                      value={s.evaluator_note}
-                      onChange={(e) => updateScore(idx, { evaluator_note: e.target.value })}
-                      placeholder="Optional evaluator note for this parameter"
-                    />
                   </div>
                 );
               })}
               {!scoresValid && (
-                <p className="text-xs text-destructive">
-                  Active scorecard weights must total 100 (currently {overall.max}). Ask an admin to fix Settings.
-                </p>
+                <div className="border-t border-border/60 px-4 py-2">
+                  <p className="text-xs text-destructive">
+                    Active scorecard weights must total 100 (currently {overall.max}). Ask an admin to fix Settings.
+                  </p>
+                </div>
               )}
             </div>
           )}
@@ -384,34 +377,23 @@ function NewFeedback() {
         {/* Written Feedback */}
         <Card className="mt-6 rounded-xl border-border/60 bg-card/60 p-6">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Written Feedback</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
+          <div className="grid gap-4">
+            <div>
               <Label>Summary</Label>
-              <Textarea className="mt-1.5" rows={3} value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} placeholder="What happened, in one paragraph." />
+              <Textarea className="mt-1.5" rows={3} value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} placeholder="Concise 2–3 sentence summary of the interaction." />
             </div>
             <div>
               <Label>Strengths</Label>
               <Textarea className="mt-1.5" rows={4} value={form.strengths} onChange={(e) => setForm({ ...form, strengths: e.target.value })} placeholder="What went well" />
             </div>
             <div>
-              <Label>Areas to improve</Label>
+              <Label>Areas for Improvement</Label>
               <Textarea className="mt-1.5" rows={4} value={form.improvements} onChange={(e) => setForm({ ...form, improvements: e.target.value })} placeholder="Where to grow" />
-            </div>
-            <div className="sm:col-span-2">
-              <Label>Recommended actions</Label>
-              <Textarea className="mt-1.5" rows={3} value={form.recommended_actions} onChange={(e) => setForm({ ...form, recommended_actions: e.target.value })} placeholder="Concrete next steps, coaching, learning material" />
-            </div>
-            <div>
-              <Label>Internal notes (not shared with agent)</Label>
-              <Textarea className="mt-1.5" rows={3} value={form.internal_notes} onChange={(e) => setForm({ ...form, internal_notes: e.target.value })} placeholder="For QA/manager eyes only" />
-            </div>
-            <div>
-              <Label>Agent-visible notes</Label>
-              <Textarea className="mt-1.5" rows={3} value={form.agent_visible_notes} onChange={(e) => setForm({ ...form, agent_visible_notes: e.target.value })} placeholder="Included in the email" />
             </div>
           </div>
         </Card>
       </div>
+
 
       <Dialog open={aiOpen} onOpenChange={setAiOpen}>
         <DialogContent className="sm:max-w-lg">
