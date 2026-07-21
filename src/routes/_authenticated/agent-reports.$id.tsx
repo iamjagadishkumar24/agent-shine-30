@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
@@ -9,8 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getAgentReport } from "@/lib/agent-reports.functions";
-import { ArrowLeft, FileText, FileSpreadsheet } from "lucide-react";
+import { getAgentReport, listAgentReportFeedback, listAgentFeedbackEmails } from "@/lib/agent-reports.functions";
+import { ArrowLeft, FileText, FileSpreadsheet, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { toCsv, toPdf } from "@/lib/reports";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend } from "recharts";
@@ -53,66 +53,108 @@ function periodRange(p: Period, customFrom?: string, customTo?: string): { from?
   }
 }
 
+type SortBy = "created_at" | "sent_at" | "score" | "case_number" | "title";
+type EmailSortBy = "created_at" | "sent_at" | "delivered_at" | "status";
+
 function AgentReportDetail() {
   const { id } = Route.useParams();
-  const fn = useServerFn(getAgentReport);
+  const summaryFn = useServerFn(getAgentReport);
+  const listFn = useServerFn(listAgentReportFeedback);
+  const emailFn = useServerFn(listAgentFeedbackEmails);
+
   const [period, setPeriod] = useState<Period>("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const range = periodRange(period, from, to);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["agent-report", id, period, from, to],
-    queryFn: () => fn({ data: { agentId: id, from: range.from, to: range.to } }),
+  // feedback table state
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<string>("all");
+  const [ackStatus, setAckStatus] = useState<string>("all");
+  const [interaction, setInteraction] = useState<string>("all");
+  const [minScore, setMinScore] = useState<string>("");
+  const [maxScore, setMaxScore] = useState<string>("");
+  const [sortBy, setSortBy] = useState<SortBy>("created_at");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
+  // email table state
+  const [emailSearch, setEmailSearch] = useState("");
+  const [emailStatus, setEmailStatus] = useState<string>("all");
+  const [emailSortBy, setEmailSortBy] = useState<EmailSortBy>("created_at");
+  const [emailSortDir, setEmailSortDir] = useState<"asc" | "desc">("desc");
+  const [emailPage, setEmailPage] = useState(1);
+
+  const summary = useQuery({
+    queryKey: ["agent-report-summary", id, range.from, range.to],
+    queryFn: () => summaryFn({ data: { agentId: id, from: range.from, to: range.to } }),
   });
 
-  const agent = data?.agent;
-  const feedback = (data?.feedback ?? []) as any[];
-  const paramScores = (data?.paramScores ?? []) as any[];
+  const feedbackQ = useQuery({
+    queryKey: ["agent-report-feedback", id, range.from, range.to, search, status, ackStatus, interaction, minScore, maxScore, sortBy, sortDir, page],
+    queryFn: () => listFn({
+      data: {
+        agentId: id,
+        from: range.from,
+        to: range.to,
+        search: search || undefined,
+        status: status !== "all" ? status : undefined,
+        ackStatus: ackStatus !== "all" ? ackStatus : undefined,
+        interactionType: interaction !== "all" ? (interaction as "chat" | "case") : undefined,
+        minScore: minScore ? Number(minScore) : undefined,
+        maxScore: maxScore ? Number(maxScore) : undefined,
+        sortBy, sortDir, page, pageSize,
+      },
+    }),
+    placeholderData: keepPreviousData,
+  });
 
-  const stats = useMemo(() => {
-    const scores = feedback.map((f) => f.score).filter((s) => typeof s === "number");
-    const ackd = feedback.filter((f) => f.acknowledgement_status === "acknowledged" || f.acknowledged_at).length;
-    const pending = feedback.filter((f) => f.sent_at && !f.acknowledged_at && f.acknowledgement_status !== "acknowledged").length;
-    const chat = feedback.filter((f) => f.interaction_type === "chat").length;
-    const cases = feedback.filter((f) => f.interaction_type === "case").length;
-    return {
-      total: feedback.length,
-      avg: scores.length ? Math.round((scores.reduce((s, n) => s + n, 0) / scores.length) * 10) / 10 : null,
-      high: scores.length ? Math.max(...scores) : null,
-      low: scores.length ? Math.min(...scores) : null,
-      ackd, pending, chat, cases,
-      first: feedback.length ? feedback[feedback.length - 1].created_at : null,
-      last: feedback.length ? feedback[0].created_at : null,
-    };
-  }, [feedback]);
+  const emailQ = useQuery({
+    queryKey: ["agent-report-emails", id, range.from, range.to, emailSearch, emailStatus, emailSortBy, emailSortDir, emailPage],
+    queryFn: () => emailFn({
+      data: {
+        agentId: id,
+        from: range.from,
+        to: range.to,
+        search: emailSearch || undefined,
+        status: emailStatus !== "all" ? emailStatus : undefined,
+        sortBy: emailSortBy, sortDir: emailSortDir, page: emailPage, pageSize,
+      },
+    }),
+    placeholderData: keepPreviousData,
+  });
 
+  const agent = summary.data?.agent as any;
+  const stats = summary.data?.stats ?? { total: 0, avg: null, high: null, low: null, ackd: 0, pending: 0, chat: 0, cases: 0 } as any;
+  const paramAvg = (summary.data?.paramAvg ?? []) as Array<{ name: string; avg: number; max: number }>;
   const trendData = useMemo(() =>
-    [...feedback].reverse().map((f) => ({
-      date: format(new Date(f.created_at), "MMM d"),
-      score: f.score ?? 0,
-    })), [feedback]);
+    (summary.data?.trend ?? []).map((t: any) => ({ date: format(new Date(t.date), "MMM d"), score: t.score })),
+    [summary.data]);
 
-  const paramAvg = useMemo(() => {
-    const acc = new Map<string, { earned: number; max: number; count: number }>();
-    for (const p of paramScores) {
-      const cur = acc.get(p.parameter_name) ?? { earned: 0, max: 0, count: 0 };
-      cur.earned += Number(p.earned_points) || 0;
-      cur.max += Number(p.max_points) || 0;
-      cur.count += 1;
-      acc.set(p.parameter_name, cur);
-    }
-    return Array.from(acc.entries()).map(([name, v]) => ({
-      name,
-      avg: v.count ? Math.round((v.earned / v.count) * 10) / 10 : 0,
-      max: v.count ? Math.round((v.max / v.count) * 10) / 10 : 0,
-    }));
-  }, [paramScores]);
+  const feedbackRows = (feedbackQ.data?.rows ?? []) as any[];
+  const totalRows = feedbackQ.data?.total ?? 0;
+  const totalPages = feedbackQ.data?.totalPages ?? 1;
+
+  const emailRows = (emailQ.data?.rows ?? []) as any[];
+  const emailTotal = emailQ.data?.total ?? 0;
+  const emailTotalPages = emailQ.data?.totalPages ?? 1;
 
   const interactionPie = [
     { name: "Chat", value: stats.chat, fill: "#4F46E5" },
     { name: "Case", value: stats.cases, fill: "#0EA5E9" },
   ];
+
+  const toggleSort = (col: SortBy) => {
+    if (sortBy === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortBy(col); setSortDir("desc"); }
+    setPage(1);
+  };
+  const toggleEmailSort = (col: EmailSortBy) => {
+    if (emailSortBy === col) setEmailSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setEmailSortBy(col); setEmailSortDir("desc"); }
+    setEmailPage(1);
+  };
 
   const exportPdf = () => {
     if (!agent) return;
@@ -140,9 +182,9 @@ function AgentReportDetail() {
           rows: paramAvg.map((p) => [p.name, p.avg, p.max]),
         } : null,
         {
-          title: "Feedback history",
+          title: `Feedback (page ${page}/${totalPages})`,
           columns: ["Case", "Title", "Type", "Score", "Ack", "Date"],
-          rows: feedback.map((f) => [
+          rows: feedbackRows.map((f) => [
             f.case_number ?? "—",
             f.title ?? "",
             f.interaction_type ?? "",
@@ -157,7 +199,7 @@ function AgentReportDetail() {
 
   const exportCsv = () => {
     if (!agent) return;
-    toCsv(feedback.map((f) => ({
+    toCsv(feedbackRows.map((f) => ({
       Case: f.case_number ?? "",
       Title: f.title,
       Type: f.interaction_type,
@@ -167,6 +209,21 @@ function AgentReportDetail() {
       Date: f.created_at ? format(new Date(f.created_at), "yyyy-MM-dd") : "",
     })), `agent-${agent.full_name.replace(/\s+/g, "-")}.csv`);
   };
+
+  const SortHeader = ({ label, col, align = "left" }: { label: string; col: SortBy; align?: "left" | "right" }) => (
+    <th className={`px-4 py-2 ${align === "right" ? "text-right" : "text-left"}`}>
+      <button className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort(col)}>
+        {label} <ArrowUpDown className={`h-3 w-3 ${sortBy === col ? "text-primary" : "opacity-50"}`} />
+      </button>
+    </th>
+  );
+  const EmailSortHeader = ({ label, col }: { label: string; col: EmailSortBy }) => (
+    <th className="px-4 py-2 text-left">
+      <button className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => toggleEmailSort(col)}>
+        {label} <ArrowUpDown className={`h-3 w-3 ${emailSortBy === col ? "text-primary" : "opacity-50"}`} />
+      </button>
+    </th>
+  );
 
   return (
     <div>
@@ -189,7 +246,7 @@ function AgentReportDetail() {
           <div className="flex flex-wrap items-end gap-3">
             <div>
               <Label className="text-xs">Period</Label>
-              <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+              <Select value={period} onValueChange={(v) => { setPeriod(v as Period); setPage(1); setEmailPage(1); }}>
                 <SelectTrigger className="h-9 w-[180px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All time</SelectItem>
@@ -205,11 +262,11 @@ function AgentReportDetail() {
               <>
                 <div>
                   <Label className="text-xs">From</Label>
-                  <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-9 w-[160px]" />
+                  <Input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1); }} className="h-9 w-[160px]" />
                 </div>
                 <div>
                   <Label className="text-xs">To</Label>
-                  <Input type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} className="h-9 w-[160px]" />
+                  <Input type="date" value={to} min={from} onChange={(e) => { setTo(e.target.value); setPage(1); }} className="h-9 w-[160px]" />
                 </div>
                 {from && to && new Date(to) < new Date(from) && (
                   <div className="text-xs text-destructive">End date must be after start date</div>
@@ -219,7 +276,7 @@ function AgentReportDetail() {
           </div>
         </Card>
 
-        {isLoading ? (
+        {summary.isLoading ? (
           <Card className="p-10 text-center text-muted-foreground">Loading agent report…</Card>
         ) : !agent ? (
           <Card className="p-10 text-center text-muted-foreground">Agent not found.</Card>
@@ -307,33 +364,77 @@ function AgentReportDetail() {
               </Card>
             </div>
 
-            {/* Feedback list */}
+            {/* Feedback table with server-side filters */}
             <Card className="overflow-hidden">
-              <div className="border-b px-5 py-3 text-sm font-semibold">Feedback history ({feedback.length})</div>
+              <div className="flex flex-wrap items-end gap-3 border-b p-4">
+                <div className="text-sm font-semibold mr-auto">Feedback history ({totalRows})</div>
+                <Input placeholder="Search title / case / category" value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="h-9 w-64" />
+                <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
+                  <SelectTrigger className="h-9 w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="ready_to_send">Ready to send</SelectItem>
+                    <SelectItem value="queued">Queued</SelectItem>
+                    <SelectItem value="sent">Sent</SelectItem>
+                    <SelectItem value="acknowledged">Acknowledged</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={ackStatus} onValueChange={(v) => { setAckStatus(v); setPage(1); }}>
+                  <SelectTrigger className="h-9 w-[160px]"><SelectValue placeholder="Ack status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All ack</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="response_received">Response received</SelectItem>
+                    <SelectItem value="acknowledged">Acknowledged</SelectItem>
+                    <SelectItem value="overdue">Overdue</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={interaction} onValueChange={(v) => { setInteraction(v); setPage(1); }}>
+                  <SelectTrigger className="h-9 w-[130px]"><SelectValue placeholder="Type" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All types</SelectItem>
+                    <SelectItem value="chat">Chat</SelectItem>
+                    <SelectItem value="case">Case</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input type="number" placeholder="Min score" value={minScore}
+                  onChange={(e) => { setMinScore(e.target.value); setPage(1); }} className="h-9 w-[100px]" />
+                <Input type="number" placeholder="Max score" value={maxScore}
+                  onChange={(e) => { setMaxScore(e.target.value); setPage(1); }} className="h-9 w-[100px]" />
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/30 text-xs uppercase text-muted-foreground">
                     <tr>
-                      <th className="px-4 py-2 text-left">Case</th>
-                      <th className="px-4 py-2 text-left">Title</th>
+                      <SortHeader label="Case" col="case_number" />
+                      <SortHeader label="Title" col="title" />
                       <th className="px-4 py-2 text-left">Type</th>
-                      <th className="px-4 py-2 text-right">Score</th>
+                      <SortHeader label="Score" col="score" align="right" />
                       <th className="px-4 py-2 text-left">Ack</th>
-                      <th className="px-4 py-2 text-left">Date</th>
+                      <SortHeader label="Sent" col="sent_at" />
+                      <SortHeader label="Created" col="created_at" />
                       <th></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
-                    {feedback.length === 0 && (
-                      <tr><td colSpan={7} className="py-8 text-center text-muted-foreground">No feedback in this period.</td></tr>
+                    {feedbackQ.isFetching && feedbackRows.length === 0 && (
+                      <tr><td colSpan={8} className="py-8 text-center text-muted-foreground">Loading…</td></tr>
                     )}
-                    {feedback.map((f) => (
+                    {!feedbackQ.isFetching && feedbackRows.length === 0 && (
+                      <tr><td colSpan={8} className="py-8 text-center text-muted-foreground">No feedback matches these filters.</td></tr>
+                    )}
+                    {feedbackRows.map((f) => (
                       <tr key={f.id} className="hover:bg-muted/20">
                         <td className="px-4 py-2 font-mono text-xs">{f.case_number ?? "—"}</td>
                         <td className="px-4 py-2 max-w-xs truncate">{f.title}</td>
                         <td className="px-4 py-2 text-xs uppercase tracking-wide text-muted-foreground">{f.interaction_type}</td>
                         <td className="px-4 py-2 text-right tabular-nums font-semibold">{f.score ?? "—"}</td>
                         <td className="px-4 py-2"><Badge variant="outline">{f.acknowledgement_status ?? "—"}</Badge></td>
+                        <td className="px-4 py-2 text-xs text-muted-foreground">{f.sent_at ? format(new Date(f.sent_at), "d MMM yyyy") : "—"}</td>
                         <td className="px-4 py-2 text-xs text-muted-foreground">{format(new Date(f.created_at), "d MMM yyyy")}</td>
                         <td className="px-4 py-2 text-right">
                           <Link to="/feedback/$id" params={{ id: f.id }} className="text-xs text-primary hover:underline">View</Link>
@@ -342,6 +443,86 @@ function AgentReportDetail() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+              <div className="flex items-center justify-between border-t px-4 py-3 text-xs text-muted-foreground">
+                <div>Page {page} of {totalPages} • {totalRows} rows</div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                    <ChevronLeft className="h-3.5 w-3.5" /> Prev
+                  </Button>
+                  <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                    Next <ChevronRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+
+            {/* Email delivery history */}
+            <Card className="overflow-hidden">
+              <div className="flex flex-wrap items-end gap-3 border-b p-4">
+                <div className="text-sm font-semibold mr-auto">Email delivery history ({emailTotal})</div>
+                <Input placeholder="Search subject / recipient" value={emailSearch}
+                  onChange={(e) => { setEmailSearch(e.target.value); setEmailPage(1); }} className="h-9 w-64" />
+                <Select value={emailStatus} onValueChange={(v) => { setEmailStatus(v); setEmailPage(1); }}>
+                  <SelectTrigger className="h-9 w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="queued">Queued</SelectItem>
+                    <SelectItem value="sending">Sending</SelectItem>
+                    <SelectItem value="sent">Sent</SelectItem>
+                    <SelectItem value="delivered">Delivered</SelectItem>
+                    <SelectItem value="bounced">Bounced</SelectItem>
+                    <SelectItem value="deferred">Deferred</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/30 text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-2 text-left">Subject</th>
+                      <th className="px-4 py-2 text-left">Recipient</th>
+                      <EmailSortHeader label="Status" col="status" />
+                      <th className="px-4 py-2 text-left">Provider</th>
+                      <th className="px-4 py-2 text-left">Attempts</th>
+                      <EmailSortHeader label="Sent" col="sent_at" />
+                      <EmailSortHeader label="Delivered" col="delivered_at" />
+                      <EmailSortHeader label="Created" col="created_at" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {emailQ.isFetching && emailRows.length === 0 && (
+                      <tr><td colSpan={8} className="py-8 text-center text-muted-foreground">Loading…</td></tr>
+                    )}
+                    {!emailQ.isFetching && emailRows.length === 0 && (
+                      <tr><td colSpan={8} className="py-8 text-center text-muted-foreground">No emails match.</td></tr>
+                    )}
+                    {emailRows.map((e) => (
+                      <tr key={e.id} className="hover:bg-muted/20">
+                        <td className="px-4 py-2 max-w-xs truncate">{e.subject}</td>
+                        <td className="px-4 py-2 text-xs">{e.to_email}</td>
+                        <td className="px-4 py-2"><Badge variant="outline">{e.status}</Badge></td>
+                        <td className="px-4 py-2 text-xs text-muted-foreground">{e.provider ?? "—"}</td>
+                        <td className="px-4 py-2 text-xs tabular-nums">{e.attempts}/{e.max_attempts}</td>
+                        <td className="px-4 py-2 text-xs text-muted-foreground">{e.sent_at ? format(new Date(e.sent_at), "d MMM HH:mm") : "—"}</td>
+                        <td className="px-4 py-2 text-xs text-muted-foreground">{e.delivered_at ? format(new Date(e.delivered_at), "d MMM HH:mm") : "—"}</td>
+                        <td className="px-4 py-2 text-xs text-muted-foreground">{format(new Date(e.created_at), "d MMM HH:mm")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex items-center justify-between border-t px-4 py-3 text-xs text-muted-foreground">
+                <div>Page {emailPage} of {emailTotalPages} • {emailTotal} rows</div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="outline" disabled={emailPage <= 1} onClick={() => setEmailPage((p) => Math.max(1, p - 1))}>
+                    <ChevronLeft className="h-3.5 w-3.5" /> Prev
+                  </Button>
+                  <Button size="sm" variant="outline" disabled={emailPage >= emailTotalPages} onClick={() => setEmailPage((p) => Math.min(emailTotalPages, p + 1))}>
+                    Next <ChevronRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
             </Card>
           </>
