@@ -1,8 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AuthPage, parseAuthSearch, type AuthSearch } from "./auth";
+import { AuthPage, parseAuthSearch, redirectIfAuthenticated, type AuthSearch } from "./auth";
 
 export const Route = createFileRoute("/auth/forgot-password")({
+  ssr: false,
   validateSearch: (s: Record<string, unknown>): AuthSearch => parseAuthSearch(s),
+  beforeLoad: async ({ search }) => {
+    await redirectIfAuthenticated(search.next);
+  },
   component: ForgotPasswordRoute,
   head: () => ({
     meta: [
@@ -14,6 +18,7 @@ export const Route = createFileRoute("/auth/forgot-password")({
     ],
   }),
 });
+
 
 function ForgotPasswordRoute() {
   const { next, email } = Route.useSearch();
