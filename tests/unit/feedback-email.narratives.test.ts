@@ -30,7 +30,7 @@ function render(opts: {
     summary: opts.present.summary ?? null,
     strengths: opts.present.strengths ?? null,
     improvements: opts.present.improvements ?? null,
-    recommendedActions: opts.present.recommendedActions ?? null,
+    recommendedActions: null,
     appBaseUrl: "https://example.test",
     metrics,
     logoUrl: null,
