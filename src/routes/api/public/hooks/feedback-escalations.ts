@@ -2,10 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { renderFeedbackEmail } from "@/lib/feedback-email.templates";
 import qualipulseMark from "@/assets/qualipulse-mark.png.asset.json";
 
-const SLA_HOURS = 48;
-const MAX_REMINDERS = 3;
-const REMINDER_INTERVAL_HOURS = 24;
-
 export const Route = createFileRoute("/api/public/hooks/feedback-escalations")({
   server: {
     handlers: {
@@ -21,10 +17,6 @@ export const Route = createFileRoute("/api/public/hooks/feedback-escalations")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        const now = Date.now();
-        const slaCutoff = new Date(now - SLA_HOURS * 3600_000).toISOString();
-        const reminderCutoff = new Date(now - REMINDER_INTERVAL_HOURS * 3600_000).toISOString();
-
         const { data: settings } = await supabaseAdmin
           .from("email_settings")
           .select("*")
@@ -34,13 +26,23 @@ export const Route = createFileRoute("/api/public/hooks/feedback-escalations")({
           return Response.json({ processed: 0, skipped: "email service disabled" });
         }
 
+        const firstDays = Number((settings as any).first_reminder_after_days ?? 2) || 2;
+        const secondDays = Number((settings as any).second_reminder_after_days ?? 5) || 5;
+        const overdueDays = Number((settings as any).overdue_after_days ?? 7) || 7;
+        const maxReminders = Number((settings as any).max_reminders ?? 3) || 3;
+
+        const now = Date.now();
+        // pick rows where next reminder is due based on their reminder_count
+        const scanCutoff = new Date(now - firstDays * 86_400_000).toISOString();
+
         const { data: rows, error } = await supabaseAdmin
           .from("feedback")
           .select("*, agent:agents(*)")
           .eq("status", "sent")
-          .lt("sent_at", slaCutoff)
-          .lt("reminder_count", MAX_REMINDERS)
-          .or(`last_reminder_at.is.null,last_reminder_at.lt.${reminderCutoff}`)
+          .is("acknowledged_at", null)
+          .is("agent_response_received_at", null)
+          .lt("sent_at", scanCutoff)
+          .lt("reminder_count", maxReminders)
           .limit(50);
 
         if (error) {
@@ -51,14 +53,23 @@ export const Route = createFileRoute("/api/public/hooks/feedback-escalations")({
         }
 
         const appBaseUrl = (process.env.APP_BASE_URL || new URL(request.url).origin).replace(/\/$/, "");
-        const processed: { id: string; queued: boolean }[] = [];
+        const replyTo = settings.reply_to ?? "itsjack2025@gmail.com";
+        const processed: { id: string; queued: boolean; skipped?: string }[] = [];
 
         for (const fb of rows ?? []) {
           if (!fb.agent?.email) {
-            processed.push({ id: fb.id, queued: false });
+            processed.push({ id: fb.id, queued: false, skipped: "no agent email" });
             continue;
           }
           const nextCount = (fb.reminder_count ?? 0) + 1;
+          const sentAt = fb.sent_at ? new Date(fb.sent_at).getTime() : now;
+          const lastAt = fb.last_reminder_sent_at ? new Date(fb.last_reminder_sent_at).getTime() : sentAt;
+          // Interval gating: 1st reminder after firstDays since send, 2nd after secondDays since 1st, etc.
+          const intervalDays = nextCount === 1 ? firstDays : nextCount === 2 ? Math.max(1, secondDays - firstDays) : Math.max(1, secondDays);
+          if (now - lastAt < intervalDays * 86_400_000) {
+            processed.push({ id: fb.id, queued: false, skipped: "interval not elapsed" });
+            continue;
+          }
 
           const { data: atts } = await supabaseAdmin
             .from("feedback_attachments")
@@ -76,28 +87,50 @@ export const Route = createFileRoute("/api/public/hooks/feedback-escalations")({
 
           const { data: scoreRows } = await supabaseAdmin
             .from("feedback_scores")
-            .select("parameter_name, selected_percentage, display_order")
+            .select("parameter_name, max_points, selected_percentage, earned_points, evaluator_note, display_order")
             .eq("feedback_id", fb.id)
             .order("display_order", { ascending: true });
-          const metrics = (scoreRows ?? [])
-            .filter((r: any) => r.selected_percentage != null)
-            .map((r: any) => ({ label: r.parameter_name as string, score: Number(r.selected_percentage) }));
+          const metrics = (scoreRows ?? []).map((r: any) => ({
+            label: r.parameter_name as string,
+            score: Number(r.selected_percentage ?? 0),
+            maxPoints: Number(r.max_points ?? 0),
+            earnedPoints: Number(r.earned_points ?? 0),
+            note: r.evaluator_note ?? null,
+          }));
+
+          let teamName: string | null = null;
+          let evaluatorName: string | null = null;
+          if (fb.team_id) {
+            const { data } = await supabaseAdmin.from("teams").select("name").eq("id", fb.team_id).maybeSingle();
+            teamName = data?.name ?? null;
+          }
+          const evalUser = (fb as any).evaluator_id || fb.created_by;
+          if (evalUser) {
+            const { data } = await supabaseAdmin.from("profiles").select("full_name").eq("id", evalUser).maybeSingle();
+            evaluatorName = data?.full_name ?? null;
+          }
 
           const { subject, html, text } = renderFeedbackEmail({
             feedbackId: fb.id,
+            caseNumber: (fb as any).case_number ?? null,
             title: fb.title,
             agentName: fb.agent.full_name,
+            teamName,
+            evaluatorName,
             managerName: fb.agent.manager_name ?? undefined,
             category: fb.category,
             feedbackType: fb.feedback_type,
             severity: fb.severity,
             interactionType: (fb as any).interaction_type,
+            interactionReference: (fb as any).interaction_reference ?? null,
+            interactionDate: (fb as any).interaction_date ?? null,
             score: fb.score as number | null,
             summary: fb.summary,
             strengths: fb.strengths,
             improvements: fb.improvements,
             recommendedActions: fb.recommended_actions,
             dueDate: fb.due_date,
+            acknowledgementDueAt: (fb as any).acknowledgement_due_at ?? null,
             appBaseUrl,
             isReminder: true,
             reminderCount: nextCount,
@@ -107,6 +140,7 @@ export const Route = createFileRoute("/api/public/hooks/feedback-escalations")({
             confidentialityNotice: settings.confidentiality_notice,
             attachmentLinks,
             metrics,
+            replyToEmail: replyTo,
           });
 
           await supabaseAdmin.from("email_queue").insert({
@@ -124,20 +158,30 @@ export const Route = createFileRoute("/api/public/hooks/feedback-escalations")({
             next_attempt_at: new Date().toISOString(),
           });
 
+          await supabaseAdmin.from("feedback_reminders").insert({
+            feedback_id: fb.id,
+            reminder_number: nextCount,
+            recipient_email: fb.agent.email,
+            subject,
+            delivery_status: "queued",
+            sent_at: new Date().toISOString(),
+          });
+
           const nowIso = new Date().toISOString();
-          await supabaseAdmin
-            .from("feedback")
-            .update({
-              reminder_count: nextCount,
-              last_reminder_at: nowIso,
-              escalated_at: fb.escalated_at ?? nowIso,
-            })
-            .eq("id", fb.id);
+          const isOverdue = (now - sentAt) / 86_400_000 >= overdueDays;
+          const patch: Record<string, unknown> = {
+            reminder_count: nextCount,
+            last_reminder_at: nowIso,
+            last_reminder_sent_at: nowIso,
+            escalated_at: fb.escalated_at ?? nowIso,
+          };
+          if (isOverdue) patch.acknowledgement_status = "overdue";
+          await supabaseAdmin.from("feedback").update(patch).eq("id", fb.id);
 
           await supabaseAdmin.from("feedback_email_events").insert({
             feedback_id: fb.id,
             event_type: "reminder_queued",
-            detail: { reminder_count: nextCount },
+            detail: { reminder_count: nextCount, overdue: isOverdue },
           });
 
           processed.push({ id: fb.id, queued: true });
