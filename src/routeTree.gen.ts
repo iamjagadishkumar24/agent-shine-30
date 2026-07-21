@@ -26,13 +26,13 @@ import { Route as AuthenticatedCoachingRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedApprovalsRouteImport } from './routes/_authenticated/approvals'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated/agents'
-import { Route as AuthenticatedAgentReportsRouteImport } from './routes/_authenticated/agent-reports'
 import { Route as AuthenticatedAcknowledgementsRouteImport } from './routes/_authenticated/acknowledgements'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedAccessManagementRouteImport } from './routes/_authenticated/access-management'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedFeedbackIndexRouteImport } from './routes/_authenticated/feedback.index'
+import { Route as AuthenticatedAgentReportsIndexRouteImport } from './routes/_authenticated/agent-reports.index'
 import { Route as AuthenticatedReportsSchedulesRouteImport } from './routes/_authenticated/reports.schedules'
 import { Route as AuthenticatedPortalIdRouteImport } from './routes/_authenticated/portal.$id'
 import { Route as AuthenticatedFeedbackNewRouteImport } from './routes/_authenticated/feedback.new'
@@ -140,12 +140,6 @@ const AuthenticatedAgentsRoute = AuthenticatedAgentsRouteImport.update({
   path: '/agents',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAgentReportsRoute =
-  AuthenticatedAgentReportsRouteImport.update({
-    id: '/agent-reports',
-    path: '/agent-reports',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedAcknowledgementsRoute =
   AuthenticatedAcknowledgementsRouteImport.update({
     id: '/acknowledgements',
@@ -179,6 +173,12 @@ const AuthenticatedFeedbackIndexRoute =
   AuthenticatedFeedbackIndexRouteImport.update({
     id: '/feedback/',
     path: '/feedback/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAgentReportsIndexRoute =
+  AuthenticatedAgentReportsIndexRouteImport.update({
+    id: '/agent-reports/',
+    path: '/agent-reports/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedReportsSchedulesRoute =
@@ -228,9 +228,9 @@ const AuthenticatedAnalyticsEmailRoute =
   } as any)
 const AuthenticatedAgentReportsIdRoute =
   AuthenticatedAgentReportsIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedAgentReportsRoute,
+    id: '/agent-reports/$id',
+    path: '/agent-reports/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
@@ -315,7 +315,6 @@ export interface FileRoutesByFullPath {
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/account': typeof AuthenticatedAccountRoute
   '/acknowledgements': typeof AuthenticatedAcknowledgementsRoute
-  '/agent-reports': typeof AuthenticatedAgentReportsRouteWithChildren
   '/agents': typeof AuthenticatedAgentsRoute
   '/analytics': typeof AuthenticatedAnalyticsRouteWithChildren
   '/approvals': typeof AuthenticatedApprovalsRoute
@@ -336,6 +335,7 @@ export interface FileRoutesByFullPath {
   '/feedback/new': typeof AuthenticatedFeedbackNewRoute
   '/portal/$id': typeof AuthenticatedPortalIdRoute
   '/reports/schedules': typeof AuthenticatedReportsSchedulesRoute
+  '/agent-reports/': typeof AuthenticatedAgentReportsIndexRoute
   '/feedback/': typeof AuthenticatedFeedbackIndexRoute
   '/coaching/plans/$id': typeof AuthenticatedCoachingPlansIdRoute
   '/coaching/plans/new': typeof AuthenticatedCoachingPlansNewRoute
@@ -361,7 +361,6 @@ export interface FileRoutesByTo {
   '/access-management': typeof AuthenticatedAccessManagementRoute
   '/account': typeof AuthenticatedAccountRoute
   '/acknowledgements': typeof AuthenticatedAcknowledgementsRoute
-  '/agent-reports': typeof AuthenticatedAgentReportsRouteWithChildren
   '/agents': typeof AuthenticatedAgentsRoute
   '/analytics': typeof AuthenticatedAnalyticsRouteWithChildren
   '/approvals': typeof AuthenticatedApprovalsRoute
@@ -382,6 +381,7 @@ export interface FileRoutesByTo {
   '/feedback/new': typeof AuthenticatedFeedbackNewRoute
   '/portal/$id': typeof AuthenticatedPortalIdRoute
   '/reports/schedules': typeof AuthenticatedReportsSchedulesRoute
+  '/agent-reports': typeof AuthenticatedAgentReportsIndexRoute
   '/feedback': typeof AuthenticatedFeedbackIndexRoute
   '/coaching/plans/$id': typeof AuthenticatedCoachingPlansIdRoute
   '/coaching/plans/new': typeof AuthenticatedCoachingPlansNewRoute
@@ -409,7 +409,6 @@ export interface FileRoutesById {
   '/_authenticated/access-management': typeof AuthenticatedAccessManagementRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/acknowledgements': typeof AuthenticatedAcknowledgementsRoute
-  '/_authenticated/agent-reports': typeof AuthenticatedAgentReportsRouteWithChildren
   '/_authenticated/agents': typeof AuthenticatedAgentsRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRouteWithChildren
   '/_authenticated/approvals': typeof AuthenticatedApprovalsRoute
@@ -430,6 +429,7 @@ export interface FileRoutesById {
   '/_authenticated/feedback/new': typeof AuthenticatedFeedbackNewRoute
   '/_authenticated/portal/$id': typeof AuthenticatedPortalIdRoute
   '/_authenticated/reports/schedules': typeof AuthenticatedReportsSchedulesRoute
+  '/_authenticated/agent-reports/': typeof AuthenticatedAgentReportsIndexRoute
   '/_authenticated/feedback/': typeof AuthenticatedFeedbackIndexRoute
   '/_authenticated/coaching/plans/$id': typeof AuthenticatedCoachingPlansIdRoute
   '/_authenticated/coaching/plans/new': typeof AuthenticatedCoachingPlansNewRoute
@@ -457,7 +457,6 @@ export interface FileRouteTypes {
     | '/access-management'
     | '/account'
     | '/acknowledgements'
-    | '/agent-reports'
     | '/agents'
     | '/analytics'
     | '/approvals'
@@ -478,6 +477,7 @@ export interface FileRouteTypes {
     | '/feedback/new'
     | '/portal/$id'
     | '/reports/schedules'
+    | '/agent-reports/'
     | '/feedback/'
     | '/coaching/plans/$id'
     | '/coaching/plans/new'
@@ -503,7 +503,6 @@ export interface FileRouteTypes {
     | '/access-management'
     | '/account'
     | '/acknowledgements'
-    | '/agent-reports'
     | '/agents'
     | '/analytics'
     | '/approvals'
@@ -524,6 +523,7 @@ export interface FileRouteTypes {
     | '/feedback/new'
     | '/portal/$id'
     | '/reports/schedules'
+    | '/agent-reports'
     | '/feedback'
     | '/coaching/plans/$id'
     | '/coaching/plans/new'
@@ -550,7 +550,6 @@ export interface FileRouteTypes {
     | '/_authenticated/access-management'
     | '/_authenticated/account'
     | '/_authenticated/acknowledgements'
-    | '/_authenticated/agent-reports'
     | '/_authenticated/agents'
     | '/_authenticated/analytics'
     | '/_authenticated/approvals'
@@ -571,6 +570,7 @@ export interface FileRouteTypes {
     | '/_authenticated/feedback/new'
     | '/_authenticated/portal/$id'
     | '/_authenticated/reports/schedules'
+    | '/_authenticated/agent-reports/'
     | '/_authenticated/feedback/'
     | '/_authenticated/coaching/plans/$id'
     | '/_authenticated/coaching/plans/new'
@@ -728,13 +728,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/agent-reports': {
-      id: '/_authenticated/agent-reports'
-      path: '/agent-reports'
-      fullPath: '/agent-reports'
-      preLoaderRoute: typeof AuthenticatedAgentReportsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/acknowledgements': {
       id: '/_authenticated/acknowledgements'
       path: '/acknowledgements'
@@ -775,6 +768,13 @@ declare module '@tanstack/react-router' {
       path: '/feedback'
       fullPath: '/feedback/'
       preLoaderRoute: typeof AuthenticatedFeedbackIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/agent-reports/': {
+      id: '/_authenticated/agent-reports/'
+      path: '/agent-reports'
+      fullPath: '/agent-reports/'
+      preLoaderRoute: typeof AuthenticatedAgentReportsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/reports/schedules': {
@@ -835,10 +835,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/agent-reports/$id': {
       id: '/_authenticated/agent-reports/$id'
-      path: '/$id'
+      path: '/agent-reports/$id'
       fullPath: '/agent-reports/$id'
       preLoaderRoute: typeof AuthenticatedAgentReportsIdRouteImport
-      parentRoute: typeof AuthenticatedAgentReportsRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/.mcp/invoke-tool/$tool': {
       id: '/.mcp/invoke-tool/$tool'
@@ -927,20 +927,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedAgentReportsRouteChildren {
-  AuthenticatedAgentReportsIdRoute: typeof AuthenticatedAgentReportsIdRoute
-}
-
-const AuthenticatedAgentReportsRouteChildren: AuthenticatedAgentReportsRouteChildren =
-  {
-    AuthenticatedAgentReportsIdRoute: AuthenticatedAgentReportsIdRoute,
-  }
-
-const AuthenticatedAgentReportsRouteWithChildren =
-  AuthenticatedAgentReportsRoute._addFileChildren(
-    AuthenticatedAgentReportsRouteChildren,
-  )
-
 interface AuthenticatedAnalyticsRouteChildren {
   AuthenticatedAnalyticsEmailRoute: typeof AuthenticatedAnalyticsEmailRoute
 }
@@ -1014,7 +1000,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccessManagementRoute: typeof AuthenticatedAccessManagementRoute
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedAcknowledgementsRoute: typeof AuthenticatedAcknowledgementsRoute
-  AuthenticatedAgentReportsRoute: typeof AuthenticatedAgentReportsRouteWithChildren
   AuthenticatedAgentsRoute: typeof AuthenticatedAgentsRoute
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRouteWithChildren
   AuthenticatedApprovalsRoute: typeof AuthenticatedApprovalsRoute
@@ -1024,8 +1009,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRouteWithChildren
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedAgentReportsIdRoute: typeof AuthenticatedAgentReportsIdRoute
   AuthenticatedFeedbackIdRoute: typeof AuthenticatedFeedbackIdRoute
   AuthenticatedFeedbackNewRoute: typeof AuthenticatedFeedbackNewRoute
+  AuthenticatedAgentReportsIndexRoute: typeof AuthenticatedAgentReportsIndexRoute
   AuthenticatedFeedbackIndexRoute: typeof AuthenticatedFeedbackIndexRoute
 }
 
@@ -1033,7 +1020,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccessManagementRoute: AuthenticatedAccessManagementRoute,
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedAcknowledgementsRoute: AuthenticatedAcknowledgementsRoute,
-  AuthenticatedAgentReportsRoute: AuthenticatedAgentReportsRouteWithChildren,
   AuthenticatedAgentsRoute: AuthenticatedAgentsRoute,
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRouteWithChildren,
   AuthenticatedApprovalsRoute: AuthenticatedApprovalsRoute,
@@ -1043,8 +1029,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPortalRoute: AuthenticatedPortalRouteWithChildren,
   AuthenticatedReportsRoute: AuthenticatedReportsRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedAgentReportsIdRoute: AuthenticatedAgentReportsIdRoute,
   AuthenticatedFeedbackIdRoute: AuthenticatedFeedbackIdRoute,
   AuthenticatedFeedbackNewRoute: AuthenticatedFeedbackNewRoute,
+  AuthenticatedAgentReportsIndexRoute: AuthenticatedAgentReportsIndexRoute,
   AuthenticatedFeedbackIndexRoute: AuthenticatedFeedbackIndexRoute,
 }
 

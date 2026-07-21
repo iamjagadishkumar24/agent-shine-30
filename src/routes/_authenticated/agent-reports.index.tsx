@@ -13,7 +13,7 @@ import { listAgentReports } from "@/lib/agent-reports.functions";
 import { format } from "date-fns";
 import { toCsv } from "@/lib/reports";
 
-export const Route = createFileRoute("/_authenticated/agent-reports")({
+export const Route = createFileRoute("/_authenticated/agent-reports/")({
   component: AgentReportsList,
 });
 
