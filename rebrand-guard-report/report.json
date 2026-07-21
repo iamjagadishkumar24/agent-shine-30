@@ -604,7 +604,7 @@
     }
   ],
   "per_file": {},
-  "generated_at": "2026-07-21T15:09:29.031Z",
+  "generated_at": "2026-07-21T15:11:19.058Z",
   "detection": "case-insensitive + unicode-confusables + separator-insertions + zero-width-stripped",
   "matches": []
 }
