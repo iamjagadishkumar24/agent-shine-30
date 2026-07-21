@@ -458,6 +458,21 @@ jobs:
               }
             } catch {}
 
+            // Historical trend across recorded scheduled runs.
+            try {
+              const trendMd = fs.readFileSync(`${outDir}/diffs/trend.md`, 'utf8');
+              if (trendMd.trim()) {
+                body +=
+                  `\n<details open><summary>Trend (last 10 scheduled runs)</summary>\n\n` +
+                  `${trendMd.slice(0, 20000)}\n\n` +
+                  `_History persisted on branch \`feedback-email-history\` (\`history.jsonl\`)._\n` +
+                  `</details>\n`;
+              }
+            } catch {}
+
+
+
+
 
 
             const title = `Feedback email contract drift (${new Date().toISOString().slice(0,10)})`;
