@@ -44,6 +44,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications/notifications-bell";
+import { ExportsMenu } from "@/components/exports/exports-menu";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
