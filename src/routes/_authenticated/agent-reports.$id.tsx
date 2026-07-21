@@ -536,7 +536,15 @@ function AgentReportDetail() {
             {/* Feedback table with server-side filters */}
             <Card className="overflow-hidden">
               <div className="flex flex-wrap items-end gap-3 border-b p-4">
-                <div className="text-sm font-semibold mr-auto">Feedback history ({totalRows})</div>
+                <div className="mr-auto flex items-center gap-2">
+                  <div className="text-sm font-semibold">Feedback history ({totalRows})</div>
+                  <Button size="sm" variant="outline" className="h-8" onClick={exportFeedbackCsv} disabled={!!exporting}>
+                    {exporting === "fb-csv" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1.5 h-3.5 w-3.5" />} CSV
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-8" onClick={exportFeedbackPdf} disabled={!!exporting}>
+                    {exporting === "fb-pdf" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <FileText className="mr-1.5 h-3.5 w-3.5" />} PDF
+                  </Button>
+                </div>
                 <Input placeholder="Search title / case / category" value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="h-9 w-64" />
                 <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
