@@ -266,7 +266,7 @@ export function AuthPage({ initialMode, next, initialEmail }: { initialMode: Mod
           JSON.stringify({ email: trimmedEmail, name: name.trim(), mode }),
         );
       } catch {}
-      const redirectUri = `${window.location.origin}/auth${next ? `?next=${encodeURIComponent(next)}` : ""}`;
+      const redirectUri = `${window.location.origin}/auth/signin${next ? `?next=${encodeURIComponent(next)}` : ""}`;
       const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectUri });
       if (result.error) {
         setErrorMsg(result.error.message);
