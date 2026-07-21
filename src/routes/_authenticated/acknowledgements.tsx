@@ -83,9 +83,9 @@ function AcknowledgementsAdmin() {
     queryFn: () => list({ data: { status, q: q || undefined, limit: 200 } }),
   });
 
-  useRealtimeInvalidate("feedback", ["ack-admin"]);
-  useRealtimeInvalidate("feedback_reminders", ["ack-admin", "ack-history"]);
-  useRealtimeInvalidate("feedback_email_responses", ["ack-admin", "ack-history"]);
+  useRealtimeInvalidate("feedback", [["ack-admin"]]);
+  useRealtimeInvalidate("feedback_reminders", [["ack-admin"], ["ack-history"]]);
+  useRealtimeInvalidate("feedback_email_responses", [["ack-admin"], ["ack-history"]]);
 
   const rows: AckRow[] = query.data ?? [];
 
