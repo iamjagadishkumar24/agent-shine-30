@@ -33,6 +33,17 @@ export function parseAuthSearch(s: Record<string, unknown>): AuthSearch {
   return out;
 }
 
+// Redirect signed-in visitors away from the auth pages so they never see
+// sign-in / sign-up UI while a session is already active. Honors a safe
+// `next` search param so post-login redirects continue to work.
+export async function redirectIfAuthenticated(next?: string) {
+  const { supabase } = await import("@/integrations/supabase/client");
+  const { data } = await supabase.auth.getSession();
+  if (data.session) {
+    throw redirect({ to: safeNext(next) });
+  }
+}
+
 // The bare `/auth` URL redirects to the canonical `/auth/signin` page so
 // every entry point lands on a dedicated route rather than an intermediate
 // mode picker.
@@ -52,6 +63,7 @@ export const Route = createFileRoute("/auth")({
     throw redirect({ to: target, search: passthrough });
   },
 });
+
 
 export function safeNext(next: string | undefined): string {
   if (!next || !next.startsWith("/") || next.startsWith("//")) return "/dashboard";
