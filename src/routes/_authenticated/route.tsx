@@ -57,7 +57,7 @@ const STAFF_NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/feedback", label: "Feedback", icon: MessageSquareText },
-  
+  { to: "/acknowledgements", label: "Acknowledgements", icon: MessageSquareText },
   { to: "/coaching", label: "Coaching", icon: GraduationCap },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/reports", label: "Reports", icon: FileBarChart },
