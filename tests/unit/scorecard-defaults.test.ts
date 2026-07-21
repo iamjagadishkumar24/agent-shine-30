@@ -62,13 +62,13 @@ describe("weighted score calculation", () => {
   });
 
   it("weights the higher-max parameters more than the lower-max ones", () => {
-    // Only "Understanding Customer Issues" (weight 25) scored 100, rest 0.
+    // Only "Understanding Customer Requirements" (weight 25) scored 100, rest 0.
     const scoresA = EXPECTED.map((p) =>
-      p.name === "Understanding Customer Issues" ? 100 : 0,
+      p.name === "Understanding Customer Requirements" ? 100 : 0,
     );
-    // Only "Customer Satisfaction" (weight 5) scored 100, rest 0.
+    // Only "Customer Satisfaction (CSAT)" (weight 5) scored 100, rest 0.
     const scoresB = EXPECTED.map((p) =>
-      p.name === "Customer Satisfaction" ? 100 : 0,
+      p.name === "Customer Satisfaction (CSAT)" ? 100 : 0,
     );
     expect(computeOverallScore(scoresA)).toBeCloseTo(25, 6);
     expect(computeOverallScore(scoresB)).toBeCloseTo(5, 6);
