@@ -97,7 +97,7 @@ function scoreColor(n: number): string {
 }
 
 // Fill missing per-parameter rows with 0% so the email always shows all seven.
-function normalizeMetrics(input?: FeedbackMetric[] | null): Required<Omit<FeedbackMetric, "note">> & { note: string | null }[] extends never ? never : FeedbackMetric[] {
+function normalizeMetrics(input?: FeedbackMetric[] | null): FeedbackMetric[] {
   const byKey = new Map<string, FeedbackMetric>();
   for (const m of input ?? []) {
     const k = (m.label ?? "").trim().toLowerCase();
