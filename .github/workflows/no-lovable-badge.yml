@@ -13,12 +13,23 @@ on:
   workflow_dispatch:
     inputs:
       base_url:
-        description: "Published URL to audit"
+        description: "Override URL to audit (leave blank to run both staging + production)"
         required: false
-        default: "https://agent-shine-30.lovable.app"
+        default: ""
 
 jobs:
   badge-guard:
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - name: staging
+            # Stable preview URL — always serves the latest preview build.
+            url: https://project--ee9ab798-a4f8-4621-a924-2bc91cf49061-dev.lovable.app
+          - name: production
+            # Stable published URL.
+            url: https://agent-shine-30.lovable.app
+    name: badge-guard (${{ matrix.target.name }})
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -36,14 +47,14 @@ jobs:
 
       - name: Run badge DOM + screenshot guard
         env:
-          BASE_URL: ${{ github.event.inputs.base_url || 'https://agent-shine-30.lovable.app' }}
+          BASE_URL: ${{ github.event.inputs.base_url || matrix.target.url }}
         run: python3 tests/e2e/no_lovable_badge.spec.py
 
       - name: Upload badge guard screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: no-lovable-badge-screenshots
+          name: no-lovable-badge-${{ matrix.target.name }}
           path: tests/e2e/screenshots/no_lovable_badge/**
           if-no-files-found: ignore
           retention-days: 14
