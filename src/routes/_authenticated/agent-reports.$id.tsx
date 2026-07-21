@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getAgentReport, listAgentReportFeedback, listAgentFeedbackEmails } from "@/lib/agent-reports.functions";
-import { ArrowLeft, FileText, FileSpreadsheet, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, FileText, FileSpreadsheet, ArrowUpDown, ChevronLeft, ChevronRight, Download, Loader2 } from "lucide-react";
 import { toCsv, toPdf } from "@/lib/reports";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, Legend } from "recharts";
@@ -156,59 +156,224 @@ function AgentReportDetail() {
     setEmailPage(1);
   };
 
-  const exportPdf = () => {
-    if (!agent) return;
-    toPdf({
-      title: `Agent Report — ${agent.full_name}`,
-      subtitle: `Period: ${range.label} • Generated ${format(new Date(), "PPpp")}`,
-      filename: `agent-report-${agent.full_name.replace(/\s+/g, "-")}.pdf`,
-      sections: [
-        {
-          title: "Summary",
-          columns: ["Metric", "Value"],
-          rows: [
-            ["Total feedback", stats.total],
-            ["Average score", stats.avg ?? "—"],
-            ["Highest score", stats.high ?? "—"],
-            ["Lowest score", stats.low ?? "—"],
-            ["Acknowledged", stats.ackd],
-            ["Pending", stats.pending],
-            ["Chat / Case", `${stats.chat} / ${stats.cases}`],
-          ],
+  const [exporting, setExporting] = useState<null | "fb-csv" | "fb-pdf" | "em-csv" | "em-pdf" | "all-pdf">(null);
+  const MAX_EXPORT = 5000;
+
+  async function fetchAllFeedback(): Promise<any[]> {
+    const rows: any[] = [];
+    let p = 1;
+    while (rows.length < MAX_EXPORT) {
+      const res = await listFn({
+        data: {
+          agentId: id,
+          from: range.from,
+          to: range.to,
+          search: search || undefined,
+          status: status !== "all" ? status : undefined,
+          ackStatus: ackStatus !== "all" ? ackStatus : undefined,
+          interactionType: interaction !== "all" ? (interaction as "chat" | "case") : undefined,
+          minScore: minScore ? Number(minScore) : undefined,
+          maxScore: maxScore ? Number(maxScore) : undefined,
+          sortBy, sortDir, page: p, pageSize: 100,
         },
-        paramAvg.length ? {
-          title: "Parameter averages",
-          columns: ["Parameter", "Average", "Max"],
-          rows: paramAvg.map((p) => [p.name, p.avg, p.max]),
-        } : null,
-        {
-          title: `Feedback (page ${page}/${totalPages})`,
-          columns: ["Case", "Title", "Type", "Score", "Ack", "Date"],
-          rows: feedbackRows.map((f) => [
+      });
+      rows.push(...(res.rows as any[]));
+      if (p >= res.totalPages) break;
+      p += 1;
+    }
+    return rows;
+  }
+
+  async function fetchAllEmails(): Promise<any[]> {
+    const rows: any[] = [];
+    let p = 1;
+    while (rows.length < MAX_EXPORT) {
+      const res = await emailFn({
+        data: {
+          agentId: id,
+          from: range.from,
+          to: range.to,
+          search: emailSearch || undefined,
+          status: emailStatus !== "all" ? emailStatus : undefined,
+          sortBy: emailSortBy, sortDir: emailSortDir, page: p, pageSize: 100,
+        },
+      });
+      rows.push(...(res.rows as any[]));
+      if (p >= res.totalPages) break;
+      p += 1;
+    }
+    return rows;
+  }
+
+  const filterSummary = () => {
+    const parts: string[] = [`Period: ${range.label}`];
+    if (search) parts.push(`Search: "${search}"`);
+    if (status !== "all") parts.push(`Status: ${status}`);
+    if (ackStatus !== "all") parts.push(`Ack: ${ackStatus}`);
+    if (interaction !== "all") parts.push(`Type: ${interaction}`);
+    if (minScore) parts.push(`Min score: ${minScore}`);
+    if (maxScore) parts.push(`Max score: ${maxScore}`);
+    parts.push(`Sort: ${sortBy} ${sortDir}`);
+    return parts.join(" • ");
+  };
+
+  const emailFilterSummary = () => {
+    const parts: string[] = [`Period: ${range.label}`];
+    if (emailSearch) parts.push(`Search: "${emailSearch}"`);
+    if (emailStatus !== "all") parts.push(`Status: ${emailStatus}`);
+    parts.push(`Sort: ${emailSortBy} ${emailSortDir}`);
+    return parts.join(" • ");
+  };
+
+  const safeName = () => (agent?.full_name ?? "agent").replace(/\s+/g, "-");
+
+  const exportFeedbackCsv = async () => {
+    if (!agent) return;
+    try {
+      setExporting("fb-csv");
+      const rows = await fetchAllFeedback();
+      toCsv(rows.map((f) => ({
+        Case: f.case_number ?? "",
+        Title: f.title ?? "",
+        Type: f.interaction_type ?? "",
+        Score: f.score ?? "",
+        "Overall %": f.overall_percentage ?? "",
+        Status: f.status ?? "",
+        Acknowledgement: f.acknowledgement_status ?? "",
+        Category: f.category ?? "",
+        Sent: f.sent_at ? format(new Date(f.sent_at), "yyyy-MM-dd HH:mm") : "",
+        Delivered: f.delivered_at ? format(new Date(f.delivered_at), "yyyy-MM-dd HH:mm") : "",
+        Acknowledged: f.acknowledged_at ? format(new Date(f.acknowledged_at), "yyyy-MM-dd HH:mm") : "",
+        Created: f.created_at ? format(new Date(f.created_at), "yyyy-MM-dd HH:mm") : "",
+      })), `agent-${safeName()}-feedback.csv`);
+    } finally { setExporting(null); }
+  };
+
+  const exportFeedbackPdf = async () => {
+    if (!agent) return;
+    try {
+      setExporting("fb-pdf");
+      const rows = await fetchAllFeedback();
+      toPdf({
+        title: `Feedback — ${agent.full_name}`,
+        subtitle: `${filterSummary()} • ${rows.length} rows • Generated ${format(new Date(), "PPpp")}`,
+        filename: `agent-${safeName()}-feedback.pdf`,
+        sections: [{
+          title: `Feedback history (${rows.length})`,
+          columns: ["Case", "Title", "Type", "Score", "Status", "Ack", "Sent", "Created"],
+          rows: rows.map((f) => [
             f.case_number ?? "—",
             f.title ?? "",
             f.interaction_type ?? "",
             f.score ?? "—",
+            f.status ?? "—",
             f.acknowledgement_status ?? "—",
+            f.sent_at ? format(new Date(f.sent_at), "yyyy-MM-dd") : "",
             f.created_at ? format(new Date(f.created_at), "yyyy-MM-dd") : "",
           ]),
-        },
-      ].filter(Boolean) as any,
-    });
+        }],
+      });
+    } finally { setExporting(null); }
   };
 
-  const exportCsv = () => {
+  const exportEmailCsv = async () => {
     if (!agent) return;
-    toCsv(feedbackRows.map((f) => ({
-      Case: f.case_number ?? "",
-      Title: f.title,
-      Type: f.interaction_type,
-      Score: f.score ?? "",
-      Status: f.status,
-      Acknowledgement: f.acknowledgement_status ?? "",
-      Date: f.created_at ? format(new Date(f.created_at), "yyyy-MM-dd") : "",
-    })), `agent-${agent.full_name.replace(/\s+/g, "-")}.csv`);
+    try {
+      setExporting("em-csv");
+      const rows = await fetchAllEmails();
+      toCsv(rows.map((e) => ({
+        Subject: e.subject ?? "",
+        Recipient: e.to_email ?? "",
+        Status: e.status ?? "",
+        Provider: e.provider ?? "",
+        "Provider Message ID": e.provider_message_id ?? "",
+        "Provider Status": e.provider_status ?? "",
+        Attempts: `${e.attempts}/${e.max_attempts}`,
+        "Last Error": e.last_error ?? "",
+        Sent: e.sent_at ? format(new Date(e.sent_at), "yyyy-MM-dd HH:mm") : "",
+        Delivered: e.delivered_at ? format(new Date(e.delivered_at), "yyyy-MM-dd HH:mm") : "",
+        Bounced: e.bounced_at ? format(new Date(e.bounced_at), "yyyy-MM-dd HH:mm") : "",
+        "Bounce Reason": e.bounce_reason ?? "",
+        Created: e.created_at ? format(new Date(e.created_at), "yyyy-MM-dd HH:mm") : "",
+      })), `agent-${safeName()}-emails.csv`);
+    } finally { setExporting(null); }
   };
+
+  const exportEmailPdf = async () => {
+    if (!agent) return;
+    try {
+      setExporting("em-pdf");
+      const rows = await fetchAllEmails();
+      toPdf({
+        title: `Email delivery — ${agent.full_name}`,
+        subtitle: `${emailFilterSummary()} • ${rows.length} rows • Generated ${format(new Date(), "PPpp")}`,
+        filename: `agent-${safeName()}-emails.pdf`,
+        sections: [{
+          title: `Email history (${rows.length})`,
+          columns: ["Subject", "Recipient", "Status", "Provider", "Attempts", "Sent", "Delivered"],
+          rows: rows.map((e) => [
+            e.subject ?? "",
+            e.to_email ?? "",
+            e.status ?? "",
+            e.provider ?? "—",
+            `${e.attempts}/${e.max_attempts}`,
+            e.sent_at ? format(new Date(e.sent_at), "yyyy-MM-dd HH:mm") : "—",
+            e.delivered_at ? format(new Date(e.delivered_at), "yyyy-MM-dd HH:mm") : "—",
+          ]),
+        }],
+      });
+    } finally { setExporting(null); }
+  };
+
+  // Full report PDF — summary + charts data + all filtered feedback rows
+  const exportPdf = async () => {
+    if (!agent) return;
+    try {
+      setExporting("all-pdf");
+      const rows = await fetchAllFeedback();
+      toPdf({
+        title: `Agent Report — ${agent.full_name}`,
+        subtitle: `${filterSummary()} • Generated ${format(new Date(), "PPpp")}`,
+        filename: `agent-report-${safeName()}.pdf`,
+        sections: [
+          {
+            title: "Summary",
+            columns: ["Metric", "Value"],
+            rows: [
+              ["Total feedback", stats.total],
+              ["Average score", stats.avg ?? "—"],
+              ["Highest score", stats.high ?? "—"],
+              ["Lowest score", stats.low ?? "—"],
+              ["Acknowledged", stats.ackd],
+              ["Pending", stats.pending],
+              ["Chat / Case", `${stats.chat} / ${stats.cases}`],
+            ],
+          },
+          paramAvg.length ? {
+            title: "Parameter averages",
+            columns: ["Parameter", "Average", "Max"],
+            rows: paramAvg.map((p) => [p.name, p.avg, p.max]),
+          } : null,
+          {
+            title: `Feedback (${rows.length} rows)`,
+            columns: ["Case", "Title", "Type", "Score", "Ack", "Date"],
+            rows: rows.map((f) => [
+              f.case_number ?? "—",
+              f.title ?? "",
+              f.interaction_type ?? "",
+              f.score ?? "—",
+              f.acknowledgement_status ?? "—",
+              f.created_at ? format(new Date(f.created_at), "yyyy-MM-dd") : "",
+            ]),
+          },
+        ].filter(Boolean) as any,
+      });
+    } finally { setExporting(null); }
+  };
+
+  const exportCsv = exportFeedbackCsv;
+
+
 
   const SortHeader = ({ label, col, align = "left" }: { label: string; col: SortBy; align?: "left" | "right" }) => (
     <th className={`px-4 py-2 ${align === "right" ? "text-right" : "text-left"}`}>
@@ -235,8 +400,12 @@ function AgentReportDetail() {
             <Button asChild variant="ghost" size="sm">
               <Link to="/agent-reports"><ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back</Link>
             </Button>
-            <Button size="sm" variant="outline" onClick={exportCsv}><FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" /> CSV</Button>
-            <Button size="sm" onClick={exportPdf}><FileText className="mr-1.5 h-3.5 w-3.5" /> PDF</Button>
+            <Button size="sm" variant="outline" onClick={exportCsv} disabled={!!exporting}>
+              {exporting === "fb-csv" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />} CSV
+            </Button>
+            <Button size="sm" onClick={exportPdf} disabled={!!exporting}>
+              {exporting === "all-pdf" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <FileText className="mr-1.5 h-3.5 w-3.5" />} PDF
+            </Button>
           </div>
         }
       />
@@ -367,7 +536,15 @@ function AgentReportDetail() {
             {/* Feedback table with server-side filters */}
             <Card className="overflow-hidden">
               <div className="flex flex-wrap items-end gap-3 border-b p-4">
-                <div className="text-sm font-semibold mr-auto">Feedback history ({totalRows})</div>
+                <div className="mr-auto flex items-center gap-2">
+                  <div className="text-sm font-semibold">Feedback history ({totalRows})</div>
+                  <Button size="sm" variant="outline" className="h-8" onClick={exportFeedbackCsv} disabled={!!exporting}>
+                    {exporting === "fb-csv" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1.5 h-3.5 w-3.5" />} CSV
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-8" onClick={exportFeedbackPdf} disabled={!!exporting}>
+                    {exporting === "fb-pdf" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <FileText className="mr-1.5 h-3.5 w-3.5" />} PDF
+                  </Button>
+                </div>
                 <Input placeholder="Search title / case / category" value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="h-9 w-64" />
                 <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
@@ -460,7 +637,15 @@ function AgentReportDetail() {
             {/* Email delivery history */}
             <Card className="overflow-hidden">
               <div className="flex flex-wrap items-end gap-3 border-b p-4">
-                <div className="text-sm font-semibold mr-auto">Email delivery history ({emailTotal})</div>
+                <div className="mr-auto flex items-center gap-2">
+                  <div className="text-sm font-semibold">Email delivery history ({emailTotal})</div>
+                  <Button size="sm" variant="outline" className="h-8" onClick={exportEmailCsv} disabled={!!exporting}>
+                    {exporting === "em-csv" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1.5 h-3.5 w-3.5" />} CSV
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-8" onClick={exportEmailPdf} disabled={!!exporting}>
+                    {exporting === "em-pdf" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <FileText className="mr-1.5 h-3.5 w-3.5" />} PDF
+                  </Button>
+                </div>
                 <Input placeholder="Search subject / recipient" value={emailSearch}
                   onChange={(e) => { setEmailSearch(e.target.value); setEmailPage(1); }} className="h-9 w-64" />
                 <Select value={emailStatus} onValueChange={(v) => { setEmailStatus(v); setEmailPage(1); }}>
