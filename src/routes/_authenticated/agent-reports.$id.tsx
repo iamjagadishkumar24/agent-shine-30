@@ -400,8 +400,12 @@ function AgentReportDetail() {
             <Button asChild variant="ghost" size="sm">
               <Link to="/agent-reports"><ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back</Link>
             </Button>
-            <Button size="sm" variant="outline" onClick={exportCsv}><FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" /> CSV</Button>
-            <Button size="sm" onClick={exportPdf}><FileText className="mr-1.5 h-3.5 w-3.5" /> PDF</Button>
+            <Button size="sm" variant="outline" onClick={exportCsv} disabled={!!exporting}>
+              {exporting === "fb-csv" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />} CSV
+            </Button>
+            <Button size="sm" onClick={exportPdf} disabled={!!exporting}>
+              {exporting === "all-pdf" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <FileText className="mr-1.5 h-3.5 w-3.5" />} PDF
+            </Button>
           </div>
         }
       />
