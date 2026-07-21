@@ -214,14 +214,47 @@ function ReportsPage() {
     <div>
       <PageHeader
         title="Reports"
-        subtitle="Export performance, trends, and delivery data as PDF or CSV."
+        subtitle={`Export performance, trends, and delivery data. Period: ${range.label}`}
         actions={
           <Button asChild size="sm" variant="outline">
             <Link to="/reports/schedules"><CalendarClock className="mr-1.5 h-3.5 w-3.5" /> Scheduled reports</Link>
           </Button>
         }
       />
-      <div className="mx-auto max-w-5xl px-8 pb-12 pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="mx-auto max-w-5xl space-y-4 px-4 pb-12 pt-4 sm:px-8">
+        <Card className="p-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <div>
+              <Label className="text-xs">Period</Label>
+              <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+                <SelectTrigger className="h-9 w-[180px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All time</SelectItem>
+                  <SelectItem value="current_week">Current week</SelectItem>
+                  <SelectItem value="previous_week">Previous week</SelectItem>
+                  <SelectItem value="current_month">Current month</SelectItem>
+                  <SelectItem value="previous_month">Previous month</SelectItem>
+                  <SelectItem value="custom">Custom range</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {period === "custom" && (
+              <>
+                <div>
+                  <Label className="text-xs">From</Label>
+                  <Input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} className="h-9 w-[160px]" />
+                </div>
+                <div>
+                  <Label className="text-xs">To</Label>
+                  <Input type="date" value={customTo} min={customFrom} onChange={(e) => setCustomTo(e.target.value)} className="h-9 w-[160px]" />
+                </div>
+              </>
+            )}
+            <div className="ml-auto text-xs text-muted-foreground">{feedback.length} feedback items in scope</div>
+          </div>
+        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
         {REPORTS.map((r) => (
           <Card key={r.key} className="p-5 flex flex-col">
             <div className="flex items-start gap-3">
