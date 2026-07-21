@@ -22,25 +22,25 @@ export const BRAND = {
 // Canonical seven quality parameters, in canonical display order, with
 // weights (max points) totalling 100.
 export const QUALITY_PARAMETERS = [
-  "Accuracy",
-  "Understanding Customer Issues",
-  "Customer Satisfaction",
+  "Accuracy & Quality",
+  "Understanding Customer Requirements",
+  "Customer Satisfaction (CSAT)",
   "Product Knowledge & Resolution",
-  "Average Handling Time",
-  "Compliance",
-  "Technical Accuracy / IHD",
+  "Average Handling Time (AHT)",
+  "Policy & Process Compliance",
+  "Technical Accuracy / Issue Handling",
 ] as const;
 
 export type QualityParameter = (typeof QUALITY_PARAMETERS)[number];
 
 export const QUALITY_PARAMETER_WEIGHTS: Record<QualityParameter, number> = {
-  "Accuracy": 20,
-  "Understanding Customer Issues": 25,
-  "Customer Satisfaction": 5,
+  "Accuracy & Quality": 20,
+  "Understanding Customer Requirements": 25,
+  "Customer Satisfaction (CSAT)": 5,
   "Product Knowledge & Resolution": 20,
-  "Average Handling Time": 10,
-  "Compliance": 10,
-  "Technical Accuracy / IHD": 10,
+  "Average Handling Time (AHT)": 10,
+  "Policy & Process Compliance": 10,
+  "Technical Accuracy / Issue Handling": 10,
 };
 
 // Weighted overall score: each score is 0-100 for its parameter; the

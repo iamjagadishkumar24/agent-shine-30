@@ -46,7 +46,6 @@ const DraftSchema = z.object({
   summary: z.string(),
   strengths: z.string(),
   improvements: z.string(),
-  recommended_actions: z.string(),
 });
 
 const clamp = (s: unknown, max: number) =>
@@ -87,7 +86,8 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
     const system = [
       "You are a senior Customer Success coach writing agent feedback for an enterprise contact center.",
       "Tone: professional, empathetic, specific, action-oriented. No fluff, no clichés.",
-      "Write each field as plain prose (no markdown headings). Keep each section under 120 words.",
+      "Summary MUST be 2–3 sentences maximum — no long paragraphs, no repetition.",
+      "Strengths and improvements should be concise bullet-style prose (short lines, 3–4 items max each).",
       "Never invent facts the observer didn't mention. If a section has no basis, keep it short and honest.",
       "Always return every field as a non-empty string; if a section truly has no material, write a single sentence acknowledging that.",
       `Template guidance: ${TEMPLATE_GUIDANCE[data.template]}`,
@@ -106,7 +106,7 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
       "Reviewer observations:",
       data.observations,
       "",
-      "Produce a structured feedback draft as JSON with fields: title (short, <=90 chars), summary (1 paragraph), strengths, improvements, recommended_actions.",
+      "Produce a structured feedback draft as JSON with fields: title (short, <=90 chars), summary (2–3 sentences), strengths, improvements.",
     ]
       .filter(Boolean)
       .join("\n");
@@ -125,10 +125,9 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
       });
       return {
         title: clamp(object.title, 120),
-        summary: clamp(object.summary, 2000),
-        strengths: clamp(object.strengths, 1500),
-        improvements: clamp(object.improvements, 1500),
-        recommended_actions: clamp(object.recommended_actions, 1500),
+        summary: clamp(object.summary, 600),
+        strengths: clamp(object.strengths, 800),
+        improvements: clamp(object.improvements, 800),
       };
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
