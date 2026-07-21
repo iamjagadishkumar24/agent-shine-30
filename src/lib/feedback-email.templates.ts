@@ -12,6 +12,10 @@ import {
   type QualityParameter,
 } from "./brand";
 import { labelFromPercentage } from "./scorecard";
+import {
+  resolveFeedbackEmailStrings,
+  type FeedbackEmailLocale,
+} from "./feedback-email.i18n";
 
 export type FeedbackEmailAttachmentLink = { fileName: string; url: string };
 
