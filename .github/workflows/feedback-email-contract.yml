@@ -197,8 +197,19 @@ jobs:
               `- Failed cases: **${failed}/${total}** (severity: \`${severity.split(':')[1]}\`)\n` +
               `- Artifact: \`feedback-email-verification\` (rendered HTML/text)\n`;
             if (summary) {
-              body += `\n<details><summary>summary.json</summary>\n\n\`\`\`json\n${JSON.stringify(summary, null, 2).slice(0, 60000)}\n\`\`\`\n</details>\n`;
+              body += `\n<details><summary>summary.json</summary>\n\n\`\`\`json\n${JSON.stringify(summary, null, 2).slice(0, 30000)}\n\`\`\`\n</details>\n`;
             }
+
+            // Inline HTML/text diffs vs the previous successful nightly artifact.
+            try {
+              const diff = fs.readFileSync(`${outDir}/diffs/combined.md`, 'utf8');
+              if (diff.trim()) {
+                body += `\n<details open><summary>HTML / text diff vs last green nightly</summary>\n\n${diff.slice(0, 55000)}\n</details>\n`;
+              }
+            } catch {
+              body += `\n_No baseline artifact was available to diff against._\n`;
+            }
+
 
             const title = `Feedback email contract drift (${new Date().toISOString().slice(0,10)})`;
 
