@@ -507,7 +507,7 @@ export function AuthPage({ initialMode, next, initialEmail }: { initialMode: Mod
                     </div>
                     <button
                       type="button"
-                      onClick={() => { setMode("forgot"); setResetSent(false); }}
+                      onClick={() => { setResetSent(false); navigate({ to: "/auth/forgot-password", search: next ? { next } : {} }); }}
                       className="text-sm font-medium text-primary hover:underline"
                     >
                       Forgot password?
