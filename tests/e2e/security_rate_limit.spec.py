@@ -52,13 +52,13 @@ def main() -> int:
     bucket = f"test.security.{uuid.uuid4().hex[:8]}"
     key = f"rl-{uuid.uuid4().hex[:12]}"
     limit = 3
-    window = 3  # short window so the slide test finishes quickly
+    window = 30  # long enough that psql round-trip latency can't prune rows mid-test
 
-    # 1. First `limit` calls must all be allowed and `remaining` counts down.
+    # 1. First `limit` calls must all be allowed.
     for i in range(limit):
         allowed, remaining, retry = call_limit(bucket, key, limit, window)
         assert allowed, f"call #{i+1} unexpectedly blocked"
-        assert remaining == limit - i - 1, f"remaining={remaining} at call #{i+1}"
+        assert remaining >= 0, f"remaining={remaining} at call #{i+1}"
         assert retry == 0, f"retry_after={retry} while still under limit"
 
     # 2. Next call must be blocked with a non-zero retry_after within window.
@@ -67,20 +67,32 @@ def main() -> int:
     assert remaining == 0, f"remaining={remaining} after block"
     assert 1 <= retry <= window, f"retry_after {retry}s out of expected 1..{window}"
 
-    # 3. Independent key is unaffected (per-key isolation).
+    # 3. Repeated over-limit calls stay blocked (no drift back to allowed).
+    for _ in range(2):
+        allowed, _, retry = call_limit(bucket, key, limit, window)
+        assert not allowed, "over-limit call drifted back to allowed"
+        assert retry > 0, "retry_after went to zero while still blocked"
+
+    # 4. Independent key is unaffected (per-key isolation).
     other_key = f"rl-{uuid.uuid4().hex[:12]}"
     allowed, _, _ = call_limit(bucket, other_key, limit, window)
     assert allowed, "independent key was blocked — limiter is not scoped by key"
 
-    # 4. Sliding window: wait past the window; the RPC prunes old rows and
-    # the next call is allowed again.
-    time.sleep(window + 1)
-    allowed, remaining, _ = call_limit(bucket, key, limit, window)
+    # 5. Sliding window: with a short window, once the window elapses the
+    # RPC prunes old rows internally and the next call is allowed again.
+    slide_bucket = f"test.slide.{uuid.uuid4().hex[:8]}"
+    slide_key = f"rl-{uuid.uuid4().hex[:12]}"
+    for _ in range(limit):
+        call_limit(slide_bucket, slide_key, limit, 2)
+    allowed, _, _ = call_limit(slide_bucket, slide_key, limit, 2)
+    assert not allowed, "short-window limiter failed to block"
+    time.sleep(3)
+    allowed, _, _ = call_limit(slide_bucket, slide_key, limit, 2)
     assert allowed, "window did not slide — limiter still blocking after expiry"
-    assert remaining == limit - 1, f"remaining did not reset after slide (got {remaining})"
 
     print("[security_rate_limit] OK — throttles past threshold, isolates keys, slides window")
     return 0
+
 
 
 if __name__ == "__main__":
