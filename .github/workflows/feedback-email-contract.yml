@@ -24,7 +24,7 @@ jobs:
     name: Verify rendered feedback emails
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       issues: write
     env:
       # Redirect artifact output away from the local /mnt/documents path.
@@ -182,7 +182,7 @@ jobs:
 
 
       - name: Compute SHA256 checksums for baseline + current artifacts
-        if: failure() && github.event_name == 'schedule'
+        if: always() && github.event_name == 'schedule'
         id: checksums
         run: |
           set -e
@@ -223,8 +223,142 @@ jobs:
             ' "$OUT/checksums.json"
           } > "$OUT/checksums.md"
 
+      - name: Persist run history (scheduled)
+        if: always() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UNIT_OUTCOME: ${{ steps.unit.outcome }}
+          VERIFY_OUTCOME: ${{ steps.verify.outcome }}
+        run: |
+          set -e
+          HIST_BRANCH=feedback-email-history
+          HIST_DIR="${{ github.workspace }}/_history"
+          OUT="$FEEDBACK_EMAIL_VERIFY_OUT_DIR"
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git config --global user.email "feedback-email-bot@users.noreply.github.com"
+          git config --global user.name  "feedback-email-bot"
+          if git clone --branch "$HIST_BRANCH" --depth 1 "$REMOTE" "$HIST_DIR" 2>/dev/null; then
+            :
+          else
+            mkdir -p "$HIST_DIR"
+            (
+              cd "$HIST_DIR"
+              git init -q -b "$HIST_BRANCH"
+              git remote add origin "$REMOTE"
+              : > history.jsonl
+              printf "# Feedback Email Contract history\n\nAppend-only JSONL of every scheduled run.\n" > README.md
+              git add .
+              git commit -q -m "init history"
+            )
+          fi
 
+          conclusion="success"
+          if [ "$UNIT_OUTCOME" != "success" ] || [ "$VERIFY_OUTCOME" != "success" ]; then
+            conclusion="failure"
+          fi
+          failed=0; total=0
+          if [ -f "$OUT/summary.json" ]; then
+            failed=$(jq -r '.failed // 0' "$OUT/summary.json")
+            total=$(jq -r '.totalCases // 0' "$OUT/summary.json")
+          fi
+          diffBytes=0
+          if [ -f "$OUT/diffs/combined.md" ]; then
+            diffBytes=$(wc -c < "$OUT/diffs/combined.md" | tr -d ' ')
+          fi
+          checksums="[]"
+          if [ -f "$OUT/diffs/checksums.json" ]; then
+            checksums=$(jq -c '.current // []' "$OUT/diffs/checksums.json")
+          fi
+          entry=$(jq -cn \
+            --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg run_id "${{ github.run_id }}" \
+            --arg run_url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --arg sha "${{ github.sha }}" \
+            --arg conclusion "$conclusion" \
+            --argjson failed "$failed" \
+            --argjson total "$total" \
+            --argjson diffBytes "$diffBytes" \
+            --argjson checksums "$checksums" \
+            '{ts:$ts, run_id:$run_id, run_url:$run_url, sha:$sha, conclusion:$conclusion, failed:$failed, total:$total, diffBytes:$diffBytes, checksums:$checksums}')
 
+          cd "$HIST_DIR"
+          echo "$entry" >> history.jsonl
+          # Bound file size — keep last 500 entries.
+          tail -n 500 history.jsonl > history.jsonl.tmp && mv history.jsonl.tmp history.jsonl
+          git add history.jsonl
+          git commit -q -m "record run ${{ github.run_id }} ($conclusion)" || true
+          # Push; create upstream on first commit to a fresh orphan branch.
+          git push -q origin "HEAD:$HIST_BRANCH" || git push -q --set-upstream origin "HEAD:$HIST_BRANCH"
+
+          mkdir -p "$OUT/diffs"
+          cp history.jsonl "$OUT/diffs/history.jsonl"
+
+      - name: Compute trend from history (scheduled failures)
+        if: failure() && github.event_name == 'schedule'
+        run: |
+          set -e
+          OUT="$FEEDBACK_EMAIL_VERIFY_OUT_DIR"
+          HIST="$OUT/diffs/history.jsonl"
+          TREND="$OUT/diffs/trend.md"
+          mkdir -p "$OUT/diffs"
+          if [ ! -f "$HIST" ] || [ ! -s "$HIST" ]; then
+            echo "_No history available yet — this is the first recorded run._" > "$TREND"
+            exit 0
+          fi
+
+          RECENT="$OUT/diffs/history.recent.jsonl"
+          tail -n 10 "$HIST" > "$RECENT"
+
+          {
+            echo "| # | When (UTC) | Result | Failed / Total | Diff bytes |"
+            echo "| --- | --- | --- | --- | --- |"
+            i=0
+            while IFS= read -r line; do
+              i=$((i+1))
+              ts=$(echo "$line"      | jq -r '.ts')
+              conc=$(echo "$line"    | jq -r '.conclusion')
+              failed=$(echo "$line"  | jq -r '.failed')
+              total=$(echo "$line"   | jq -r '.total')
+              db=$(echo "$line"      | jq -r '.diffBytes')
+              run_url=$(echo "$line" | jq -r '.run_url')
+              icon="✅"; [ "$conc" != "success" ] && icon="❌"
+              echo "| $i | [\`$ts\`]($run_url) | $icon $conc | $failed/$total | $db |"
+            done < "$RECENT"
+          } > "$TREND"
+
+          # Direction vs previous run (last two entries overall).
+          prev_line=$(tail -n 2 "$HIST" | head -n 1)
+          cur_line=$(tail -n 1 "$HIST")
+          prev_db=$(echo "$prev_line" | jq -r '.diffBytes // 0')
+          cur_db=$(echo "$cur_line"  | jq -r '.diffBytes // 0')
+          prev_failed=$(echo "$prev_line" | jq -r '.failed // 0')
+          cur_failed=$(echo "$cur_line"  | jq -r '.failed // 0')
+
+          arrow() {
+            if   [ "$1" -gt "$2" ]; then echo "🔺 increasing (+$(($1-$2)))"
+            elif [ "$1" -lt "$2" ]; then echo "🔻 decreasing (-$(($2-$1)))"
+            else echo "➖ unchanged"; fi
+          }
+
+          # Checksum churn: how many current files changed hash since previous run.
+          changed_count=0
+          if [ "$(echo "$prev_line" | jq -r '.checksums | type')" = "array" ]; then
+            changed_count=$(jq -n \
+              --argjson prev "$(echo "$prev_line" | jq '.checksums')" \
+              --argjson cur  "$(echo "$cur_line"  | jq '.checksums')" '
+                ($prev | map({key:.name, value:.sha256}) | from_entries) as $p
+              | ($cur  | map({key:.name, value:.sha256}) | from_entries) as $c
+              | [ ($c | keys[]) | select(($p[.] // "") != $c[.]) ] | length
+            ')
+          fi
+
+          {
+            echo ""
+            echo "**Trend vs previous run**"
+            echo "- Diff bytes: \`$prev_db\` → \`$cur_db\` — $(arrow "$cur_db" "$prev_db")"
+            echo "- Failed cases: \`$prev_failed\` → \`$cur_failed\` — $(arrow "$cur_failed" "$prev_failed")"
+            echo "- Files with new SHA256 vs previous run: \`$changed_count\`"
+          } >> "$TREND"
 
 
       - name: Open drift issue (scheduled runs only)
@@ -323,6 +457,21 @@ jobs:
                   `</details>\n`;
               }
             } catch {}
+
+            // Historical trend across recorded scheduled runs.
+            try {
+              const trendMd = fs.readFileSync(`${outDir}/diffs/trend.md`, 'utf8');
+              if (trendMd.trim()) {
+                body +=
+                  `\n<details open><summary>Trend (last 10 scheduled runs)</summary>\n\n` +
+                  `${trendMd.slice(0, 20000)}\n\n` +
+                  `_History persisted on branch \`feedback-email-history\` (\`history.jsonl\`)._\n` +
+                  `</details>\n`;
+              }
+            } catch {}
+
+
+
 
 
 
