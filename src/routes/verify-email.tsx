@@ -137,7 +137,7 @@ function VerifyEmailPage() {
                   : "Resend verification email"}
             </Button>
             <Button asChild variant="outline" className="h-11 w-full rounded-lg">
-              <Link to="/auth">
+              <Link to="/auth/signin">
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back to sign in
               </Link>
             </Button>

@@ -86,7 +86,7 @@ function AccessManagementPage() {
   const inviteM = useMutation({
     mutationFn: (data: any) => inviteFn({ data }),
     onSuccess: (res: any) => {
-      const link = `${window.location.origin}/auth?email=${encodeURIComponent(res.email)}&mode=signup`;
+      const link = `${window.location.origin}/auth/signup?email=${encodeURIComponent(res.email)}`;
       setInviteLink(link);
       qc.invalidateQueries({ queryKey: ["authorised-users"] });
       qc.invalidateQueries({ queryKey: ["access-audit"] });
@@ -115,7 +115,7 @@ function AccessManagementPage() {
   const resendM = useMutation({
     mutationFn: (data: any) => resendFn({ data }),
     onSuccess: (res: any) => {
-      const link = `${window.location.origin}/auth?email=${encodeURIComponent(res.email)}&mode=signup`;
+      const link = `${window.location.origin}/auth/signup?email=${encodeURIComponent(res.email)}`;
       navigator.clipboard.writeText(link).catch(() => {});
       qc.invalidateQueries({ queryKey: ["authorised-users"] });
       toast.success("Invitation refreshed — link copied to clipboard");
