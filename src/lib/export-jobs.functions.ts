@@ -20,7 +20,10 @@ export const enqueueExport = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => EnqueueSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { enforceRateLimit } = await import("@/lib/rate-limit.server");
+    await enforceRateLimit({ bucket: "export.enqueue", key: userId });
     const { data: row, error } = await supabase
+
       .from("export_jobs")
       .insert({
         user_id: userId,

@@ -1401,6 +1401,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          bucket: string
+          hit_at: string
+          id: number
+          key: string
+        }
+        Insert: {
+          bucket: string
+          hit_at?: string
+          id?: number
+          key: string
+        }
+        Update: {
+          bucket?: string
+          hit_at?: string
+          id?: number
+          key?: string
+        }
+        Relationships: []
+      }
       report_schedules: {
         Row: {
           cadence: Database["public"]["Enums"]["report_cadence"]
@@ -1636,6 +1657,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          _bucket: string
+          _key: string
+          _limit: number
+          _window_seconds: number
+        }
+        Returns: {
+          allowed: boolean
+          remaining: number
+          retry_after_seconds: number
+        }[]
+      }
       create_notification: {
         Args: {
           _body: string

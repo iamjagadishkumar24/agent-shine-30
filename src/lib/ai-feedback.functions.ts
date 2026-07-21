@@ -69,6 +69,12 @@ export const generateFeedbackDraft = createServerFn({ method: "POST" })
     );
     if (!isStaff) throw new Response("Forbidden", { status: 403 });
 
+    // Rate limit: prevent AI abuse / token exhaustion. Loaded dynamically
+    // to keep this client-reachable module free of server-only imports.
+    const { enforceRateLimit } = await import("@/lib/rate-limit.server");
+    await enforceRateLimit({ bucket: "ai.draft", key: userId });
+
+
     const { data: agent } = await supabase
       .from("agents")
       .select("full_name, department")
