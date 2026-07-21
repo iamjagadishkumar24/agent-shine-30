@@ -11,10 +11,10 @@ export const Route = createFileRoute("/")({
   }),
   beforeLoad: async () => {
     if (typeof window === "undefined") {
-      throw redirect({ to: "/auth" });
+      throw redirect({ to: "/auth/signin" });
     }
     const { data } = await supabase.auth.getSession();
-    throw redirect({ to: data.session ? "/dashboard" : "/auth" });
+    throw redirect({ to: data.session ? "/dashboard" : "/auth/signin" });
   },
   component: () => null,
 });

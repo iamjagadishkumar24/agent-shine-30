@@ -125,7 +125,7 @@ function AuthedLayout() {
     } catch {
       /* even if signOut errors, still bounce to /auth */
     } finally {
-      navigate({ to: "/auth", replace: true });
+      navigate({ to: "/auth/signin", replace: true });
     }
   };
 
