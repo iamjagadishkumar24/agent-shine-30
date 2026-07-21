@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
+
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { generateFeedbackDraft, EMAIL_TEMPLATES, type EmailTemplate } from "@/lib/ai-feedback.functions";
 import { getActiveScorecard, saveFeedbackWithScores } from "@/lib/scorecard.functions";
-import { computeEarnedPoints, computeOverall, labelTone } from "@/lib/scorecard";
+import { computeOverall, labelTone } from "@/lib/scorecard";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/feedback/new")({
@@ -43,8 +43,7 @@ const HeaderSchema = z.object({
 type ScoreState = {
   parameter_name: string;
   max_points: number;
-  selected_percentage: number;
-  evaluator_note: string;
+  points: number; // 0..max_points
 };
 
 function NewFeedback() {
@@ -72,9 +71,6 @@ function NewFeedback() {
     summary: "",
     strengths: "",
     improvements: "",
-    recommended_actions: "",
-    internal_notes: "",
-    agent_visible_notes: "",
   });
 
   const [scores, setScores] = useState<ScoreState[]>([]);
@@ -86,14 +82,22 @@ function NewFeedback() {
         scorecard.data.parameters.map((p) => ({
           parameter_name: p.name,
           max_points: Number(p.max_points),
-          selected_percentage: 0,
-          evaluator_note: "",
+          points: 0,
         })),
       );
     }
   }, [scorecard.data, scores.length]);
 
-  const overall = useMemo(() => computeOverall(scores), [scores]);
+  const overall = useMemo(
+    () =>
+      computeOverall(
+        scores.map((s) => ({
+          max_points: s.max_points,
+          selected_percentage: s.max_points > 0 ? (s.points / s.max_points) * 100 : 0,
+        })),
+      ),
+    [scores],
+  );
 
   const [aiOpen, setAiOpen] = useState(false);
   const [observations, setObservations] = useState("");
