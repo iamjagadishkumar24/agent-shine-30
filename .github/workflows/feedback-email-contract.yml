@@ -12,6 +12,11 @@ on:
       - ".github/workflows/feedback-email-contract.yml"
   push:
     branches: [main]
+  schedule:
+    # Nightly at 07:15 UTC — runs on the default branch even without a PR
+    # so environment drift (dep updates, Node/Bun versions, upstream renders)
+    # gets caught within 24 hours.
+    - cron: "15 7 * * *"
   workflow_dispatch:
 
 jobs:
@@ -20,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      issues: write
     env:
       # Redirect artifact output away from the local /mnt/documents path.
       FEEDBACK_EMAIL_VERIFY_OUT_DIR: ${{ github.workspace }}/feedback-email-verification
@@ -74,3 +80,42 @@ jobs:
             echo ""
             echo "Download the \`feedback-email-verification\` artifact for full HTML/text renders."
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open drift issue (scheduled runs only)
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const outDir = process.env.FEEDBACK_EMAIL_VERIFY_OUT_DIR;
+            let body = `The nightly feedback email contract check failed on \`${context.ref}\` (commit ${context.sha}).\n\n` +
+              `- Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n` +
+              `- Download the \`feedback-email-verification\` artifact for the rendered HTML/text.\n`;
+            try {
+              const s = fs.readFileSync(`${outDir}/summary.json`, 'utf8');
+              body += `\n<details><summary>summary.json</summary>\n\n\`\`\`json\n${s.slice(0, 60000)}\n\`\`\`\n</details>\n`;
+            } catch {}
+            const title = `Feedback email contract drift (${new Date().toISOString().slice(0,10)})`;
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'feedback-email-contract',
+              per_page: 1,
+            });
+            if (existing.length) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['feedback-email-contract'],
+              });
+            }
