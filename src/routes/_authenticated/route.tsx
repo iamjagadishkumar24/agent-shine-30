@@ -292,6 +292,7 @@ function AuthedLayout() {
             <span className="mx-1 hidden h-6 w-px bg-border/70 sm:block" aria-hidden="true" />
 
 
+            <ExportsMenu />
             <NotificationsBell userId={user.id} />
 
             <DropdownMenu>
