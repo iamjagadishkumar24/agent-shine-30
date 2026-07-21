@@ -46,6 +46,10 @@ function monthKey(v: string | null | undefined): string | null {
 
 function ReportsPage() {
   const [busy, setBusy] = useState<string | null>(null);
+  const [period, setPeriod] = useState<Period>("all");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const range = periodRange(period, customFrom, customTo);
 
   const { data: agents = [], isLoading: agentsLoading } = useQuery({
     queryKey: ["report-agents"],
@@ -57,7 +61,7 @@ function ReportsPage() {
     },
   });
 
-  const { data: feedback = [], isLoading: feedbackLoading } = useQuery({
+  const { data: allFeedback = [], isLoading: feedbackLoading } = useQuery({
     queryKey: ["report-feedback"],
     queryFn: async () => {
       const { data, error } = await supabase.from("feedback")
@@ -67,6 +71,16 @@ function ReportsPage() {
       return data;
     },
   });
+
+  const feedback = useMemo(() => {
+    if (!range.from && !range.to) return allFeedback as any[];
+    return (allFeedback as any[]).filter((f) => {
+      const d = new Date(f.created_at);
+      if (range.from && d < range.from) return false;
+      if (range.to && d > range.to) return false;
+      return true;
+    });
+  }, [allFeedback, range.from, range.to]);
 
   const dataLoading = agentsLoading || feedbackLoading;
 
