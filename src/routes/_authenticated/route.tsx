@@ -21,6 +21,8 @@ import {
   Monitor,
   UserCog,
   Plus,
+  ShieldCheck,
+  UserSearch,
   
 } from "lucide-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -61,6 +63,11 @@ const STAFF_NAV = [
   { to: "/coaching", label: "Coaching", icon: GraduationCap },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/reports", label: "Reports", icon: FileBarChart },
+  { to: "/agent-reports", label: "Agent Reports", icon: UserSearch },
+] as const;
+
+const MASTER_ADMIN_NAV = [
+  { to: "/access-management", label: "Access Management", icon: ShieldCheck },
 ] as const;
 
 const AGENT_NAV = [
