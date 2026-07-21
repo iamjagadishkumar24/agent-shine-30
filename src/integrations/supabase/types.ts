@@ -481,10 +481,14 @@ export type Database = {
           feedback_template_html: string | null
           feedback_template_subject: string | null
           feedback_template_text: string | null
+          first_reminder_after_days: number
           id: string
           logo_url: string | null
+          max_reminders: number
+          overdue_after_days: number
           provider: string
           reply_to: string | null
+          second_reminder_after_days: number
           sender_email: string | null
           sender_name: string
           signature_html: string | null
@@ -502,10 +506,14 @@ export type Database = {
           feedback_template_html?: string | null
           feedback_template_subject?: string | null
           feedback_template_text?: string | null
+          first_reminder_after_days?: number
           id?: string
           logo_url?: string | null
+          max_reminders?: number
+          overdue_after_days?: number
           provider?: string
           reply_to?: string | null
+          second_reminder_after_days?: number
           sender_email?: string | null
           sender_name?: string
           signature_html?: string | null
@@ -523,10 +531,14 @@ export type Database = {
           feedback_template_html?: string | null
           feedback_template_subject?: string | null
           feedback_template_text?: string | null
+          first_reminder_after_days?: number
           id?: string
           logo_url?: string | null
+          max_reminders?: number
+          overdue_after_days?: number
           provider?: string
           reply_to?: string | null
+          second_reminder_after_days?: number
           sender_email?: string | null
           sender_name?: string
           signature_html?: string | null
@@ -596,10 +608,14 @@ export type Database = {
       feedback: {
         Row: {
           acknowledged_at: string | null
+          acknowledgement_due_at: string | null
           acknowledgement_note: string | null
+          acknowledgement_status: string
           agent_id: string
+          agent_response_received_at: string | null
           agent_visible_notes: string | null
           case_id: string | null
+          case_number: string
           category: string
           click_count: number
           clicked_at: string | null
@@ -619,6 +635,7 @@ export type Database = {
           interaction_type: string | null
           internal_notes: string | null
           last_reminder_at: string | null
+          last_reminder_sent_at: string | null
           open_count: number
           opened_at: string | null
           overall_percentage: number | null
@@ -644,10 +661,14 @@ export type Database = {
         }
         Insert: {
           acknowledged_at?: string | null
+          acknowledgement_due_at?: string | null
           acknowledgement_note?: string | null
+          acknowledgement_status?: string
           agent_id: string
+          agent_response_received_at?: string | null
           agent_visible_notes?: string | null
           case_id?: string | null
+          case_number: string
           category: string
           click_count?: number
           clicked_at?: string | null
@@ -667,6 +688,7 @@ export type Database = {
           interaction_type?: string | null
           internal_notes?: string | null
           last_reminder_at?: string | null
+          last_reminder_sent_at?: string | null
           open_count?: number
           opened_at?: string | null
           overall_percentage?: number | null
@@ -692,10 +714,14 @@ export type Database = {
         }
         Update: {
           acknowledged_at?: string | null
+          acknowledgement_due_at?: string | null
           acknowledgement_note?: string | null
+          acknowledgement_status?: string
           agent_id?: string
+          agent_response_received_at?: string | null
           agent_visible_notes?: string | null
           case_id?: string | null
+          case_number?: string
           category?: string
           click_count?: number
           clicked_at?: string | null
@@ -715,6 +741,7 @@ export type Database = {
           interaction_type?: string | null
           internal_notes?: string | null
           last_reminder_at?: string | null
+          last_reminder_sent_at?: string | null
           open_count?: number
           opened_at?: string | null
           overall_percentage?: number | null
@@ -912,6 +939,97 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "feedback_email_events_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_email_responses: {
+        Row: {
+          case_number: string
+          created_at: string
+          feedback_id: string | null
+          id: string
+          message_body: string | null
+          provider_message_id: string | null
+          received_at: string
+          recipient_email: string | null
+          sender_email: string
+          subject: string | null
+        }
+        Insert: {
+          case_number: string
+          created_at?: string
+          feedback_id?: string | null
+          id?: string
+          message_body?: string | null
+          provider_message_id?: string | null
+          received_at?: string
+          recipient_email?: string | null
+          sender_email: string
+          subject?: string | null
+        }
+        Update: {
+          case_number?: string
+          created_at?: string
+          feedback_id?: string | null
+          id?: string
+          message_body?: string | null
+          provider_message_id?: string | null
+          received_at?: string
+          recipient_email?: string | null
+          sender_email?: string
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_email_responses_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_reminders: {
+        Row: {
+          created_at: string
+          delivery_status: string
+          failure_reason: string | null
+          feedback_id: string
+          id: string
+          recipient_email: string
+          reminder_number: number
+          sent_at: string | null
+          subject: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivery_status?: string
+          failure_reason?: string | null
+          feedback_id: string
+          id?: string
+          recipient_email: string
+          reminder_number: number
+          sent_at?: string | null
+          subject?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivery_status?: string
+          failure_reason?: string | null
+          feedback_id?: string
+          id?: string
+          recipient_email?: string
+          reminder_number?: number
+          sent_at?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_reminders_feedback_id_fkey"
             columns: ["feedback_id"]
             isOneToOne: false
             referencedRelation: "feedback"
