@@ -59,6 +59,7 @@ export type FeedbackEmailData = {
   attachmentLinks?: FeedbackEmailAttachmentLink[];
   metrics?: FeedbackMetric[] | null;
   replyToEmail?: string | null;
+  locale?: FeedbackEmailLocale | string | null;
   // Legacy fields (ignored, kept for API compat)
   customerName?: string | null;
   department?: string | null;
