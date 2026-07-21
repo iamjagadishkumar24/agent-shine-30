@@ -5,8 +5,7 @@ import { QUALITY_PARAMETERS } from "@/lib/brand";
 const NARRATIVE_SECTIONS = [
   { key: "summary", title: "Summary" },
   { key: "strengths", title: "Strengths" },
-  { key: "improvements", title: "Areas to Improve" },
-  { key: "recommendedActions", title: "Recommended Actions" },
+  { key: "improvements", title: "Areas for Improvement" },
 ] as const;
 
 type NarrativeKey = (typeof NARRATIVE_SECTIONS)[number]["key"];
@@ -15,7 +14,6 @@ const SAMPLE: Record<NarrativeKey, string> = {
   summary: "Overall the interaction met expectations with minor issues.",
   strengths: "Warm greeting, empathetic tone, clean handoff.",
   improvements: "Slow issue resolution; missed one compliance disclosure.",
-  recommendedActions: "Review KB #4521; shadow a senior agent this week.",
 };
 
 function render(opts: {
