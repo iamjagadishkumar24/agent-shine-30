@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_audit_logs: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          new_value: Json | null
+          old_value: Json | null
+          target_email: string | null
+          target_user_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          target_email?: string | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          target_email?: string | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       agents: {
         Row: {
           avatar_url: string | null
@@ -78,6 +117,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      authorised_users: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          invitation_accepted_at: string | null
+          invitation_expires_at: string | null
+          invited_at: string | null
+          invited_by: string | null
+          is_active: boolean
+          last_login_at: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          invitation_accepted_at?: string | null
+          invitation_expires_at?: string | null
+          invited_at?: string | null
+          invited_by?: string | null
+          is_active?: boolean
+          last_login_at?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          invitation_accepted_at?: string | null
+          invitation_expires_at?: string | null
+          invited_at?: string | null
+          invited_by?: string | null
+          is_active?: boolean
+          last_login_at?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       calendar_feed_tokens: {
         Row: {
@@ -1400,6 +1490,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          revoked_at: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          revoked_at?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          revoked_at?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -1452,6 +1578,11 @@ export type Database = {
         | "team_manager"
         | "read_only"
         | "agent"
+        | "master_admin"
+        | "admin"
+        | "qa_evaluator"
+        | "manager"
+        | "viewer"
       coaching_goal_status: "on_track" | "at_risk" | "achieved" | "missed"
       coaching_plan_status: "active" | "completed" | "archived"
       coaching_priority: "low" | "medium" | "high" | "urgent"
@@ -1632,6 +1763,11 @@ export const Constants = {
         "team_manager",
         "read_only",
         "agent",
+        "master_admin",
+        "admin",
+        "qa_evaluator",
+        "manager",
+        "viewer",
       ],
       coaching_goal_status: ["on_track", "at_risk", "achieved", "missed"],
       coaching_plan_status: ["active", "completed", "archived"],

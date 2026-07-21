@@ -21,6 +21,8 @@ import {
   Monitor,
   UserCog,
   Plus,
+  ShieldCheck,
+  UserSearch,
   
 } from "lucide-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -61,6 +63,11 @@ const STAFF_NAV = [
   { to: "/coaching", label: "Coaching", icon: GraduationCap },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/reports", label: "Reports", icon: FileBarChart },
+  { to: "/agent-reports", label: "Agent Reports", icon: UserSearch },
+] as const;
+
+const MASTER_ADMIN_NAV = [
+  { to: "/access-management", label: "Access Management", icon: ShieldCheck },
 ] as const;
 
 const AGENT_NAV = [
@@ -91,9 +98,12 @@ function AuthedLayout() {
     queryFn: () => fetchRoles(),
     staleTime: 5 * 60_000,
   });
-  const staffRoles = ["super_admin", "qa_admin", "team_manager"];
+  const staffRoles = ["master_admin", "admin", "super_admin", "qa_admin", "qa_evaluator", "manager", "team_manager"];
   const isStaff = roles.some((r) => staffRoles.includes(r));
-  const NAV = isStaff ? STAFF_NAV : AGENT_NAV;
+  const isMasterAdmin = roles.includes("master_admin");
+  const NAV = isStaff
+    ? (isMasterAdmin ? [...STAFF_NAV, ...MASTER_ADMIN_NAV] : STAFF_NAV)
+    : AGENT_NAV;
 
   const email = user?.email ?? "";
   const displayName = profile?.full_name?.trim() || email.split("@")[0] || "User";

@@ -4,14 +4,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, FileSpreadsheet, Users, TrendingUp, Mail, CalendarClock } from "lucide-react";
 import { toCsv, toPdf } from "@/lib/reports";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths, format } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   component: ReportsPage,
 });
+
+type Period = "all" | "current_week" | "previous_week" | "current_month" | "previous_month" | "custom";
+
+function periodRange(p: Period, from?: string, to?: string): { from?: Date; to?: Date; label: string } {
+  const now = new Date();
+  switch (p) {
+    case "current_week": { const f = startOfWeek(now, { weekStartsOn: 1 }); const t = endOfWeek(now, { weekStartsOn: 1 }); return { from: f, to: t, label: `${format(f, "d MMM")} – ${format(t, "d MMM yyyy")}` }; }
+    case "previous_week": { const w = subWeeks(now, 1); const f = startOfWeek(w, { weekStartsOn: 1 }); const t = endOfWeek(w, { weekStartsOn: 1 }); return { from: f, to: t, label: `${format(f, "d MMM")} – ${format(t, "d MMM yyyy")}` }; }
+    case "current_month": { const f = startOfMonth(now); const t = endOfMonth(now); return { from: f, to: t, label: format(f, "MMMM yyyy") }; }
+    case "previous_month": { const m = subMonths(now, 1); const f = startOfMonth(m); const t = endOfMonth(m); return { from: f, to: t, label: format(f, "MMMM yyyy") }; }
+    case "custom": return { from: from ? new Date(from) : undefined, to: to ? new Date(to + "T23:59:59") : undefined, label: from && to ? `${format(new Date(from), "d MMM yyyy")} – ${format(new Date(to), "d MMM yyyy")}` : "Custom range" };
+    default: return { label: "All time" };
+  }
+}
 
 function safeDateTime(v: string | null | undefined): string {
   if (!v) return "";
@@ -28,6 +46,10 @@ function monthKey(v: string | null | undefined): string | null {
 
 function ReportsPage() {
   const [busy, setBusy] = useState<string | null>(null);
+  const [period, setPeriod] = useState<Period>("all");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const range = periodRange(period, customFrom, customTo);
 
   const { data: agents = [], isLoading: agentsLoading } = useQuery({
     queryKey: ["report-agents"],
@@ -39,7 +61,7 @@ function ReportsPage() {
     },
   });
 
-  const { data: feedback = [], isLoading: feedbackLoading } = useQuery({
+  const { data: allFeedback = [], isLoading: feedbackLoading } = useQuery({
     queryKey: ["report-feedback"],
     queryFn: async () => {
       const { data, error } = await supabase.from("feedback")
@@ -49,6 +71,16 @@ function ReportsPage() {
       return data;
     },
   });
+
+  const feedback = useMemo(() => {
+    if (!range.from && !range.to) return allFeedback as any[];
+    return (allFeedback as any[]).filter((f) => {
+      const d = new Date(f.created_at);
+      if (range.from && d < range.from) return false;
+      if (range.to && d > range.to) return false;
+      return true;
+    });
+  }, [allFeedback, range.from, range.to]);
 
   const dataLoading = agentsLoading || feedbackLoading;
 
@@ -182,14 +214,47 @@ function ReportsPage() {
     <div>
       <PageHeader
         title="Reports"
-        subtitle="Export performance, trends, and delivery data as PDF or CSV."
+        subtitle={`Export performance, trends, and delivery data. Period: ${range.label}`}
         actions={
           <Button asChild size="sm" variant="outline">
             <Link to="/reports/schedules"><CalendarClock className="mr-1.5 h-3.5 w-3.5" /> Scheduled reports</Link>
           </Button>
         }
       />
-      <div className="mx-auto max-w-5xl px-8 pb-12 pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="mx-auto max-w-5xl space-y-4 px-4 pb-12 pt-4 sm:px-8">
+        <Card className="p-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <div>
+              <Label className="text-xs">Period</Label>
+              <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+                <SelectTrigger className="h-9 w-[180px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All time</SelectItem>
+                  <SelectItem value="current_week">Current week</SelectItem>
+                  <SelectItem value="previous_week">Previous week</SelectItem>
+                  <SelectItem value="current_month">Current month</SelectItem>
+                  <SelectItem value="previous_month">Previous month</SelectItem>
+                  <SelectItem value="custom">Custom range</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {period === "custom" && (
+              <>
+                <div>
+                  <Label className="text-xs">From</Label>
+                  <Input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} className="h-9 w-[160px]" />
+                </div>
+                <div>
+                  <Label className="text-xs">To</Label>
+                  <Input type="date" value={customTo} min={customFrom} onChange={(e) => setCustomTo(e.target.value)} className="h-9 w-[160px]" />
+                </div>
+              </>
+            )}
+            <div className="ml-auto text-xs text-muted-foreground">{feedback.length} feedback items in scope</div>
+          </div>
+        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
         {REPORTS.map((r) => (
           <Card key={r.key} className="p-5 flex flex-col">
             <div className="flex items-start gap-3">
@@ -225,6 +290,7 @@ function ReportsPage() {
             </div>
           </Card>
         ))}
+      </div>
       </div>
     </div>
   );

@@ -724,7 +724,7 @@ function Dashboard() {
             <div className="text-sm font-semibold">Quick Actions</div>
             <div className="mt-4 grid grid-cols-2 gap-2">
               {[
-                { to: "/feedback/new", label: "New Feedback", icon: Plus, tone: "violet" as Tone },
+                { to: "/feedback/new", label: "New Feedback", icon: Plus, tone: "emerald" as Tone },
                 { to: "/coaching/new", label: "Schedule Coaching", icon: CalendarPlus, tone: "fuchsia" as Tone },
                 { to: "/agents", label: "View Agents", icon: Users, tone: "sky" as Tone },
                 { to: "/reports", label: "Run Reports", icon: FileText, tone: "emerald" as Tone },
