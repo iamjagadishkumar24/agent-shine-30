@@ -1,20 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/forgot-password")({
-  head: () => ({
-    meta: [
-      { title: "Reset your password — QualiPulse" },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
-  beforeLoad: async () => {
-    if (typeof window === "undefined") {
-      throw redirect({ to: "/auth", search: { mode: "forgot" } });
-    }
-    const { data } = await supabase.auth.getSession();
-    if (data.session) throw redirect({ to: "/dashboard" });
-    throw redirect({ to: "/auth", search: { mode: "forgot" } });
+  beforeLoad: () => {
+    throw redirect({ to: "/auth" });
   },
-  component: () => null,
 });
