@@ -311,6 +311,19 @@ jobs:
               }
             }
 
+            // SHA256 checksums of the exact files compared, so the diff inputs are auditable.
+            try {
+              const checksumsMd = fs.readFileSync(`${outDir}/diffs/checksums.md`, 'utf8');
+              const checksumsJson = fs.readFileSync(`${outDir}/diffs/checksums.json`, 'utf8');
+              if (checksumsMd.trim()) {
+                body +=
+                  `\n<details><summary>SHA256 checksums (baseline vs current)</summary>\n\n` +
+                  `${checksumsMd.slice(0, 20000)}\n\n` +
+                  `<details><summary>Raw checksums.json</summary>\n\n\`\`\`json\n${checksumsJson.slice(0, 20000)}\n\`\`\`\n</details>\n` +
+                  `</details>\n`;
+              }
+            } catch {}
+
 
 
             const title = `Feedback email contract drift (${new Date().toISOString().slice(0,10)})`;
