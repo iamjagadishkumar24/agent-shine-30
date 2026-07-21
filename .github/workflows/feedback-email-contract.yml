@@ -81,6 +81,66 @@ jobs:
             echo "Download the \`feedback-email-verification\` artifact for full HTML/text renders."
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Download previous successful baseline (for diff)
+        if: failure() && github.event_name == 'schedule'
+        id: baseline
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          name: feedback-email-verification
+          workflow: ${{ github.workflow }}
+          workflow_conclusion: success
+          branch: ${{ github.event.repository.default_branch }}
+          path: ${{ github.workspace }}/feedback-email-baseline
+          if_no_artifact_found: warn
+
+      - name: Compute HTML/text diffs vs baseline
+        if: failure() && github.event_name == 'schedule'
+        id: diffs
+        run: |
+          set +e
+          CUR="$FEEDBACK_EMAIL_VERIFY_OUT_DIR"
+          BASE="${{ github.workspace }}/feedback-email-baseline"
+          OUT="$CUR/diffs"
+          mkdir -p "$OUT"
+          have_baseline=0
+          if [ -d "$BASE" ] && ls "$BASE"/*.html >/dev/null 2>&1; then have_baseline=1; fi
+          if [ "$have_baseline" -eq 0 ]; then
+            echo "no_baseline=1" >> "$GITHUB_OUTPUT"
+            echo "No previous successful artifact to diff against." > "$OUT/README.txt"
+            exit 0
+          fi
+          # Per-case unified diffs, capped so a runaway diff cannot blow up the issue body.
+          MAX_BYTES=8000
+          : > "$OUT/combined.md"
+          for f in "$CUR"/*.html "$CUR"/*.txt; do
+            [ -f "$f" ] || continue
+            name=$(basename "$f")
+            base="$BASE/$name"
+            if [ ! -f "$base" ]; then
+              echo -e "\n### \`$name\` — new file (no baseline)\n" >> "$OUT/combined.md"
+              continue
+            fi
+            d=$(diff -u --label "baseline/$name" --label "current/$name" "$base" "$f")
+            [ -z "$d" ] && continue
+            lang="diff"
+            printf '\n### `%s`\n\n```%s\n' "$name" "$lang" >> "$OUT/combined.md"
+            printf '%s' "$d" | head -c "$MAX_BYTES" >> "$OUT/combined.md"
+            bytes=$(printf '%s' "$d" | wc -c)
+            if [ "$bytes" -gt "$MAX_BYTES" ]; then
+              printf '\n... [truncated %d of %d bytes — see feedback-email-verification artifact]\n' "$((bytes-MAX_BYTES))" "$bytes" >> "$OUT/combined.md"
+            fi
+            printf '\n```\n' >> "$OUT/combined.md"
+          done
+          if [ ! -s "$OUT/combined.md" ]; then
+            echo "_No textual differences vs baseline (failure was assertion-only)._" > "$OUT/combined.md"
+          fi
+          # Cap the whole combined body too.
+          head -c 55000 "$OUT/combined.md" > "$OUT/combined.trimmed.md"
+          mv "$OUT/combined.trimmed.md" "$OUT/combined.md"
+          echo "no_baseline=0" >> "$GITHUB_OUTPUT"
+
+
       - name: Open drift issue (scheduled runs only)
         if: failure() && github.event_name == 'schedule'
         uses: actions/github-script@v7
