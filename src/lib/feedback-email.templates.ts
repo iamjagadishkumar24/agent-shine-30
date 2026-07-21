@@ -12,6 +12,10 @@ import {
   type QualityParameter,
 } from "./brand";
 import { labelFromPercentage } from "./scorecard";
+import {
+  resolveFeedbackEmailStrings,
+  type FeedbackEmailLocale,
+} from "./feedback-email.i18n";
 
 export type FeedbackEmailAttachmentLink = { fileName: string; url: string };
 
@@ -55,6 +59,7 @@ export type FeedbackEmailData = {
   attachmentLinks?: FeedbackEmailAttachmentLink[];
   metrics?: FeedbackMetric[] | null;
   replyToEmail?: string | null;
+  locale?: FeedbackEmailLocale | string | null;
   // Legacy fields (ignored, kept for API compat)
   customerName?: string | null;
   department?: string | null;
@@ -134,6 +139,7 @@ function metaRow(label: string, value: string | null | undefined): string {
 }
 
 export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; html: string; text: string } {
+  const t = resolveFeedbackEmailStrings(d.locale ?? "en");
   const metrics = normalizeMetrics(d.metrics);
   const totalMax = metrics.reduce((s, m) => s + (Number(m.maxPoints) || 0), 0);
   const totalEarned = metrics.reduce((s, m) => s + (Number(m.earnedPoints) || 0), 0);
@@ -144,14 +150,15 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
   const performanceLabel = labelFromPercentage(overall);
 
   const interactionRaw = (d.interactionType ?? "").toLowerCase();
-  const interactionLabel = interactionRaw === "case" ? "Case" : interactionRaw === "chat" ? "Chat" : "Interaction";
+  const interactionLabel =
+    interactionRaw === "case" ? t.interactionCase : interactionRaw === "chat" ? t.interactionChat : t.interactionGeneric;
 
   const caseNumber = (d.caseNumber ?? "").trim();
   const isReminder = !!d.isReminder;
 
   const subject = isReminder
-    ? `Reminder: Acknowledgement Required – ${caseNumber ? `Case ${caseNumber}` : d.title}`
-    : `Quality Feedback – ${caseNumber ? `Case ${caseNumber} – ` : ""}${d.agentName} – Score ${earnedOutOf}`;
+    ? `${t.subjectReminderPrefix} – ${caseNumber ? `${t.caseWord} ${caseNumber}` : d.title}`
+    : `${t.subjectQualityFeedback} – ${caseNumber ? `${t.caseWord} ${caseNumber} – ` : ""}${d.agentName} – ${t.scoreColumn} ${earnedOutOf}`;
 
   const greetingName = firstName(d.agentName);
   const pixelUrl = `${d.appBaseUrl}/api/public/track/open/${d.feedbackId}`;
@@ -170,7 +177,6 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
       </td>
     </tr></table>`;
 
-  // Simplified scorecard: Parameter + Score (e.g. "18 / 20")
   const metricsRows = metrics
     .map((m) => {
       const max = formatPoints(Number(m.maxPoints));
@@ -186,18 +192,18 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
 
   const scorecardBlock = `
     <tr><td style="padding:14px 24px 4px;">
-      <div style="font:700 12px/1 ${FONT};letter-spacing:.12em;text-transform:uppercase;color:${MUTE};margin-bottom:8px;">Quality Evaluation</div>
+      <div style="font:700 12px/1 ${FONT};letter-spacing:.12em;text-transform:uppercase;color:${MUTE};margin-bottom:8px;">${escape(t.qualityEvaluation)}</div>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid ${LINE};border-radius:10px;overflow:hidden;">
         <thead>
           <tr style="background:${HEADER_TINT};">
-            <th align="left"  style="padding:10px 12px;font:700 11px/1 ${FONT};letter-spacing:.1em;text-transform:uppercase;color:${INK_SOFT};border-bottom:1px solid ${LINE};">Evaluation Criteria</th>
-            <th align="right" style="padding:10px 14px;font:700 11px/1 ${FONT};letter-spacing:.1em;text-transform:uppercase;color:${INK_SOFT};border-bottom:1px solid ${LINE};">Score</th>
+            <th align="left"  style="padding:10px 12px;font:700 11px/1 ${FONT};letter-spacing:.1em;text-transform:uppercase;color:${INK_SOFT};border-bottom:1px solid ${LINE};">${escape(t.evaluationCriteria)}</th>
+            <th align="right" style="padding:10px 14px;font:700 11px/1 ${FONT};letter-spacing:.1em;text-transform:uppercase;color:${INK_SOFT};border-bottom:1px solid ${LINE};">${escape(t.scoreColumn)}</th>
           </tr>
         </thead>
         <tbody>
           ${metricsRows}
           <tr style="background:#f8fafc;">
-            <td style="padding:14px 12px;font:800 14px/1.3 ${FONT};color:${INK};">Overall Score</td>
+            <td style="padding:14px 12px;font:800 14px/1.3 ${FONT};color:${INK};">${escape(t.overallScoreRow)}</td>
             <td align="right" style="padding:14px;font:800 15px/1.3 ${FONT};color:${scoreColor(overall)};">${earnedOutOf}</td>
           </tr>
         </tbody>
@@ -207,21 +213,25 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
   const reminderBanner = isReminder
     ? `<tr><td style="padding:0 24px 10px;">
         <div style="padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-left:3px solid #ea580c;border-radius:8px;font:600 13px/1.4 ${FONT};color:#9a3412;">
-          Reminder${d.reminderCount ? ` #${d.reminderCount}` : ""} — this feedback still needs your acknowledgement.
+          ${escape(t.reminderBanner(d.reminderCount))}
         </div>
       </td></tr>`
     : "";
 
   const ackDue = (d.acknowledgementDueAt ?? "").trim();
+  // ackBody may contain a <strong> tag around the case-number reference — keep
+  // it as raw HTML (the case number itself is escaped inside the dictionary
+  // through the caller passing a validated case-number string).
+  const ackBodyHtml = t.ackBody(caseNumber ? escape(caseNumber) : null);
   const ackBlock = `
     <tr><td style="padding:14px 24px 4px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fefce8;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:10px;">
         <tr><td style="padding:14px 16px;">
-          <div style="font:800 13px/1.2 ${FONT};color:#78350f;letter-spacing:.06em;text-transform:uppercase;">Acknowledgement Required</div>
+          <div style="font:800 13px/1.2 ${FONT};color:#78350f;letter-spacing:.06em;text-transform:uppercase;">${escape(t.ackRequired)}</div>
           <div style="margin-top:8px;font:14px/1.6 ${FONT};color:${INK};">
-            Please review this quality feedback and acknowledge receipt by replying to this email${caseNumber ? ` — keep <strong>Case ${escape(caseNumber)}</strong> in the subject line so your reply is matched to this record.` : "."}
+            ${ackBodyHtml}
           </div>
-          ${ackDue ? `<div style="margin-top:6px;font:600 12px/1.4 ${FONT};color:#78350f;">Due by ${escape(new Date(ackDue).toUTCString())}</div>` : ""}
+          ${ackDue ? `<div style="margin-top:6px;font:600 12px/1.4 ${FONT};color:#78350f;">${escape(t.ackDueBy(new Date(ackDue).toUTCString()))}</div>` : ""}
         </td></tr>
       </table>
     </td></tr>`;
@@ -232,7 +242,7 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
     <tr><td style="padding:16px 24px 4px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(180deg,${HEADER_TINT},#ffffff);border:1px solid ${LINE};border-radius:12px;">
         <tr><td align="center" style="padding:18px 16px;">
-          <div style="font:700 11px/1 ${FONT};letter-spacing:.14em;text-transform:uppercase;color:${ACCENT};">Overall Quality Score</div>
+          <div style="font:700 11px/1 ${FONT};letter-spacing:.14em;text-transform:uppercase;color:${ACCENT};">${escape(t.overallQualityScore)}</div>
           <div style="margin-top:8px;font:800 30px/1 ${FONT};color:${scoreColor(overall)};">${escape(overallLabel)}</div>
           <div style="margin-top:6px;font:600 12px/1.2 ${FONT};color:${MUTE};letter-spacing:.04em;text-transform:uppercase;">${escape(performanceLabel)}</div>
         </td></tr>
@@ -242,16 +252,16 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
   const infoBlock = `
     <tr><td style="padding:14px 24px 4px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-        ${metaRow("Case Number", caseNumber || null)}
-        ${metaRow("Feedback Title", d.title)}
-        ${metaRow("Agent", d.agentName)}
-        ${metaRow("Interaction Type", interactionLabel)}
-        ${metaRow("Date", d.interactionDate)}
+        ${metaRow(t.metaCaseNumber, caseNumber || null)}
+        ${metaRow(t.metaTitle, d.title)}
+        ${metaRow(t.metaAgent, d.agentName)}
+        ${metaRow(t.metaInteractionType, interactionLabel)}
+        ${metaRow(t.metaDate, d.interactionDate)}
       </table>
     </td></tr>`;
 
   const html = `<!doctype html>
-<html lang="en">
+<html lang="${escape(t.htmlLang)}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -267,7 +277,7 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
   </style>
 </head>
 <body style="margin:0;padding:0;background:${PAGE};">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Quality Feedback ${escape(caseNumber ? `Case ${caseNumber}` : "")} · ${escape(d.title)} · ${escape(earnedOutOf)}</div>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escape(t.subjectQualityFeedback)} ${escape(caseNumber ? `${t.caseWord} ${caseNumber}` : "")} · ${escape(d.title)} · ${escape(earnedOutOf)}</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAGE};">
     <tr><td align="center" style="padding:24px 12px;">
       <table role="presentation" class="container" width="640" cellpadding="0" cellspacing="0" style="width:640px;max-width:640px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(15,23,42,.06);">
@@ -279,17 +289,17 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
         ${reminderBanner}
 
         <tr><td class="px" style="padding:18px 24px 0;">
-          <div style="font:800 18px/1.25 ${FONT};color:${INK};">${escape(d.title)}${caseNumber ? ` <span style="font-weight:600;color:${MUTE};">· Case ${escape(caseNumber)}</span>` : ""}</div>
-          <div style="margin-top:8px;font:14.5px/1.65 ${FONT};color:${INK_SOFT};">Hello ${escape(greetingName)}, a quality evaluation has been completed for your recent ${escape(interactionLabel)} interaction.</div>
+          <div style="font:800 18px/1.25 ${FONT};color:${INK};">${escape(d.title)}${caseNumber ? ` <span style="font-weight:600;color:${MUTE};">· ${escape(t.caseWord)} ${escape(caseNumber)}</span>` : ""}</div>
+          <div style="margin-top:8px;font:14.5px/1.65 ${FONT};color:${INK_SOFT};">${escape(t.greeting(greetingName, interactionLabel))}</div>
         </td></tr>
 
         ${infoBlock}
         ${heroBlock}
         ${scorecardBlock}
 
-        ${narrativeBlock("Summary", d.summary)}
-        ${narrativeBlock("Strengths", d.strengths)}
-        ${narrativeBlock("Areas for Improvement", d.improvements)}
+        ${narrativeBlock(t.sectionSummary, d.summary)}
+        ${narrativeBlock(t.sectionStrengths, d.strengths)}
+        ${narrativeBlock(t.sectionImprovements, d.improvements)}
 
         ${ackBlock}
 
@@ -308,38 +318,39 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
 </html>`;
 
   // ── Plain-text fallback ────────────────────────────────────────────────
+  const stripTags = (s: string) => s.replace(/<[^>]+>/g, "");
   const textLines: string[] = [
     `${BRAND.name}`,
     "",
-    `${d.title}${caseNumber ? ` · Case ${caseNumber}` : ""}`,
-    `Agent: ${d.agentName}`,
-    `Interaction Type: ${interactionLabel}`,
-    d.interactionDate ? `Date: ${d.interactionDate}` : "",
+    `${d.title}${caseNumber ? ` · ${t.caseWord} ${caseNumber}` : ""}`,
+    `${t.metaAgent}: ${d.agentName}`,
+    `${t.metaInteractionType}: ${interactionLabel}`,
+    d.interactionDate ? `${t.metaDate}: ${d.interactionDate}` : "",
     "",
-    `Overall Quality Score: ${earnedOutOf} (${performanceLabel})`,
+    `${t.overallQualityScore}: ${earnedOutOf} (${performanceLabel})`,
     "",
-    "Quality Evaluation:",
+    `${t.qualityEvaluation}:`,
   ];
   for (const m of metrics) {
     const max = formatPoints(Number(m.maxPoints));
     const earned = formatPoints(Number(m.earnedPoints));
     textLines.push(`  ${String(m.label).padEnd(40)} ${earned} / ${max}`);
   }
-  textLines.push(`  ${"Overall Score".padEnd(40)} ${earnedOutOf}`);
+  textLines.push(`  ${t.overallScoreRow.padEnd(40)} ${earnedOutOf}`);
   textLines.push("");
   const narrativeText = (label: string, val?: string | null) => {
     const v = (val ?? "").trim();
     if (!v) return;
     textLines.push(label, v, "");
   };
-  narrativeText("Summary", d.summary);
-  narrativeText("Strengths", d.strengths);
-  narrativeText("Areas for Improvement", d.improvements);
+  narrativeText(t.sectionSummary, d.summary);
+  narrativeText(t.sectionStrengths, d.strengths);
+  narrativeText(t.sectionImprovements, d.improvements);
 
   textLines.push(
-    "Acknowledgement Required",
-    `Please review this quality feedback and acknowledge receipt by replying to this email${caseNumber ? ` — keep Case ${caseNumber} in the subject line.` : "."}`,
-    ackDue ? `Due by: ${new Date(ackDue).toUTCString()}` : "",
+    t.ackRequired,
+    stripTags(t.ackBody(caseNumber || null)),
+    ackDue ? `${t.ackDueBy(new Date(ackDue).toUTCString())}` : "",
     "",
     BRAND.name,
   );

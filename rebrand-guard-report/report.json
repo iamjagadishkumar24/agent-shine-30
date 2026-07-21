@@ -4,7 +4,7 @@
   "mode": "full",
   "total_matches": 0,
   "files_with_matches": 0,
-  "scanned_files": 290,
+  "scanned_files": 296,
   "scanned": [
     ".env",
     ".github/workflows/a11y.yml",
@@ -24,6 +24,7 @@
     "eslint.config.js",
     "package.json",
     "public/_headers",
+    "scripts/render-email-variants.ts",
     "scripts/verify-feedback-emails.ts",
     "src/assets/qualipulse-lockup.png.asset.json",
     "src/assets/qualipulse-mark.png.asset.json",
@@ -121,6 +122,7 @@
     "src/lib/export-jobs.server.ts",
     "src/lib/feedback-attachments.functions.ts",
     "src/lib/feedback-email.functions.ts",
+    "src/lib/feedback-email.i18n.ts",
     "src/lib/feedback-email.templates.ts",
     "src/lib/feedback-email.variables.ts",
     "src/lib/feedback-workflow.functions.ts",
@@ -271,6 +273,8 @@
     "tests/e2e/analytics_drilldown.spec.py",
     "tests/e2e/badge_visual_diff.py",
     "tests/e2e/coaching_status_regression.spec.py",
+    "tests/e2e/email_visual_regression.spec.py",
+    "tests/e2e/feedback_email_render_flow.spec.py",
     "tests/e2e/feedback_escalations_disabled.spec.py",
     "tests/e2e/feedback_escalations_edge_cases.spec.py",
     "tests/e2e/feedback_escalations_invalid_signature.spec.py",
@@ -282,6 +286,8 @@
     "tests/e2e/security_token_replay.spec.py",
     "tests/e2e/security_user_enumeration.spec.py",
     "tests/unit/__snapshots__/feedback-email.snapshot.test.ts.snap",
+    "tests/unit/feedback-email.branding-contract.test.ts",
+    "tests/unit/feedback-email.localization-contract.test.ts",
     "tests/unit/feedback-email.narratives.test.ts",
     "tests/unit/feedback-email.snapshot.test.ts",
     "tests/unit/scorecard-defaults.test.ts",
@@ -305,6 +311,222 @@
     {
       "file": "tests/e2e/__pycache__/analytics_drilldown.spec.cpython-313.pyc",
       "reason": "binary"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/initial-case-ackdue__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/initial-case-ackdue__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/initial-case-ackdue__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/initial-case-logo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/initial-case-logo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/initial-case-logo__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/initial-chat-logo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/initial-chat-logo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/initial-chat-logo__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/initial-chat-nologo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/initial-chat-nologo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/initial-chat-nologo__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/reminder-case-nologo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/reminder-case-nologo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/reminder-case-nologo__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/reminder-chat-logo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/reminder-chat-logo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/baseline/reminder-chat-logo__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/initial-case-ackdue__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/initial-case-ackdue__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/initial-case-ackdue__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/initial-case-logo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/initial-case-logo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/initial-case-logo__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/initial-chat-logo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/initial-chat-logo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/initial-chat-logo__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/initial-chat-nologo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/initial-chat-nologo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/initial-chat-nologo__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/reminder-case-nologo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/reminder-case-nologo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/reminder-case-nologo__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/reminder-chat-logo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/reminder-chat-logo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/current/reminder-chat-logo__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/initial-case-ackdue__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/initial-case-ackdue__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/initial-case-ackdue__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/initial-case-logo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/initial-case-logo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/initial-case-logo__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/initial-chat-logo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/initial-chat-logo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/initial-chat-logo__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/initial-chat-nologo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/initial-chat-nologo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/initial-chat-nologo__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/reminder-case-nologo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/reminder-case-nologo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/reminder-case-nologo__header.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/reminder-chat-logo__container.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/reminder-chat-logo__footer.png",
+      "reason": "binary-ext"
+    },
+    {
+      "file": "tests/e2e/screenshots/email-visual/diff/reminder-chat-logo__header.png",
+      "reason": "binary-ext"
     },
     {
       "file": "tests/e2e/screenshots/no_lovable_badge/auth.png",
@@ -604,7 +826,7 @@
     }
   ],
   "per_file": {},
-  "generated_at": "2026-07-21T15:11:19.058Z",
+  "generated_at": "2026-07-21T15:28:10.437Z",
   "detection": "case-insensitive + unicode-confusables + separator-insertions + zero-width-stripped",
   "matches": []
 }
