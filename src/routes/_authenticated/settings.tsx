@@ -1086,18 +1086,31 @@ function ScorecardEditor() {
 
   const total = rows.reduce((s, r) => s + (Number(r.max_points) || 0), 0);
   const balanced = total === 100;
-  const duplicateNames = (() => {
-    const seen = new Set<string>();
-    for (const r of rows) {
-      const key = r.name.trim().toLowerCase();
-      if (!key) continue;
-      if (seen.has(key)) return true;
-      seen.add(key);
-    }
-    return false;
-  })();
-  const hasEmptyName = rows.some((r) => !r.name.trim());
-  const canSave = balanced && !duplicateNames && !hasEmptyName && rows.length > 0;
+  const delta = total - 100;
+
+  // Per-row issue flags so we can highlight EXACTLY which fields are
+  // responsible for the current mismatch.
+  const nameCounts = rows.reduce<Record<string, number>>((acc, r) => {
+    const k = r.name.trim().toLowerCase();
+    if (k) acc[k] = (acc[k] ?? 0) + 1;
+    return acc;
+  }, {});
+  const rowIssues = rows.map((r) => {
+    const trimmed = r.name.trim();
+    const nameEmpty = !trimmed;
+    const nameDuplicate = !!trimmed && nameCounts[trimmed.toLowerCase()] > 1;
+    const weightInvalid = !Number.isFinite(r.max_points) || r.max_points <= 0;
+    return { nameEmpty, nameDuplicate, weightInvalid };
+  });
+  const duplicateNames = rowIssues.some((i) => i.nameDuplicate);
+  const hasEmptyName = rowIssues.some((i) => i.nameEmpty);
+  const hasInvalidWeight = rowIssues.some((i) => i.weightInvalid);
+  const canSave =
+    balanced &&
+    !duplicateNames &&
+    !hasEmptyName &&
+    !hasInvalidWeight &&
+    rows.length > 0;
 
   const save = useMutation({
     mutationFn: () => saveFn({ data: { name, parameters: rows } }),
@@ -1121,6 +1134,9 @@ function ScorecardEditor() {
     );
   }
 
+  const invalidRingClass =
+    "border-destructive ring-2 ring-destructive/30 focus-visible:ring-destructive";
+
   return (
     <Card className="p-6 space-y-5">
       <div className="flex items-start justify-between gap-4">
@@ -1139,7 +1155,54 @@ function ScorecardEditor() {
           )}
           aria-live="polite"
         >
-          Total: {total} / 100
+          Total: {total} / 100 {balanced ? "✓" : `(${delta > 0 ? "+" : ""}${delta})`}
+        </div>
+      </div>
+
+      {/* Distribution bar — visualizes each parameter's share of the target */}
+      <div>
+        <div
+          className={cn(
+            "relative h-2 w-full overflow-hidden rounded-full bg-muted",
+            !balanced && "ring-1 ring-destructive/40",
+          )}
+          role="progressbar"
+          aria-valuenow={total}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Scorecard weight distribution"
+        >
+          <div className="absolute inset-y-0 left-0 flex" style={{ width: `${Math.min(total, 100)}%` }}>
+            {rows.map((r, i) => {
+              const share = total > 0 ? (r.max_points / Math.max(total, 100)) * 100 : 0;
+              const bad = rowIssues[i].weightInvalid;
+              return (
+                <div
+                  key={i}
+                  className={cn(
+                    "h-full border-r border-background/60 last:border-r-0",
+                    bad ? "bg-destructive" : balanced ? "bg-emerald-500" : "bg-amber-500",
+                  )}
+                  style={{ width: `${share}%` }}
+                  title={`${r.name || "(unnamed)"}: ${r.max_points}`}
+                />
+              );
+            })}
+          </div>
+          {total > 100 && (
+            <div
+              className="absolute inset-y-0 right-0 bg-destructive/70"
+              style={{ width: `${Math.min(delta, 100)}%` }}
+              title={`Overflow: +${delta}`}
+            />
+          )}
+        </div>
+        <div className="mt-1 flex justify-between text-[11px] text-muted-foreground tabular-nums">
+          <span>0</span>
+          <span className={cn(balanced ? "text-emerald-600 dark:text-emerald-400" : "text-destructive")}>
+            {balanced ? "Balanced" : delta > 0 ? `${delta} over target` : `${-delta} remaining`}
+          </span>
+          <span>100</span>
         </div>
       </div>
 
@@ -1154,46 +1217,87 @@ function ScorecardEditor() {
       </div>
 
       <div className="space-y-2">
-        <div className="grid grid-cols-[1fr_120px_40px] gap-2 px-1 text-xs uppercase tracking-wide text-muted-foreground">
+        <div className="grid grid-cols-[1fr_140px_40px] gap-2 px-1 text-xs uppercase tracking-wide text-muted-foreground">
           <div>Parameter</div>
           <div>Weight</div>
           <div />
         </div>
-        {rows.map((r, idx) => (
-          <div key={idx} className="grid grid-cols-[1fr_120px_40px] gap-2 items-center">
-            <Input
-              value={r.name}
-              onChange={(e) => {
-                const next = [...rows];
-                next[idx] = { ...next[idx], name: e.target.value };
-                setRows(next);
-              }}
-              placeholder="Parameter name"
-              maxLength={100}
-            />
-            <Input
-              type="number"
-              min={1}
-              max={100}
-              step={1}
-              value={r.max_points}
-              onChange={(e) => {
-                const next = [...rows];
-                next[idx] = { ...next[idx], max_points: Math.max(0, Math.floor(Number(e.target.value) || 0)) };
-                setRows(next);
-              }}
-              className="tabular-nums"
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setRows(rows.filter((_, i) => i !== idx))}
-              aria-label={`Remove ${r.name || "parameter"}`}
-            >
-              <Ban className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
+        {rows.map((r, idx) => {
+          const issue = rowIssues[idx];
+          const nameBad = issue.nameEmpty || issue.nameDuplicate;
+          // When the total is off, every weight input is a candidate cause,
+          // so flag them all. Zero/invalid weights are always flagged.
+          const weightBad = issue.weightInvalid || !balanced;
+          const messages: string[] = [];
+          if (issue.nameEmpty) messages.push("Name is required.");
+          if (issue.nameDuplicate) messages.push("Duplicate name — must be unique.");
+          if (issue.weightInvalid) messages.push("Weight must be at least 1.");
+          if (!balanced && !issue.weightInvalid) {
+            messages.push(
+              delta > 0
+                ? `Contributes to a total ${delta} over 100.`
+                : `Total is ${-delta} short of 100.`,
+            );
+          }
+          return (
+            <div key={idx} className="space-y-1">
+              <div className="grid grid-cols-[1fr_140px_40px] gap-2 items-center">
+                <Input
+                  value={r.name}
+                  onChange={(e) => {
+                    const next = [...rows];
+                    next[idx] = { ...next[idx], name: e.target.value };
+                    setRows(next);
+                  }}
+                  placeholder="Parameter name"
+                  maxLength={100}
+                  aria-invalid={nameBad || undefined}
+                  className={cn(nameBad && invalidRingClass)}
+                />
+                <div className="relative">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={100}
+                    step={1}
+                    value={r.max_points}
+                    onChange={(e) => {
+                      const next = [...rows];
+                      next[idx] = {
+                        ...next[idx],
+                        max_points: Math.max(0, Math.floor(Number(e.target.value) || 0)),
+                      };
+                      setRows(next);
+                    }}
+                    aria-invalid={weightBad || undefined}
+                    className={cn("tabular-nums pr-12", weightBad && invalidRingClass)}
+                  />
+                  <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground tabular-nums">
+                    {total > 0 ? `${Math.round((r.max_points / total) * 100)}%` : "—"}
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setRows(rows.filter((_, i) => i !== idx))}
+                  aria-label={`Remove ${r.name || "parameter"}`}
+                >
+                  <Ban className="h-4 w-4" />
+                </Button>
+              </div>
+              {messages.length > 0 && (
+                <div className="pl-1 text-[11px] text-destructive space-y-0.5">
+                  {messages.map((m, i) => (
+                    <div key={i} className="flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3 shrink-0" />
+                      <span>{m}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
         <Button
           variant="outline"
           size="sm"
@@ -1210,21 +1314,9 @@ function ScorecardEditor() {
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
             Weights must sum to exactly <strong>100</strong>. Current total is{" "}
-            <strong>{total}</strong> ({total > 100 ? total - 100 : 100 - total}{" "}
-            {total > 100 ? "over" : "under"}).
+            <strong>{total}</strong>{" "}
+            ({delta > 0 ? `${delta} over` : `${-delta} under`}). Adjust the highlighted weights above.
           </div>
-        </div>
-      )}
-      {duplicateNames && (
-        <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          Parameter names must be unique.
-        </div>
-      )}
-      {hasEmptyName && (
-        <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          Every parameter needs a name.
         </div>
       )}
 
