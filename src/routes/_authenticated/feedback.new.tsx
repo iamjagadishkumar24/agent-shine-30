@@ -102,7 +102,7 @@ function NewFeedback() {
   const [aiOpen, setAiOpen] = useState(false);
   const [observations, setObservations] = useState("");
   const [template, setTemplate] = useState<EmailTemplate>("performance_feedback");
-  const [lastDraft, setLastDraft] = useState<null | { title: string; summary: string; strengths: string; improvements: string; recommended_actions: string }>(null);
+  const [lastDraft, setLastDraft] = useState<null | { title: string; summary: string; strengths: string; improvements: string }>(null);
   const runAi = useServerFn(generateFeedbackDraft);
   const ai = useMutation({
     mutationFn: async () => {
@@ -128,7 +128,6 @@ function NewFeedback() {
         summary: draft.summary || f.summary,
         strengths: draft.strengths || f.strengths,
         improvements: draft.improvements || f.improvements,
-        recommended_actions: draft.recommended_actions || f.recommended_actions,
       }));
       setAiOpen(false);
     },
@@ -186,14 +185,14 @@ function NewFeedback() {
           summary: form.summary || null,
           strengths: form.strengths || null,
           improvements: form.improvements || null,
-          recommended_actions: form.recommended_actions || null,
-          internal_notes: form.internal_notes || null,
-          agent_visible_notes: form.agent_visible_notes || null,
+          recommended_actions: null,
+          internal_notes: null,
+          agent_visible_notes: null,
           scores: scores.map((s) => ({
             parameter_name: s.parameter_name,
             max_points: s.max_points,
-            selected_percentage: s.selected_percentage,
-            evaluator_note: s.evaluator_note || null,
+            selected_percentage: s.max_points > 0 ? (s.points / s.max_points) * 100 : 0,
+            evaluator_note: null,
           })),
           mode,
         },
