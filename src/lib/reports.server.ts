@@ -4,15 +4,11 @@
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { csvEscape } from "@/lib/csv-safe";
 
 export type ReportType = "agent_performance" | "feedback_trends" | "email_delivery";
 
 type Row = Record<string, string | number | null>;
-
-function csvEscape(v: unknown): string {
-  const s = v == null ? "" : String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
 
 export function rowsToCsv(rows: Row[]): string {
   if (!rows.length) return "";

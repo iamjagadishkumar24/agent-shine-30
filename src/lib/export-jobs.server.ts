@@ -2,20 +2,14 @@
 // dynamically so this module never ships to the client.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { format as fmt } from "date-fns";
+import { csvEscape, csvRow } from "@/lib/csv-safe";
 
 const BATCH = 500;
 const MAX_ROWS = 50_000;
 
-function csvEscape(v: unknown): string {
-  if (v === null || v === undefined) return "";
-  const s = typeof v === "string" ? v : v instanceof Date ? v.toISOString() : String(v);
-  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
+// csvEscape/csvRow imported from @/lib/csv-safe — formula-injection safe.
+void csvEscape;
 
-function csvRow(cells: unknown[]): string {
-  return cells.map(csvEscape).join(",") + "\n";
-}
 
 function fmtDt(v: string | null | undefined): string {
   if (!v) return "";
