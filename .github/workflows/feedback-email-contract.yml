@@ -12,6 +12,11 @@ on:
       - ".github/workflows/feedback-email-contract.yml"
   push:
     branches: [main]
+  schedule:
+    # Nightly at 07:15 UTC — runs on the default branch even without a PR
+    # so environment drift (dep updates, Node/Bun versions, upstream renders)
+    # gets caught within 24 hours.
+    - cron: "15 7 * * *"
   workflow_dispatch:
 
 jobs:
