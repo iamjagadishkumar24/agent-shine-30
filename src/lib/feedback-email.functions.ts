@@ -218,7 +218,12 @@ export const sendFeedbackEmail = createServerFn({ method: "POST" })
     const nowIso = new Date().toISOString();
     const { data: transitioned, error: txErr } = await supabaseAdmin
       .from("feedback")
-      .update({ status: "ready_to_send", sent_at: null, email_error: null })
+      .update({
+        status: "ready_to_send",
+        sent_at: null,
+        email_error: null,
+        acknowledgement_due_at: ackDueAt,
+      })
       .eq("id", fb.id)
       .eq("status", sourceStatus as never)
       .select("id")
