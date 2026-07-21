@@ -112,11 +112,17 @@ describe("feedback email localization contract", () => {
           });
 
           it("uses the localized quality-evaluation section header", () => {
-            expect(html).toContain(t.qualityEvaluation);
-            expect(html).toContain(t.evaluationCriteria);
-            expect(html).toContain(t.scoreColumn);
-            expect(html).toContain(t.overallScoreRow);
-            expect(html).toContain(t.overallQualityScore);
+            // HTML-decode so locale strings containing apostrophes (e.g.
+            // French "Critères d'évaluation") match after escape().
+            const decoded = html
+              .replace(/&#39;/g, "'")
+              .replace(/&quot;/g, '"')
+              .replace(/&amp;/g, "&");
+            expect(decoded).toContain(t.qualityEvaluation);
+            expect(decoded).toContain(t.evaluationCriteria);
+            expect(decoded).toContain(t.scoreColumn);
+            expect(decoded).toContain(t.overallScoreRow);
+            expect(decoded).toContain(t.overallQualityScore);
           });
 
           it("uses the localized narrative section titles", () => {
