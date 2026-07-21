@@ -29,7 +29,7 @@ function fmtDt(v: string | null | undefined): string {
 type Params = Record<string, any>;
 
 async function updateJob(id: string, patch: Record<string, any>) {
-  await supabaseAdmin.from("export_jobs").update(patch).eq("id", id);
+  await supabaseAdmin.from("export_jobs").update(patch as any).eq("id", id);
 }
 
 async function countAgentFeedback(params: Params): Promise<number> {
