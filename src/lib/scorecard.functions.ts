@@ -159,3 +159,89 @@ export const getFeedbackScores = createServerFn({ method: "GET" })
     if (error) throw new Response(error.message, { status: 500 });
     return rows ?? [];
   });
+
+// ── Save active scorecard template (admin) ─────────────────────────────────
+// CRITICAL: refuses to persist unless the sum of parameter weights === 100.
+const ScorecardParamInput = z.object({
+  name: z.string().trim().min(1).max(100),
+  max_points: z.number().int().min(1).max(100),
+});
+const SaveScorecardPayload = z.object({
+  name: z.string().trim().min(1).max(120),
+  parameters: z
+    .array(ScorecardParamInput)
+    .min(1)
+    .max(20)
+    .refine((rows) => {
+      const total = rows.reduce((sum, r) => sum + r.max_points, 0);
+      return total === 100;
+    }, { message: "Scorecard weights must sum to exactly 100" })
+    .refine((rows) => {
+      const names = rows.map((r) => r.name.toLowerCase());
+      return new Set(names).size === names.length;
+    }, { message: "Parameter names must be unique" }),
+});
+
+export const saveActiveScorecard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => SaveScorecardPayload.parse(raw))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    // Only admins may edit the active scorecard.
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const isAdmin = (roles ?? []).some((r) =>
+      ["super_admin", "qa_admin"].includes(r.role as string),
+    );
+    if (!isAdmin) throw new Response("Forbidden", { status: 403 });
+
+    // Defensive re-check (belt & braces — Zod already enforced this).
+    const total = data.parameters.reduce((sum, p) => sum + p.max_points, 0);
+    if (total !== 100) {
+      throw new Response(
+        `Scorecard weights must total 100 (received ${total})`,
+        { status: 400 },
+      );
+    }
+
+    // Find or create the active template.
+    const { data: existing } = await supabase
+      .from("scorecard_templates")
+      .select("id, version")
+      .eq("is_active", true)
+      .maybeSingle();
+
+    let templateId: string;
+    if (existing) {
+      const { error } = await supabase
+        .from("scorecard_templates")
+        .update({ name: data.name })
+        .eq("id", existing.id);
+      if (error) throw new Response(error.message, { status: 400 });
+      templateId = existing.id;
+      await supabase.from("scorecard_parameters").delete().eq("template_id", templateId);
+    } else {
+      const { data: row, error } = await supabase
+        .from("scorecard_templates")
+        .insert({ name: data.name, is_active: true, version: 1 })
+        .select("id")
+        .single();
+      if (error || !row) throw new Response(error?.message ?? "Failed to create template", { status: 400 });
+      templateId = row.id;
+    }
+
+    const rows = data.parameters.map((p, idx) => ({
+      template_id: templateId,
+      name: p.name,
+      max_points: p.max_points,
+      display_order: idx + 1,
+    }));
+    const { error: pErr } = await supabase.from("scorecard_parameters").insert(rows);
+    if (pErr) throw new Response(pErr.message, { status: 400 });
+
+    return { template_id: templateId, total };
+  });
+
