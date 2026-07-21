@@ -17,6 +17,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthSigninRouteImport } from './routes/auth.signin'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
@@ -94,6 +95,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthSigninRoute = AuthSigninRouteImport.update({
+  id: '/signin',
+  path: '/signin',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
@@ -311,7 +317,7 @@ const ApiPublicCalendarTokenIcsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/mcp': typeof McpRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -331,6 +337,7 @@ export interface FileRoutesByFullPath {
   '/portal': typeof AuthenticatedPortalRouteWithChildren
   '/reports': typeof AuthenticatedReportsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
+  '/auth/signin': typeof AuthSigninRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/agent-reports/$id': typeof AuthenticatedAgentReportsIdRoute
@@ -358,7 +365,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/mcp': typeof McpRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -378,6 +385,7 @@ export interface FileRoutesByTo {
   '/portal': typeof AuthenticatedPortalRouteWithChildren
   '/reports': typeof AuthenticatedReportsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
+  '/auth/signin': typeof AuthSigninRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/agent-reports/$id': typeof AuthenticatedAgentReportsIdRoute
@@ -407,7 +415,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/mcp': typeof McpRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -427,6 +435,7 @@ export interface FileRoutesById {
   '/_authenticated/portal': typeof AuthenticatedPortalRouteWithChildren
   '/_authenticated/reports': typeof AuthenticatedReportsRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/auth/signin': typeof AuthSigninRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/agent-reports/$id': typeof AuthenticatedAgentReportsIdRoute
@@ -476,6 +485,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/reports'
     | '/settings'
+    | '/auth/signin'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/agent-reports/$id'
@@ -523,6 +533,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/reports'
     | '/settings'
+    | '/auth/signin'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/agent-reports/$id'
@@ -571,6 +582,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
+    | '/auth/signin'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/agent-reports/$id'
@@ -600,7 +612,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   McpRoute: typeof McpRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -678,6 +690,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/signin': {
+      id: '/auth/signin'
+      path: '/signin'
+      fullPath: '/auth/signin'
+      preLoaderRoute: typeof AuthSigninRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
@@ -1060,10 +1079,20 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthSigninRoute: typeof AuthSigninRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthSigninRoute: AuthSigninRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   McpRoute: McpRoute,
   ResetPasswordRoute: ResetPasswordRoute,
