@@ -291,6 +291,7 @@ function ReportsPage() {
           </Card>
         ))}
       </div>
+      </div>
     </div>
   );
 }
