@@ -637,7 +637,15 @@ function AgentReportDetail() {
             {/* Email delivery history */}
             <Card className="overflow-hidden">
               <div className="flex flex-wrap items-end gap-3 border-b p-4">
-                <div className="text-sm font-semibold mr-auto">Email delivery history ({emailTotal})</div>
+                <div className="mr-auto flex items-center gap-2">
+                  <div className="text-sm font-semibold">Email delivery history ({emailTotal})</div>
+                  <Button size="sm" variant="outline" className="h-8" onClick={exportEmailCsv} disabled={!!exporting}>
+                    {exporting === "em-csv" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-1.5 h-3.5 w-3.5" />} CSV
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-8" onClick={exportEmailPdf} disabled={!!exporting}>
+                    {exporting === "em-pdf" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <FileText className="mr-1.5 h-3.5 w-3.5" />} PDF
+                  </Button>
+                </div>
                 <Input placeholder="Search subject / recipient" value={emailSearch}
                   onChange={(e) => { setEmailSearch(e.target.value); setEmailPage(1); }} className="h-9 w-64" />
                 <Select value={emailStatus} onValueChange={(v) => { setEmailStatus(v); setEmailPage(1); }}>
