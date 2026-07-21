@@ -69,16 +69,16 @@ export const listAgentReports = createServerFn({ method: "GET" })
   });
 
 // ---------------------------------------------------------------------------
-// Individual agent detail with period filter
+// Agent detail summary — aggregate stats + trend + parameter averages
 // ---------------------------------------------------------------------------
-const DetailSchema = z.object({
+const SummarySchema = z.object({
   agentId: z.string().uuid(),
   from: z.string().optional(),
   to: z.string().optional(),
 });
 export const getAgentReport = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => DetailSchema.parse(d))
+  .inputValidator((d: unknown) => SummarySchema.parse(d))
   .handler(async ({ data, context }) => {
     await requireStaff(context.supabase, context.userId);
     const { data: agent, error: aerr } = await context.supabase
@@ -87,24 +87,176 @@ export const getAgentReport = createServerFn({ method: "GET" })
 
     let q = context.supabase
       .from("feedback")
-      .select("id, case_number, title, interaction_type, score, overall_percentage, status, acknowledgement_status, sent_at, acknowledged_at, created_at, summary, strengths, improvements, category")
+      .select("id, score, interaction_type, acknowledgement_status, sent_at, acknowledged_at, created_at")
       .eq("agent_id", data.agentId)
       .order("created_at", { ascending: false });
     if (data.from) q = q.gte("created_at", data.from);
     if (data.to) q = q.lte("created_at", data.to);
     const { data: feedback, error: ferr } = await q;
     if (ferr) fail("Unable to load feedback", 500, ferr);
+    const F = (feedback ?? []) as any[];
 
-    // Parameter scores (period-scoped)
-    const feedbackIds = (feedback ?? []).map((f) => f.id);
-    let paramScores: any[] = [];
-    if (feedbackIds.length) {
+    const scores = F.map((f) => f.score).filter((s: any) => typeof s === "number");
+    const ackd = F.filter((f) => f.acknowledgement_status === "acknowledged" || f.acknowledged_at).length;
+    const pending = F.filter((f) => f.sent_at && !f.acknowledged_at && f.acknowledgement_status !== "acknowledged").length;
+    const chat = F.filter((f) => f.interaction_type === "chat").length;
+    const cases = F.filter((f) => f.interaction_type === "case").length;
+    const stats = {
+      total: F.length,
+      avg: scores.length ? Math.round((scores.reduce((s, n) => s + n, 0) / scores.length) * 10) / 10 : null,
+      high: scores.length ? Math.max(...scores) : null,
+      low: scores.length ? Math.min(...scores) : null,
+      ackd, pending, chat, cases,
+      first: F.length ? F[F.length - 1].created_at : null,
+      last: F.length ? F[0].created_at : null,
+    };
+
+    const trend = [...F].reverse().map((f) => ({ date: f.created_at, score: f.score ?? 0 }));
+
+    let paramAvg: Array<{ name: string; avg: number; max: number }> = [];
+    if (F.length) {
+      const ids = F.map((f) => f.id);
       const { data: ps } = await context.supabase
         .from("feedback_scores")
         .select("feedback_id, parameter_name, earned_points, max_points")
-        .in("feedback_id", feedbackIds);
-      paramScores = ps ?? [];
+        .in("feedback_id", ids);
+      const acc = new Map<string, { earned: number; max: number; count: number }>();
+      for (const p of (ps ?? []) as any[]) {
+        const cur = acc.get(p.parameter_name) ?? { earned: 0, max: 0, count: 0 };
+        cur.earned += Number(p.earned_points) || 0;
+        cur.max += Number(p.max_points) || 0;
+        cur.count += 1;
+        acc.set(p.parameter_name, cur);
+      }
+      paramAvg = Array.from(acc.entries()).map(([name, v]) => ({
+        name,
+        avg: v.count ? Math.round((v.earned / v.count) * 10) / 10 : 0,
+        max: v.count ? Math.round((v.max / v.count) * 10) / 10 : 0,
+      }));
     }
 
-    return { agent, feedback: feedback ?? [], paramScores };
+    return { agent, stats, trend, paramAvg };
+  });
+
+// ---------------------------------------------------------------------------
+// Paginated + filtered feedback history for one agent
+// ---------------------------------------------------------------------------
+const FeedbackListSchema = z.object({
+  agentId: z.string().uuid(),
+  from: z.string().optional(),
+  to: z.string().optional(),
+  search: z.string().trim().max(200).optional(),
+  status: z.string().optional(),
+  ackStatus: z.string().optional(),
+  interactionType: z.enum(["chat", "case"]).optional(),
+  minScore: z.number().min(0).max(100).optional(),
+  maxScore: z.number().min(0).max(100).optional(),
+  sortBy: z.enum(["created_at", "sent_at", "score", "case_number", "title"]).default("created_at"),
+  sortDir: z.enum(["asc", "desc"]).default("desc"),
+  page: z.number().int().min(1).default(1),
+  pageSize: z.number().int().min(1).max(100).default(20),
+});
+export const listAgentReportFeedback = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => FeedbackListSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await requireStaff(context.supabase, context.userId);
+
+    const from = (data.page - 1) * data.pageSize;
+    const to = from + data.pageSize - 1;
+
+    let q = context.supabase
+      .from("feedback")
+      .select(
+        "id, case_number, title, interaction_type, score, overall_percentage, status, acknowledgement_status, sent_at, delivered_at, acknowledged_at, opened_at, created_at, category",
+        { count: "exact" }
+      )
+      .eq("agent_id", data.agentId);
+
+    if (data.from) q = q.gte("created_at", data.from);
+    if (data.to) q = q.lte("created_at", data.to);
+    if (data.status) q = q.eq("status", data.status as any);
+    if (data.ackStatus) q = q.eq("acknowledgement_status", data.ackStatus);
+    if (data.interactionType) q = q.eq("interaction_type", data.interactionType);
+    if (typeof data.minScore === "number") q = q.gte("score", data.minScore);
+    if (typeof data.maxScore === "number") q = q.lte("score", data.maxScore);
+    if (data.search) {
+      const s = data.search.replace(/[%,]/g, " ");
+      q = q.or(`title.ilike.%${s}%,case_number.ilike.%${s}%,category.ilike.%${s}%`);
+    }
+
+    q = q.order(data.sortBy, { ascending: data.sortDir === "asc", nullsFirst: false }).range(from, to);
+
+    const { data: rows, count, error } = await q;
+    if (error) fail("Unable to load feedback", 500, error);
+
+    return {
+      rows: rows ?? [],
+      total: count ?? 0,
+      page: data.page,
+      pageSize: data.pageSize,
+      totalPages: Math.max(1, Math.ceil((count ?? 0) / data.pageSize)),
+    };
+  });
+
+// ---------------------------------------------------------------------------
+// Paginated email delivery history for one agent
+// ---------------------------------------------------------------------------
+const EmailListSchema = z.object({
+  agentId: z.string().uuid(),
+  from: z.string().optional(),
+  to: z.string().optional(),
+  search: z.string().trim().max(200).optional(),
+  status: z.string().optional(),
+  sortBy: z.enum(["created_at", "sent_at", "delivered_at", "status"]).default("created_at"),
+  sortDir: z.enum(["asc", "desc"]).default("desc"),
+  page: z.number().int().min(1).default(1),
+  pageSize: z.number().int().min(1).max(100).default(20),
+});
+export const listAgentFeedbackEmails = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => EmailListSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await requireStaff(context.supabase, context.userId);
+
+    // Restrict to this agent's feedback IDs
+    let fq = context.supabase.from("feedback").select("id").eq("agent_id", data.agentId);
+    if (data.from) fq = fq.gte("created_at", data.from);
+    if (data.to) fq = fq.lte("created_at", data.to);
+    const { data: fbIds, error: fberr } = await fq;
+    if (fberr) fail("Unable to scope emails", 500, fberr);
+    const ids = (fbIds ?? []).map((r: any) => r.id);
+    if (!ids.length) {
+      return { rows: [], total: 0, page: data.page, pageSize: data.pageSize, totalPages: 1 };
+    }
+
+    const rangeFrom = (data.page - 1) * data.pageSize;
+    const rangeTo = rangeFrom + data.pageSize - 1;
+
+    let q = context.supabase
+      .from("email_queue")
+      .select(
+        "id, feedback_id, kind, to_email, subject, status, attempts, max_attempts, provider, provider_message_id, provider_status, last_error, sent_at, delivered_at, bounced_at, bounce_reason, next_attempt_at, created_at",
+        { count: "exact" }
+      )
+      .in("feedback_id", ids);
+
+    if (data.status) q = q.eq("status", data.status);
+    if (data.search) {
+      const s = data.search.replace(/[%,]/g, " ");
+      q = q.or(`subject.ilike.%${s}%,to_email.ilike.%${s}%,provider_message_id.ilike.%${s}%`);
+    }
+
+    q = q.order(data.sortBy, { ascending: data.sortDir === "asc", nullsFirst: false }).range(rangeFrom, rangeTo);
+
+    const { data: rows, count, error } = await q;
+    if (error) fail("Unable to load emails", 500, error);
+
+    return {
+      rows: rows ?? [],
+      total: count ?? 0,
+      page: data.page,
+      pageSize: data.pageSize,
+      totalPages: Math.max(1, Math.ceil((count ?? 0) / data.pageSize)),
+    };
   });
