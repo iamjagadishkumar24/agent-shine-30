@@ -84,18 +84,64 @@ jobs:
       - name: Open drift issue (scheduled runs only)
         if: failure() && github.event_name == 'schedule'
         uses: actions/github-script@v7
+        env:
+          # Configure in repo/org Settings → Variables:
+          #   FEEDBACK_EMAIL_OWNER          — GitHub login to auto-assign (e.g. "octocat")
+          #   FEEDBACK_EMAIL_OWNER_FALLBACK — optional secondary login
+          DRIFT_OWNER: ${{ vars.FEEDBACK_EMAIL_OWNER }}
+          DRIFT_OWNER_FALLBACK: ${{ vars.FEEDBACK_EMAIL_OWNER_FALLBACK }}
         with:
           script: |
             const fs = require('fs');
             const outDir = process.env.FEEDBACK_EMAIL_VERIFY_OUT_DIR;
-            let body = `The nightly feedback email contract check failed on \`${context.ref}\` (commit ${context.sha}).\n\n` +
+
+            // ---- Derive severity + scoped labels from summary.json --------------
+            let summary = null;
+            try { summary = JSON.parse(fs.readFileSync(`${outDir}/summary.json`, 'utf8')); } catch {}
+
+            const failed = summary?.failed ?? 0;
+            const total  = summary?.totalCases ?? 0;
+            const ratio  = total > 0 ? failed / total : 1;
+
+            let severity = 'severity:low';
+            if (ratio >= 0.5 || failed >= 4) severity = 'severity:critical';
+            else if (ratio >= 0.25 || failed >= 2) severity = 'severity:high';
+            else if (failed >= 1) severity = 'severity:medium';
+
+            const failingIds = new Set((summary?.failures ?? []).map(f => f.case));
+            const scopes = new Set();
+            for (const id of failingIds) {
+              if (id.startsWith('chat-')) scopes.add('scope:chat-email');
+              if (id.startsWith('case-')) scopes.add('scope:case-email');
+            }
+
+            const labels = [
+              'agent-quality',
+              'email-contract',
+              'feedback-email-contract',
+              'drift',
+              severity,
+              ...scopes,
+            ];
+
+            // ---- Owner assignment ----------------------------------------------
+            const assignees = [process.env.DRIFT_OWNER, process.env.DRIFT_OWNER_FALLBACK]
+              .filter(Boolean)
+              .map(s => s.replace(/^@/, '').trim())
+              .filter(Boolean);
+
+            // ---- Body -----------------------------------------------------------
+            let body =
+              `The nightly feedback email contract check failed on \`${context.ref}\` (commit ${context.sha}).\n\n` +
               `- Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n` +
-              `- Download the \`feedback-email-verification\` artifact for the rendered HTML/text.\n`;
-            try {
-              const s = fs.readFileSync(`${outDir}/summary.json`, 'utf8');
-              body += `\n<details><summary>summary.json</summary>\n\n\`\`\`json\n${s.slice(0, 60000)}\n\`\`\`\n</details>\n`;
-            } catch {}
+              `- Failed cases: **${failed}/${total}** (severity: \`${severity.split(':')[1]}\`)\n` +
+              `- Artifact: \`feedback-email-verification\` (rendered HTML/text)\n`;
+            if (summary) {
+              body += `\n<details><summary>summary.json</summary>\n\n\`\`\`json\n${JSON.stringify(summary, null, 2).slice(0, 60000)}\n\`\`\`\n</details>\n`;
+            }
+
             const title = `Feedback email contract drift (${new Date().toISOString().slice(0,10)})`;
+
             const { data: existing } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -103,19 +149,37 @@ jobs:
               labels: 'feedback-email-contract',
               per_page: 1,
             });
+
             if (existing.length) {
+              const num = existing[0].number;
               await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: existing[0].number,
-                body,
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: num, body,
               });
+              // Refresh labels: drop stale severity:/scope: and re-apply current set.
+              const keep = (existing[0].labels || [])
+                .map(l => (typeof l === 'string' ? l : l.name))
+                .filter(n => n && !n.startsWith('severity:') && !n.startsWith('scope:'));
+              await github.rest.issues.setLabels({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: num,
+                labels: Array.from(new Set([...keep, ...labels])),
+              });
+              if (assignees.length) {
+                try {
+                  await github.rest.issues.addAssignees({
+                    owner: context.repo.owner, repo: context.repo.repo,
+                    issue_number: num, assignees,
+                  });
+                } catch (e) { core.warning(`Assignee update failed: ${e.message}`); }
+              }
             } else {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title,
-                body,
-                labels: ['feedback-email-contract'],
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, body, labels,
+                assignees: assignees.length ? assignees : undefined,
               });
+              if (assignees.length && !created.data.assignees?.length) {
+                core.warning(`Issue created but assignees not applied (verify ${assignees.join(', ')} have repo access).`);
+              }
             }
