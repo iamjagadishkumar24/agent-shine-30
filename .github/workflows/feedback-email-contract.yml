@@ -309,7 +309,58 @@ jobs:
           RECENT="$OUT/diffs/history.recent.jsonl"
           tail -n 10 "$HIST" > "$RECENT"
 
+          # ---- Sparklines: diff bytes + checksum churn across RECENT runs ----
+          # Uses Unicode block characters ▁▂▃▄▅▆▇█ scaled to each series' max
+          # so direction and volatility are visible at a glance.
+          spark() {
+            python3 - "$@" <<'PY'
+import sys
+vals = [max(0, int(float(x))) for x in sys.argv[1:]]
+if not vals:
+    print(""); sys.exit(0)
+blocks = "▁▂▃▄▅▆▇█"
+mx = max(vals)
+if mx == 0:
+    print(blocks[0] * len(vals)); sys.exit(0)
+print("".join(blocks[min(len(blocks)-1, int(round(v / mx * (len(blocks)-1))))] for v in vals))
+PY
+          }
+
+          # Diff-byte series: one value per recent run, oldest → newest.
+          diff_series=$(jq -r '.diffBytes // 0' "$RECENT" | tr '\n' ' ')
+
+          # Checksum-churn series: number of files whose SHA256 changed vs the
+          # immediately previous entry in full history. First entry in the
+          # window has no predecessor within it, so we compute over the whole
+          # history and slice the last N.
+          churn_series=$(jq -s -r '
+            def hashes(x): (x.checksums // []) | map({key:.name, value:.sha256}) | from_entries;
+            . as $rows
+            | [ range(0; length) as $i
+                | if $i == 0 then 0
+                  else
+                    (hashes($rows[$i-1])) as $p
+                    | (hashes($rows[$i]))   as $c
+                    | [ $c | keys[] | select(($p[.] // "") != $c[.]) ] | length
+                  end ]
+            | .[-10:] | .[]' "$HIST" | tr '\n' ' ')
+
+          diff_spark=$(spark $diff_series)
+          churn_spark=$(spark $churn_series)
+          diff_min=$(printf '%s\n' $diff_series  | sort -n | head -1)
+          diff_max=$(printf '%s\n' $diff_series  | sort -n | tail -1)
+          churn_min=$(printf '%s\n' $churn_series | sort -n | head -1)
+          churn_max=$(printf '%s\n' $churn_series | sort -n | tail -1)
+          samples=$(wc -l < "$RECENT" | tr -d ' ')
+
           {
+            echo "**Sparklines (last ${samples} scheduled runs, oldest → newest)**"
+            echo ""
+            echo "| Metric | Trend | Min | Max |"
+            echo "| --- | --- | --- | --- |"
+            echo "| Diff bytes | \`${diff_spark:- }\` | ${diff_min:-0} | ${diff_max:-0} |"
+            echo "| Checksum churn | \`${churn_spark:- }\` | ${churn_min:-0} | ${churn_max:-0} |"
+            echo ""
             echo "| # | When (UTC) | Result | Failed / Total | Diff bytes |"
             echo "| --- | --- | --- | --- | --- |"
             i=0
