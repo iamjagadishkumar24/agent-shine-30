@@ -78,17 +78,19 @@ def main() -> int:
     allowed, _, _ = call_limit(bucket, other_key, limit, window)
     assert allowed, "independent key was blocked — limiter is not scoped by key"
 
-    # 5. Sliding window: with a short window, once the window elapses the
-    # RPC prunes old rows internally and the next call is allowed again.
+    # 5. Sliding window: fill a short-window bucket, confirm block, wait past
+    # the window, then confirm the next call is allowed (RPC prunes internally).
     slide_bucket = f"test.slide.{uuid.uuid4().hex[:8]}"
     slide_key = f"rl-{uuid.uuid4().hex[:12]}"
+    slide_window = 10
     for _ in range(limit):
-        call_limit(slide_bucket, slide_key, limit, 2)
-    allowed, _, _ = call_limit(slide_bucket, slide_key, limit, 2)
+        call_limit(slide_bucket, slide_key, limit, slide_window)
+    allowed, _, _ = call_limit(slide_bucket, slide_key, limit, slide_window)
     assert not allowed, "short-window limiter failed to block"
-    time.sleep(3)
-    allowed, _, _ = call_limit(slide_bucket, slide_key, limit, 2)
+    time.sleep(slide_window + 2)
+    allowed, _, _ = call_limit(slide_bucket, slide_key, limit, slide_window)
     assert allowed, "window did not slide — limiter still blocking after expiry"
+
 
     print("[security_rate_limit] OK — throttles past threshold, isolates keys, slides window")
     return 0
