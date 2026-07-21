@@ -120,10 +120,11 @@ describe("feedback email localization contract", () => {
           });
 
           it("uses the localized narrative section titles", () => {
-            expect(html).toContain(t.sectionSummary);
-            expect(html).toContain(t.sectionStrengths);
-            expect(html).toContain(t.sectionImprovements);
+            // Text version is not HTML-escaped, so it's the reliable
+            // invariant channel for titles that may contain apostrophes.
             expect(text).toContain(t.sectionSummary);
+            expect(text).toContain(t.sectionStrengths);
+            expect(text).toContain(t.sectionImprovements);
           });
 
           it("sets the correct <html lang=…> attribute", () => {
