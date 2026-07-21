@@ -229,25 +229,34 @@ function AgentReportDetail() {
 
   const safeName = () => (agent?.full_name ?? "agent").replace(/\s+/g, "-");
 
+  const enqueueFn = useServerFn(enqueueExport);
+
   const exportFeedbackCsv = async () => {
     if (!agent) return;
     try {
       setExporting("fb-csv");
-      const rows = await fetchAllFeedback();
-      toCsv(rows.map((f) => ({
-        Case: f.case_number ?? "",
-        Title: f.title ?? "",
-        Type: f.interaction_type ?? "",
-        Score: f.score ?? "",
-        "Overall %": f.overall_percentage ?? "",
-        Status: f.status ?? "",
-        Acknowledgement: f.acknowledgement_status ?? "",
-        Category: f.category ?? "",
-        Sent: f.sent_at ? format(new Date(f.sent_at), "yyyy-MM-dd HH:mm") : "",
-        Delivered: f.delivered_at ? format(new Date(f.delivered_at), "yyyy-MM-dd HH:mm") : "",
-        Acknowledged: f.acknowledged_at ? format(new Date(f.acknowledged_at), "yyyy-MM-dd HH:mm") : "",
-        Created: f.created_at ? format(new Date(f.created_at), "yyyy-MM-dd HH:mm") : "",
-      })), `agent-${safeName()}-feedback.csv`);
+      await enqueueFn({
+        data: {
+          kind: "agent_feedback",
+          label: `Feedback — ${agent.full_name}`,
+          params: {
+            agentId: id,
+            agentSlug: safeName(),
+            from: range.from,
+            to: range.to,
+            search: search || undefined,
+            status: status !== "all" ? status : undefined,
+            ackStatus: ackStatus !== "all" ? ackStatus : undefined,
+            interactionType: interaction !== "all" ? interaction : undefined,
+            minScore: minScore ? Number(minScore) : undefined,
+            maxScore: maxScore ? Number(maxScore) : undefined,
+            sortBy, sortDir,
+          },
+        },
+      });
+      toast.success("Export started", { description: "We'll notify you when it's ready — check the Exports menu." });
+    } catch (e: any) {
+      toast.error("Could not start export", { description: e?.message ?? "" });
     } finally { setExporting(null); }
   };
 
