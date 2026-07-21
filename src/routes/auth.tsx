@@ -293,44 +293,6 @@ function AuthPage() {
     >
 
       <>
-        {/* Mode tabs */}
-        <div
-          role="tablist"
-          aria-label="Authentication mode"
-          className="mb-5 grid grid-cols-3 gap-1 rounded-xl bg-slate-100/70 p-1 text-[13px] font-semibold dark:bg-white/[0.06]"
-        >
-          {([
-            { key: "signin", label: "Sign In" },
-            { key: "signup", label: "Sign Up" },
-            { key: "forgot", label: "Recovery" },
-          ] as { key: Mode; label: string }[]).map((t) => {
-            const active = mode === t.key;
-            return (
-              <button
-                key={t.key}
-                role="tab"
-                aria-selected={active}
-                type="button"
-                onClick={() => {
-                  setMode(t.key);
-                  setTouched({});
-                  setResetSent(false);
-                  setErrorMsg(null);
-                  setErrorField(null);
-                }}
-                className={cn(
-                  "rounded-lg py-1.5 transition-all",
-                  active
-                    ? "bg-white text-slate-900 shadow-sm dark:bg-white/10 dark:text-white"
-                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white",
-                )}
-              >
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-
         <div className="text-center">
               {mode === "forgot" && (
                 <button
