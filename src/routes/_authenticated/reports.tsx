@@ -4,14 +4,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, FileSpreadsheet, Users, TrendingUp, Mail, CalendarClock } from "lucide-react";
 import { toCsv, toPdf } from "@/lib/reports";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths, format } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   component: ReportsPage,
 });
+
+type Period = "all" | "current_week" | "previous_week" | "current_month" | "previous_month" | "custom";
+
+function periodRange(p: Period, from?: string, to?: string): { from?: Date; to?: Date; label: string } {
+  const now = new Date();
+  switch (p) {
+    case "current_week": { const f = startOfWeek(now, { weekStartsOn: 1 }); const t = endOfWeek(now, { weekStartsOn: 1 }); return { from: f, to: t, label: `${format(f, "d MMM")} – ${format(t, "d MMM yyyy")}` }; }
+    case "previous_week": { const w = subWeeks(now, 1); const f = startOfWeek(w, { weekStartsOn: 1 }); const t = endOfWeek(w, { weekStartsOn: 1 }); return { from: f, to: t, label: `${format(f, "d MMM")} – ${format(t, "d MMM yyyy")}` }; }
+    case "current_month": { const f = startOfMonth(now); const t = endOfMonth(now); return { from: f, to: t, label: format(f, "MMMM yyyy") }; }
+    case "previous_month": { const m = subMonths(now, 1); const f = startOfMonth(m); const t = endOfMonth(m); return { from: f, to: t, label: format(f, "MMMM yyyy") }; }
+    case "custom": return { from: from ? new Date(from) : undefined, to: to ? new Date(to + "T23:59:59") : undefined, label: from && to ? `${format(new Date(from), "d MMM yyyy")} – ${format(new Date(to), "d MMM yyyy")}` : "Custom range" };
+    default: return { label: "All time" };
+  }
+}
 
 function safeDateTime(v: string | null | undefined): string {
   if (!v) return "";
