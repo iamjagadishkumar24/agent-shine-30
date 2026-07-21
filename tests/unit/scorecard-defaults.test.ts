@@ -7,13 +7,13 @@ import {
 import { computeOverall, computeEarnedPoints } from "@/lib/scorecard";
 
 const EXPECTED = [
-  { name: "Accuracy", max_points: 20 },
-  { name: "Understanding Customer Issues", max_points: 25 },
-  { name: "Customer Satisfaction", max_points: 5 },
+  { name: "Accuracy & Quality", max_points: 20 },
+  { name: "Understanding Customer Requirements", max_points: 25 },
+  { name: "Customer Satisfaction (CSAT)", max_points: 5 },
   { name: "Product Knowledge & Resolution", max_points: 20 },
-  { name: "Average Handling Time", max_points: 10 },
-  { name: "Compliance", max_points: 10 },
-  { name: "Technical Accuracy / IHD", max_points: 10 },
+  { name: "Average Handling Time (AHT)", max_points: 10 },
+  { name: "Policy & Process Compliance", max_points: 10 },
+  { name: "Technical Accuracy / Issue Handling", max_points: 10 },
 ] as const;
 
 describe("default active scorecard", () => {
