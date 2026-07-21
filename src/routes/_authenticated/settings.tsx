@@ -1062,14 +1062,8 @@ function TemplatePreview({
 // ---------------------------------------------------------------------------
 function ScorecardEditor() {
   const qc = useQueryClient();
-  const loadFn = useServerFn(
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require("@/lib/scorecard.functions").getActiveScorecard,
-  );
-  const saveFn = useServerFn(
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require("@/lib/scorecard.functions").saveActiveScorecard,
-  );
+  const loadFn = useServerFn(getActiveScorecard);
+  const saveFn = useServerFn(saveActiveScorecard);
 
   const { data, isLoading } = useQuery({
     queryKey: ["active-scorecard"],
