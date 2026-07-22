@@ -1,14 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Calendar, dateFnsLocalizer, Views, type View, type SlotInfo } from "react-big-calendar";
-import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
-import { format, parse, startOfWeek, getDay, addMinutes } from "date-fns";
-import { enUS } from "date-fns/locale";
+import FullCalendar from "@fullcalendar/react";
+import type { EventContentArg, EventInput } from "@fullcalendar/core";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import listPlugin from "@fullcalendar/list";
+import interactionPlugin from "@fullcalendar/interaction";
 import { toast } from "sonner";
-import { CalendarPlus, LayoutGrid, ListFilter, Search, CalendarDays } from "lucide-react";
-import "react-big-calendar/lib/css/react-big-calendar.css";
-import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
+import {
+  CalendarPlus, LayoutGrid, ListFilter, Search, CalendarDays,
+  ChevronLeft, ChevronRight,
+} from "lucide-react";
+import "@/components/coaching/fullcalendar-theme.css";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
@@ -31,19 +35,37 @@ export const Route = createFileRoute("/_authenticated/coaching")({
   component: CoachingCalendar,
 });
 
-const locales = { "en-US": enUS };
-const localizer = dateFnsLocalizer({ format, parse, startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }), getDay, locales });
-const DnDCalendar = withDragAndDrop(Calendar as any);
+type FcView = "dayGridMonth" | "timeGridWeek" | "timeGridDay" | "listWeek";
+
+const VIEW_OPTIONS: { id: FcView; label: string }[] = [
+  { id: "dayGridMonth", label: "Month" },
+  { id: "timeGridWeek", label: "Week" },
+  { id: "timeGridDay",  label: "Day" },
+  { id: "listWeek",     label: "Agenda" },
+];
+
+// Palette per session type — soft tint + strong accent (light theme, WCAG AA on white)
+const TYPE_PALETTE: Record<string, { tint: string; color: string; text: string }> = {
+  coaching:   { tint: "#eff6ff", color: "#2563eb", text: "#1d4ed8" }, // blue
+  review:     { tint: "#fef2f2", color: "#e11d48", text: "#be123c" }, // rose
+  one_on_one: { tint: "#f5f3ff", color: "#7c3aed", text: "#6d28d9" }, // violet
+  training:   { tint: "#fffbeb", color: "#d97706", text: "#b45309" }, // amber
+  follow_up:  { tint: "#ecfeff", color: "#0891b2", text: "#0e7490" }, // cyan
+  feedback:   { tint: "#ecfdf5", color: "#10b981", text: "#047857" }, // emerald
+};
+function paletteFor(sessionType?: string) {
+  return TYPE_PALETTE[sessionType ?? "coaching"] ?? TYPE_PALETTE.coaching;
+}
 
 const STATUS_META: Record<string, { label: string; className: string; dot: string }> = {
-  scheduled:        { label: "Scheduled",       className: "bg-blue-500/15 text-blue-300 border-blue-500/30",       dot: "#3b82f6" },
-  pending_approval: { label: "Pending",         className: "bg-amber-500/15 text-amber-300 border-amber-500/30",     dot: "#f59e0b" },
-  confirmed:        { label: "Confirmed",       className: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",        dot: "#06b6d4" },
-  in_progress:      { label: "In progress",     className: "bg-violet-500/15 text-violet-300 border-violet-500/30",  dot: "#8b5cf6" },
-  completed:        { label: "Completed",       className: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30", dot: "#10b981" },
-  canceled:         { label: "Cancelled",       className: "bg-muted text-muted-foreground border-border",           dot: "#71717a" },
-  missed:           { label: "Missed",          className: "bg-rose-500/15 text-rose-300 border-rose-500/30",         dot: "#f43f5e" },
-  rescheduled:      { label: "Rescheduled",     className: "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30", dot: "#d946ef" },
+  scheduled:        { label: "Scheduled",   className: "bg-blue-50 text-blue-700 border-blue-200",        dot: "#3b82f6" },
+  pending_approval: { label: "Pending",     className: "bg-amber-50 text-amber-700 border-amber-200",     dot: "#f59e0b" },
+  confirmed:        { label: "Confirmed",   className: "bg-cyan-50 text-cyan-700 border-cyan-200",        dot: "#06b6d4" },
+  in_progress:      { label: "In progress", className: "bg-violet-50 text-violet-700 border-violet-200",  dot: "#8b5cf6" },
+  completed:        { label: "Completed",   className: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "#10b981" },
+  canceled:         { label: "Cancelled",   className: "bg-muted text-muted-foreground border-border",    dot: "#71717a" },
+  missed:           { label: "Missed",      className: "bg-rose-50 text-rose-700 border-rose-200",        dot: "#f43f5e" },
+  rescheduled:      { label: "Rescheduled", className: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200", dot: "#d946ef" },
 };
 
 function CoachingCalendar() {
