@@ -415,6 +415,21 @@ function CoachingCalendar() {
                 dayHeaderFormat={{ weekday: "short" }}
                 events={events}
                 eventContent={renderEventContent}
+                eventInteractive
+                longPressDelay={250}
+                selectLongPressDelay={250}
+                eventDidMount={(info) => {
+                  const s: any = (info.event.extendedProps as any).session;
+                  const when = info.event.start?.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) ?? "";
+                  const parts = [
+                    info.event.title,
+                    when,
+                    s?.agent?.full_name ? `with ${s.agent.full_name}` : null,
+                    s?.session_type ? String(s.session_type).replace("_", " ") : null,
+                    s?.status ? `status ${STATUS_META[s.status]?.label ?? s.status}` : null,
+                  ].filter(Boolean);
+                  info.el.setAttribute("aria-label", parts.join(", "));
+                }}
                 datesSet={(arg) => setPeriodLabel(arg.view.title)}
                 dateClick={(arg) => {
                   const start = arg.date;
