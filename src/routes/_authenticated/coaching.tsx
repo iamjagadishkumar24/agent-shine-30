@@ -13,6 +13,7 @@ import {
   ChevronLeft, ChevronRight,
 } from "lucide-react";
 import "@/components/coaching/fullcalendar-theme.css";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
