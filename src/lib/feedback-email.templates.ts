@@ -24,7 +24,7 @@ export type FeedbackMetric = {
   score: number;                 // selected percentage 0..100
   maxPoints?: number | null;     // parameter weight (defaults to canonical)
   earnedPoints?: number | null;  // computed if omitted
-  note?: string | null;          // (ignored in new template)
+  note?: string | null;          // Reviewer comment shown under the score row
 };
 
 export type FeedbackEmailData = {
