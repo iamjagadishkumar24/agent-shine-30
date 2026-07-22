@@ -207,7 +207,7 @@ function AuthedLayout() {
               Account
             </div>
           )}
-          {BOTTOM_NAV.map((item) => {
+          {bottomNav.map((item) => {
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
               <Link
