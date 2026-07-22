@@ -150,15 +150,21 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
   const performanceLabel = labelFromPercentage(overall);
 
   const interactionRaw = (d.interactionType ?? "").toLowerCase();
+  const isChat = interactionRaw === "chat";
   const interactionLabel =
-    interactionRaw === "case" ? t.interactionCase : interactionRaw === "chat" ? t.interactionChat : t.interactionGeneric;
+    interactionRaw === "case" ? t.interactionCase : isChat ? t.interactionChat : t.interactionGeneric;
 
   const caseNumber = (d.caseNumber ?? "").trim();
+  const externalRef = (d.interactionReference ?? "").trim();
+  const identifier = caseNumber || externalRef;
+  const identifierLabel = isChat ? "Chat No" : "Case No";
   const isReminder = !!d.isReminder;
 
-  const subject = isReminder
-    ? `${t.subjectReminderPrefix} – ${caseNumber ? `${t.caseWord} ${caseNumber}` : d.title}`
-    : `${t.subjectQualityFeedback} – ${caseNumber ? `${t.caseWord} ${caseNumber} – ` : ""}${d.agentName} – ${t.scoreColumn} ${earnedOutOf}`;
+  // Canonical, searchable subject required by product:
+  //   Performance Feedback Review > Audit Feedback Form - Case No: XXXXX
+  //   Performance Feedback Review > Audit Feedback Form - Chat No: XXXXX
+  const subjectBase = `Performance Feedback Review > Audit Feedback Form${identifier ? ` - ${identifierLabel}: ${identifier}` : ""}`;
+  const subject = isReminder ? `${t.subjectReminderPrefix} – ${subjectBase}` : subjectBase;
 
   const greetingName = firstName(d.agentName);
   const pixelUrl = `${d.appBaseUrl}/api/public/track/open/${d.feedbackId}`;
