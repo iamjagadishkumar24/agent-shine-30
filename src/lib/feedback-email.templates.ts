@@ -188,11 +188,21 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
       const max = formatPoints(Number(m.maxPoints));
       const earned = formatPoints(Number(m.earnedPoints));
       const color = scoreColor(Number(m.score));
+      const note = (m.note ?? "").trim();
+      const noteRow = note
+        ? `
+        <tr>
+          <td colspan="2" style="padding:2px 12px 12px;border-bottom:1px solid ${LINE};background:#fafbfc;">
+            <div style="font:700 10px/1 ${FONT};letter-spacing:.1em;text-transform:uppercase;color:${MUTE};margin-bottom:4px;">Comments</div>
+            <div style="font:13px/1.55 ${FONT};color:${INK_SOFT};white-space:pre-wrap;">${escape(note)}</div>
+          </td>
+        </tr>`
+        : "";
       return `
         <tr>
-          <td style="padding:11px 12px;font:14px/1.4 ${FONT};color:${INK};border-bottom:1px solid ${LINE};vertical-align:top;">${escape(m.label)}</td>
-          <td align="right" style="padding:11px 14px;font:700 14px/1.4 ${FONT};color:${color};border-bottom:1px solid ${LINE};vertical-align:top;white-space:nowrap;tabular-nums:1;">${earned} / ${max}</td>
-        </tr>`;
+          <td style="padding:11px 12px 4px;font:600 14px/1.4 ${FONT};color:${INK};${note ? "" : `border-bottom:1px solid ${LINE};`}vertical-align:top;">${escape(m.label)}</td>
+          <td align="right" style="padding:11px 14px 4px;font:700 14px/1.4 ${FONT};color:${color};${note ? "" : `border-bottom:1px solid ${LINE};`}vertical-align:top;white-space:nowrap;tabular-nums:1;">${earned} / ${max}</td>
+        </tr>${noteRow}`;
     })
     .join("");
 
