@@ -194,7 +194,7 @@ function NewFeedback() {
             parameter_name: s.parameter_name,
             max_points: s.max_points,
             selected_percentage: s.max_points > 0 ? (s.points / s.max_points) * 100 : 0,
-            evaluator_note: null,
+            evaluator_note: s.note.trim() ? s.note.trim() : null,
           })),
           mode,
         },
