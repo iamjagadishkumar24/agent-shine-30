@@ -72,6 +72,7 @@ const STATUS_META: Record<string, { label: string; className: string; dot: strin
 function CoachingCalendar() {
   useRealtimeInvalidate("coaching_sessions", [["coaching-sessions"]]);
   const qc = useQueryClient();
+  const isMobile = useIsMobile();
 
   const calendarRef = useRef<FullCalendar | null>(null);
   const [view, setView] = useState<FcView>("dayGridMonth");
@@ -82,6 +83,14 @@ function CoachingCalendar() {
   const [agentId, setAgentId] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState<"calendar" | "list">("calendar");
+
+  // On small viewports, agenda is the most usable calendar view.
+  useEffect(() => {
+    if (isMobile && view === "dayGridMonth") {
+      setView("listWeek");
+      calendarRef.current?.getApi().changeView("listWeek");
+    }
+  }, [isMobile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<SessionRow | null>(null);
