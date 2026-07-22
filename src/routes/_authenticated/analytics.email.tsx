@@ -25,7 +25,10 @@ import {
 } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
 
+import { requireRoles } from "@/lib/role-guard";
+
 export const Route = createFileRoute("/_authenticated/analytics/email")({
+  beforeLoad: () => requireRoles(["master_admin", "admin", "manager", "team_manager", "qa_evaluator"]),
   component: EmailAnalyticsPage,
   head: () => ({
     meta: [
