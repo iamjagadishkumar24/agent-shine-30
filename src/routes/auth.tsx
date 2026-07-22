@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -44,24 +44,16 @@ export async function redirectIfAuthenticated(next?: string) {
   }
 }
 
-// The bare `/auth` URL redirects to the canonical `/auth/signin` page so
-// every entry point lands on a dedicated route rather than an intermediate
-// mode picker.
+// `/auth` is a layout for `auth.signin`, `auth.signup`, and
+// `auth.forgot-password`. The bare `/auth` URL is handled by
+// `auth.index.tsx`, which redirects to the canonical `/auth/signin`.
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): AuthSearch & { mode?: "signin" | "signup" } => {
     const out: AuthSearch & { mode?: "signin" | "signup" } = parseAuthSearch(s);
     if (s.mode === "signup" || s.mode === "signin") out.mode = s.mode;
     return out;
   },
-  beforeLoad: ({ search }) => {
-    const mode = search.mode;
-    const target =
-      mode === "signup" ? "/auth/signup" : "/auth/signin";
-    const passthrough: AuthSearch = {};
-    if (search.next) passthrough.next = search.next;
-    if (search.email) passthrough.email = search.email;
-    throw redirect({ to: target, search: passthrough });
-  },
+  component: () => <Outlet />,
 });
 
 
