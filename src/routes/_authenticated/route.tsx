@@ -102,9 +102,13 @@ function AuthedLayout() {
   const staffRoles = ["master_admin", "admin", "super_admin", "qa_admin", "qa_evaluator", "manager", "team_manager"];
   const isStaff = roles.some((r) => staffRoles.includes(r));
   const isMasterAdmin = roles.includes("master_admin");
+  const isSuperAdmin = roles.includes("super_admin");
+  const isQaAdminOnly = roles.includes("qa_admin") && !isSuperAdmin && !isMasterAdmin && !roles.includes("admin");
   const NAV = isStaff
     ? (isMasterAdmin ? [...STAFF_NAV, ...MASTER_ADMIN_NAV] : STAFF_NAV)
     : AGENT_NAV;
+  // QA Admins are scoped to QA operations — hide platform Settings from their sidebar.
+  const bottomNav = isQaAdminOnly ? [] : BOTTOM_NAV;
 
   const email = user?.email ?? "";
   const displayName = profile?.full_name?.trim() || email.split("@")[0] || "User";
