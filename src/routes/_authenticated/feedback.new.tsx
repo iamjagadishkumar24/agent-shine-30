@@ -335,32 +335,46 @@ function NewFeedback() {
               {scores.map((s, idx) => {
                 const remaining = Math.max(0, s.max_points - s.points);
                 return (
-                  <div key={s.parameter_name} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium">{s.parameter_name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        Max {s.max_points} pts{s.points > 0 && remaining > 0 ? ` · ${remaining} remaining` : ""}
+                  <div key={s.parameter_name} className="px-4 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium">{s.parameter_name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          Max {s.max_points} pts{s.points > 0 && remaining > 0 ? ` · ${remaining} remaining` : ""}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          inputMode="numeric"
+                          min={0}
+                          max={s.max_points}
+                          step={1}
+                          value={s.points}
+                          onChange={(e) => {
+                            const raw = Number(e.target.value);
+                            const clamped = Number.isFinite(raw)
+                              ? Math.max(0, Math.min(s.max_points, Math.round(raw)))
+                              : 0;
+                            updateScore(idx, { points: clamped });
+                          }}
+                          className="h-9 w-20 text-right tabular-nums"
+                          aria-label={`${s.parameter_name} score`}
+                        />
+                        <span className="text-sm font-medium tabular-nums text-muted-foreground">/ {s.max_points}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        inputMode="numeric"
-                        min={0}
-                        max={s.max_points}
-                        step={1}
-                        value={s.points}
-                        onChange={(e) => {
-                          const raw = Number(e.target.value);
-                          const clamped = Number.isFinite(raw)
-                            ? Math.max(0, Math.min(s.max_points, Math.round(raw)))
-                            : 0;
-                          updateScore(idx, { points: clamped });
-                        }}
-                        className="h-9 w-20 text-right tabular-nums"
-                        aria-label={`${s.parameter_name} score`}
+                    <div className="mt-2">
+                      <Label className="text-xs text-muted-foreground">Comments / Notes (optional)</Label>
+                      <Textarea
+                        className="mt-1 min-h-[64px] text-sm"
+                        rows={2}
+                        maxLength={1000}
+                        value={s.note}
+                        onChange={(e) => updateScore(idx, { note: e.target.value })}
+                        placeholder={`Reviewer notes for ${s.parameter_name.toLowerCase()}…`}
+                        aria-label={`${s.parameter_name} comments`}
                       />
-                      <span className="text-sm font-medium tabular-nums text-muted-foreground">/ {s.max_points}</span>
                     </div>
                   </div>
                 );
