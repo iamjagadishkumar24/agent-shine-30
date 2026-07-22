@@ -351,6 +351,10 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
     const max = formatPoints(Number(m.maxPoints));
     const earned = formatPoints(Number(m.earnedPoints));
     textLines.push(`  ${String(m.label).padEnd(40)} ${earned} / ${max}`);
+    const note = (m.note ?? "").trim();
+    if (note) {
+      textLines.push(`    Comments: ${note}`);
+    }
   }
   textLines.push(`  ${t.overallScoreRow.padEnd(40)} ${earnedOutOf}`);
   textLines.push("");
