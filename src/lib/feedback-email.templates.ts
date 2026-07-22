@@ -114,7 +114,7 @@ function normalizeMetrics(input?: FeedbackMetric[] | null): FeedbackMetric[] {
     const score = src?.score != null && !Number.isNaN(Number(src.score)) ? Math.max(0, Math.min(100, Number(src.score))) : 0;
     const max = Number(src?.maxPoints ?? weight);
     const earned = src?.earnedPoints != null ? Number(src.earnedPoints) : (max * score) / 100;
-    out.push({ label, score, maxPoints: max, earnedPoints: earned });
+    out.push({ label, score, maxPoints: max, earnedPoints: earned, note: src?.note ?? null });
   }
   return out;
 }
