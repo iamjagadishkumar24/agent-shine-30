@@ -44,6 +44,7 @@ type ScoreState = {
   parameter_name: string;
   max_points: number;
   points: number; // 0..max_points
+  note: string;  // reviewer comment / notes
 };
 
 function NewFeedback() {
