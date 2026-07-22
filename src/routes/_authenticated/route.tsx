@@ -102,9 +102,13 @@ function AuthedLayout() {
   const staffRoles = ["master_admin", "admin", "super_admin", "qa_admin", "qa_evaluator", "manager", "team_manager"];
   const isStaff = roles.some((r) => staffRoles.includes(r));
   const isMasterAdmin = roles.includes("master_admin");
+  const isSuperAdmin = roles.includes("super_admin");
+  const isQaAdminOnly = roles.includes("qa_admin") && !isSuperAdmin && !isMasterAdmin && !roles.includes("admin");
   const NAV = isStaff
     ? (isMasterAdmin ? [...STAFF_NAV, ...MASTER_ADMIN_NAV] : STAFF_NAV)
     : AGENT_NAV;
+  // QA Admins are scoped to QA operations — hide platform Settings from their sidebar.
+  const bottomNav = isQaAdminOnly ? [] : BOTTOM_NAV;
 
   const email = user?.email ?? "";
   const displayName = profile?.full_name?.trim() || email.split("@")[0] || "User";
@@ -203,7 +207,7 @@ function AuthedLayout() {
               Account
             </div>
           )}
-          {BOTTOM_NAV.map((item) => {
+          {bottomNav.map((item) => {
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
               <Link
@@ -316,9 +320,11 @@ function AuthedLayout() {
                 <DropdownMenuItem asChild>
                   <Link to="/account"><UserCog className="mr-2 h-4 w-4" />Account settings</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/settings"><Settings className="mr-2 h-4 w-4" />Workspace settings</Link>
-                </DropdownMenuItem>
+                {!isQaAdminOnly && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings"><Settings className="mr-2 h-4 w-4" />Workspace settings</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />Sign out

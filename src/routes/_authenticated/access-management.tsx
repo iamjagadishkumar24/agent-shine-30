@@ -20,7 +20,10 @@ import {
 } from "@/lib/access-control.functions";
 import { format, formatDistanceToNow } from "date-fns";
 
+import { requireRoles } from "@/lib/role-guard";
+
 export const Route = createFileRoute("/_authenticated/access-management")({
+  beforeLoad: () => requireRoles(["master_admin", "admin"]),
   component: AccessManagementPage,
 });
 

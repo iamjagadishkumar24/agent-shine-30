@@ -42,7 +42,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useEffect, useRef } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
+import { requireRoles } from "@/lib/role-guard";
+
 export const Route = createFileRoute("/_authenticated/settings")({
+  beforeLoad: () => requireRoles(["master_admin", "admin", "manager", "team_manager", "qa_evaluator"]),
   component: SettingsPage,
 });
 
