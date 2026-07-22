@@ -46,7 +46,8 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --gradient-brand: linear-gradient(135deg, oklch(0.62 0.18 265) 0%, oklch(0.60 0.22 295) 55%, oklch(0.72 0.14 220) 100%);
+  --gradient-brand: linear-gradient(135deg, oklch(0.62 0.15 155) 0%, oklch(0.66 0.13 185) 100%);
+  --shadow-brand: 0 6px 20px -6px color-mix(in oklab, oklch(0.62 0.15 155) 45%, transparent);
 
   /* Type scale — modular, 1.125 minor-third at small, 1.2 at large. */
   --text-2xs: 0.6875rem;   /* 11px — micro labels, eyebrows */

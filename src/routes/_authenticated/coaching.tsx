@@ -1,14 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Calendar, dateFnsLocalizer, Views, type View, type SlotInfo } from "react-big-calendar";
-import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
-import { format, parse, startOfWeek, getDay, addMinutes } from "date-fns";
-import { enUS } from "date-fns/locale";
+import FullCalendar from "@fullcalendar/react";
+import type { EventContentArg, EventInput } from "@fullcalendar/core";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import listPlugin from "@fullcalendar/list";
+import interactionPlugin from "@fullcalendar/interaction";
 import { toast } from "sonner";
-import { CalendarPlus, LayoutGrid, ListFilter, Search, CalendarDays } from "lucide-react";
-import "react-big-calendar/lib/css/react-big-calendar.css";
-import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
+import {
+  CalendarPlus, LayoutGrid, ListFilter, Search, CalendarDays,
+  ChevronLeft, ChevronRight,
+} from "lucide-react";
+import "@/components/coaching/fullcalendar-theme.css";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
@@ -31,27 +35,46 @@ export const Route = createFileRoute("/_authenticated/coaching")({
   component: CoachingCalendar,
 });
 
-const locales = { "en-US": enUS };
-const localizer = dateFnsLocalizer({ format, parse, startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }), getDay, locales });
-const DnDCalendar = withDragAndDrop(Calendar as any);
+type FcView = "dayGridMonth" | "timeGridWeek" | "timeGridDay" | "listWeek";
+
+const VIEW_OPTIONS: { id: FcView; label: string }[] = [
+  { id: "dayGridMonth", label: "Month" },
+  { id: "timeGridWeek", label: "Week" },
+  { id: "timeGridDay",  label: "Day" },
+  { id: "listWeek",     label: "Agenda" },
+];
+
+// Palette per session type — soft tint + strong accent (light theme, WCAG AA on white)
+const TYPE_PALETTE: Record<string, { tint: string; color: string; text: string }> = {
+  coaching:   { tint: "#eff6ff", color: "#2563eb", text: "#1d4ed8" }, // blue
+  review:     { tint: "#fef2f2", color: "#e11d48", text: "#be123c" }, // rose
+  one_on_one: { tint: "#f5f3ff", color: "#7c3aed", text: "#6d28d9" }, // violet
+  training:   { tint: "#fffbeb", color: "#d97706", text: "#b45309" }, // amber
+  follow_up:  { tint: "#ecfeff", color: "#0891b2", text: "#0e7490" }, // cyan
+  feedback:   { tint: "#ecfdf5", color: "#10b981", text: "#047857" }, // emerald
+};
+function paletteFor(sessionType?: string) {
+  return TYPE_PALETTE[sessionType ?? "coaching"] ?? TYPE_PALETTE.coaching;
+}
 
 const STATUS_META: Record<string, { label: string; className: string; dot: string }> = {
-  scheduled:        { label: "Scheduled",       className: "bg-blue-500/15 text-blue-300 border-blue-500/30",       dot: "#3b82f6" },
-  pending_approval: { label: "Pending",         className: "bg-amber-500/15 text-amber-300 border-amber-500/30",     dot: "#f59e0b" },
-  confirmed:        { label: "Confirmed",       className: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",        dot: "#06b6d4" },
-  in_progress:      { label: "In progress",     className: "bg-violet-500/15 text-violet-300 border-violet-500/30",  dot: "#8b5cf6" },
-  completed:        { label: "Completed",       className: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30", dot: "#10b981" },
-  canceled:         { label: "Cancelled",       className: "bg-muted text-muted-foreground border-border",           dot: "#71717a" },
-  missed:           { label: "Missed",          className: "bg-rose-500/15 text-rose-300 border-rose-500/30",         dot: "#f43f5e" },
-  rescheduled:      { label: "Rescheduled",     className: "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30", dot: "#d946ef" },
+  scheduled:        { label: "Scheduled",   className: "bg-blue-50 text-blue-700 border-blue-200",        dot: "#3b82f6" },
+  pending_approval: { label: "Pending",     className: "bg-amber-50 text-amber-700 border-amber-200",     dot: "#f59e0b" },
+  confirmed:        { label: "Confirmed",   className: "bg-cyan-50 text-cyan-700 border-cyan-200",        dot: "#06b6d4" },
+  in_progress:      { label: "In progress", className: "bg-violet-50 text-violet-700 border-violet-200",  dot: "#8b5cf6" },
+  completed:        { label: "Completed",   className: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "#10b981" },
+  canceled:         { label: "Cancelled",   className: "bg-muted text-muted-foreground border-border",    dot: "#71717a" },
+  missed:           { label: "Missed",      className: "bg-rose-50 text-rose-700 border-rose-200",        dot: "#f43f5e" },
+  rescheduled:      { label: "Rescheduled", className: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200", dot: "#d946ef" },
 };
 
 function CoachingCalendar() {
   useRealtimeInvalidate("coaching_sessions", [["coaching-sessions"]]);
   const qc = useQueryClient();
 
-  const [view, setView] = useState<View>(Views.WEEK);
-  const [date, setDate] = useState<Date>(new Date());
+  const calendarRef = useRef<FullCalendar | null>(null);
+  const [view, setView] = useState<FcView>("dayGridMonth");
+  const [periodLabel, setPeriodLabel] = useState<string>("");
   const [status, setStatus] = useState<string>("all");
   const [sessionType, setSessionType] = useState<string>("all");
   const [priority, setPriority] = useState<string>("all");
@@ -115,12 +138,28 @@ function CoachingCalendar() {
   const { page, pageSize, setPage, setPageSize } = usePagination(sorted.length, 25);
   const paged = paginate(sorted, page, pageSize);
 
-  const events = useMemo(() => filtered
+  const sessionsById = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const s of filtered) map.set(s.id, s);
+    return map;
+  }, [filtered]);
+
+  const events = useMemo<EventInput[]>(() => filtered
     .filter((s) => s.scheduled_at)
     .map((s) => {
       const start = new Date(s.scheduled_at);
-      const end = addMinutes(start, s.duration_minutes ?? 30);
-      return { id: s.id, title: s.topic ?? "Untitled", start, end, resource: s };
+      const end = new Date(start.getTime() + (s.duration_minutes ?? 30) * 60000);
+      const pal = paletteFor(s.session_type);
+      return {
+        id: s.id,
+        title: s.topic ?? "Untitled",
+        start,
+        end,
+        extendedProps: { session: s },
+        backgroundColor: pal.tint,
+        borderColor: pal.color,
+        textColor: pal.text,
+      };
     }), [filtered]);
 
   const reschedule = useMutation({
@@ -170,19 +209,31 @@ function CoachingCalendar() {
     }
   }, []);
 
-  const eventPropGetter = (event: any) => {
-    const s = event.resource;
-    const meta = STATUS_META[s.status ?? "scheduled"] ?? STATUS_META.scheduled;
-    return {
-      style: {
-        backgroundColor: `${meta.dot}22`,
-        borderLeft: `3px solid ${meta.dot}`,
-        color: "hsl(var(--foreground))",
-        borderRadius: 6,
-        padding: "2px 6px",
-        fontSize: 12,
-      },
-    };
+  const goto = (action: "prev" | "next" | "today") => {
+    const api = calendarRef.current?.getApi();
+    if (!api) return;
+    if (action === "prev") api.prev();
+    else if (action === "next") api.next();
+    else api.today();
+  };
+  const changeView = (v: FcView) => {
+    setView(v);
+    calendarRef.current?.getApi().changeView(v);
+  };
+
+  const renderEventContent = (arg: EventContentArg) => {
+    const time = arg.timeText;
+    return (
+      <div className="qp-event" style={{
+        // @ts-expect-error CSS custom props
+        "--qp-color": arg.event.borderColor,
+        "--qp-tint":  arg.event.backgroundColor,
+        "--qp-text":  arg.event.textColor,
+      }}>
+        {time && <span className="qp-event-time">{time}</span>}
+        <span className="qp-event-title">{arg.event.title}</span>
+      </div>
+    );
   };
 
   return (
@@ -252,29 +303,105 @@ function CoachingCalendar() {
         </Card>
 
         {mode === "calendar" ? (
-          <Card className="p-3 rbc-shell">
-            <DnDCalendar
-              localizer={localizer}
-              events={events}
-              view={view}
-              onView={setView}
-              date={date}
-              onNavigate={setDate}
-              views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
-              step={30}
-              timeslots={2}
-              popup
-              selectable
-              defaultView={Views.WEEK}
-              onSelectSlot={(slot: SlotInfo) => openCreate(slot.start as Date, slot.end as Date)}
-              onSelectEvent={(evt: any) => openEdit(evt.resource)}
-              onDoubleClickEvent={(evt: any) => openEdit(evt.resource)}
-              onEventDrop={({ event, start, end }: any) => reschedule.mutate({ id: event.id, start, end })}
-              onEventResize={({ event, start, end }: any) => reschedule.mutate({ id: event.id, start, end })}
-              resizable
-              eventPropGetter={eventPropGetter}
-              style={{ height: 720 }}
-            />
+          <Card className="p-0 overflow-hidden">
+            {/* Minimalist executive toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+              <div className="flex items-center gap-1.5">
+                <Button variant="outline" size="sm" className="h-8 px-3 font-medium" onClick={() => goto("today")}>
+                  Today
+                </Button>
+                <div className="mx-1 flex items-center rounded-md border border-border/70">
+                  <button
+                    type="button"
+                    onClick={() => goto("prev")}
+                    className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    aria-label="Previous period"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="h-4 w-px bg-border/70" />
+                  <button
+                    type="button"
+                    onClick={() => goto("next")}
+                    className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    aria-label="Next period"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+                <h2 className="ml-2 text-lg font-semibold tracking-tight text-foreground">
+                  {periodLabel}
+                </h2>
+              </div>
+
+              <div className="inline-flex rounded-md border border-border/70 bg-muted/30 p-0.5">
+                {VIEW_OPTIONS.map((v) => (
+                  <button
+                    key={v.id}
+                    onClick={() => changeView(v.id)}
+                    className={cn(
+                      "h-7 rounded px-3 text-xs font-semibold transition-all",
+                      view === v.id
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="qp-fc p-3">
+              <FullCalendar
+                ref={calendarRef}
+                plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+                initialView={view}
+                headerToolbar={false}
+                height={720}
+                firstDay={1}
+                dayMaxEvents={3}
+                nowIndicator
+                selectable
+                editable
+                eventResizableFromStart
+                allDaySlot={false}
+                slotMinTime="06:00:00"
+                slotMaxTime="22:00:00"
+                slotDuration="00:30:00"
+                slotLabelFormat={{ hour: "numeric", minute: "2-digit", meridiem: "short" }}
+                eventTimeFormat={{ hour: "numeric", minute: "2-digit", meridiem: "short" }}
+                dayHeaderFormat={{ weekday: "short" }}
+                events={events}
+                eventContent={renderEventContent}
+                datesSet={(arg) => setPeriodLabel(arg.view.title)}
+                dateClick={(arg) => {
+                  const start = arg.date;
+                  const end = new Date(start.getTime() + 30 * 60000);
+                  openCreate(start, end);
+                }}
+                select={(arg) => openCreate(arg.start, arg.end)}
+                eventClick={(arg) => {
+                  const s = (arg.event.extendedProps as any).session ?? sessionsById.get(arg.event.id);
+                  if (s) openEdit(s);
+                }}
+                eventDrop={(arg) => {
+                  if (!arg.event.start || !arg.event.end) { arg.revert(); return; }
+                  reschedule.mutate(
+                    { id: arg.event.id, start: arg.event.start, end: arg.event.end },
+                    { onError: () => arg.revert() }
+                  );
+                }}
+                eventResize={(arg) => {
+                  if (!arg.event.start || !arg.event.end) { arg.revert(); return; }
+                  reschedule.mutate(
+                    { id: arg.event.id, start: arg.event.start, end: arg.event.end },
+                    { onError: () => arg.revert() }
+                  );
+                }}
+                noEventsContent={() => "No sessions in this range."}
+              />
+            </div>
           </Card>
         ) : (
           <Card className="overflow-hidden p-0">

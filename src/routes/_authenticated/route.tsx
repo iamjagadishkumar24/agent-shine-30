@@ -285,11 +285,11 @@ function AuthedLayout() {
             {isStaff && (
               <Button
                 size="sm"
-                className="h-9 gap-1.5 rounded-lg border-0 bg-[image:var(--gradient-brand)] text-primary-foreground shadow-sm transition-all hover:opacity-95 hover:shadow-md"
+                className="group h-9 gap-1.5 rounded-lg border-0 bg-[image:var(--gradient-brand)] px-3.5 text-primary-foreground shadow-[var(--shadow-brand)] transition-all hover:brightness-105 hover:-translate-y-px hover:shadow-lg active:translate-y-0 active:scale-[0.98]"
                 onClick={() => navigate({ to: "/feedback/new" })}
               >
-                <Plus className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">New feedback</span>
+                <Plus className="h-3.5 w-3.5 transition-transform group-hover:rotate-90" />
+                <span className="hidden sm:inline font-semibold">New feedback</span>
               </Button>
             )}
 
