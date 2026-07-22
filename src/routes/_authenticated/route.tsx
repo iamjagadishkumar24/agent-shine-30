@@ -320,9 +320,11 @@ function AuthedLayout() {
                 <DropdownMenuItem asChild>
                   <Link to="/account"><UserCog className="mr-2 h-4 w-4" />Account settings</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/settings"><Settings className="mr-2 h-4 w-4" />Workspace settings</Link>
-                </DropdownMenuItem>
+                {!isQaAdminOnly && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings"><Settings className="mr-2 h-4 w-4" />Workspace settings</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />Sign out
