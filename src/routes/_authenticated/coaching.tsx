@@ -72,8 +72,9 @@ function CoachingCalendar() {
   useRealtimeInvalidate("coaching_sessions", [["coaching-sessions"]]);
   const qc = useQueryClient();
 
-  const [view, setView] = useState<View>(Views.WEEK);
-  const [date, setDate] = useState<Date>(new Date());
+  const calendarRef = useRef<FullCalendar | null>(null);
+  const [view, setView] = useState<FcView>("dayGridMonth");
+  const [periodLabel, setPeriodLabel] = useState<string>("");
   const [status, setStatus] = useState<string>("all");
   const [sessionType, setSessionType] = useState<string>("all");
   const [priority, setPriority] = useState<string>("all");
