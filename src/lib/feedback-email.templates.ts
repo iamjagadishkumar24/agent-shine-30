@@ -24,7 +24,7 @@ export type FeedbackMetric = {
   score: number;                 // selected percentage 0..100
   maxPoints?: number | null;     // parameter weight (defaults to canonical)
   earnedPoints?: number | null;  // computed if omitted
-  note?: string | null;          // (ignored in new template)
+  note?: string | null;          // Reviewer comment shown under the score row
 };
 
 export type FeedbackEmailData = {
@@ -114,7 +114,7 @@ function normalizeMetrics(input?: FeedbackMetric[] | null): FeedbackMetric[] {
     const score = src?.score != null && !Number.isNaN(Number(src.score)) ? Math.max(0, Math.min(100, Number(src.score))) : 0;
     const max = Number(src?.maxPoints ?? weight);
     const earned = src?.earnedPoints != null ? Number(src.earnedPoints) : (max * score) / 100;
-    out.push({ label, score, maxPoints: max, earnedPoints: earned });
+    out.push({ label, score, maxPoints: max, earnedPoints: earned, note: src?.note ?? null });
   }
   return out;
 }
@@ -150,15 +150,21 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
   const performanceLabel = labelFromPercentage(overall);
 
   const interactionRaw = (d.interactionType ?? "").toLowerCase();
+  const isChat = interactionRaw === "chat";
   const interactionLabel =
-    interactionRaw === "case" ? t.interactionCase : interactionRaw === "chat" ? t.interactionChat : t.interactionGeneric;
+    interactionRaw === "case" ? t.interactionCase : isChat ? t.interactionChat : t.interactionGeneric;
 
   const caseNumber = (d.caseNumber ?? "").trim();
+  const externalRef = (d.interactionReference ?? "").trim();
+  const identifier = caseNumber || externalRef;
+  const identifierLabel = isChat ? "Chat No" : "Case No";
   const isReminder = !!d.isReminder;
 
-  const subject = isReminder
-    ? `${t.subjectReminderPrefix} – ${caseNumber ? `${t.caseWord} ${caseNumber}` : d.title}`
-    : `${t.subjectQualityFeedback} – ${caseNumber ? `${t.caseWord} ${caseNumber} – ` : ""}${d.agentName} – ${t.scoreColumn} ${earnedOutOf}`;
+  // Canonical, searchable subject required by product:
+  //   Performance Feedback Review > Audit Feedback Form - Case No: XXXXX
+  //   Performance Feedback Review > Audit Feedback Form - Chat No: XXXXX
+  const subjectBase = `Performance Feedback Review > Audit Feedback Form${identifier ? ` - ${identifierLabel}: ${identifier}` : ""}`;
+  const subject = isReminder ? `${t.subjectReminderPrefix} – ${subjectBase}` : subjectBase;
 
   const greetingName = firstName(d.agentName);
   const pixelUrl = `${d.appBaseUrl}/api/public/track/open/${d.feedbackId}`;
@@ -182,11 +188,21 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
       const max = formatPoints(Number(m.maxPoints));
       const earned = formatPoints(Number(m.earnedPoints));
       const color = scoreColor(Number(m.score));
+      const note = (m.note ?? "").trim();
+      const noteRow = note
+        ? `
+        <tr>
+          <td colspan="2" style="padding:2px 12px 12px;border-bottom:1px solid ${LINE};background:#fafbfc;">
+            <div style="font:700 10px/1 ${FONT};letter-spacing:.1em;text-transform:uppercase;color:${MUTE};margin-bottom:4px;">Comments</div>
+            <div style="font:13px/1.55 ${FONT};color:${INK_SOFT};white-space:pre-wrap;">${escape(note)}</div>
+          </td>
+        </tr>`
+        : "";
       return `
         <tr>
-          <td style="padding:11px 12px;font:14px/1.4 ${FONT};color:${INK};border-bottom:1px solid ${LINE};vertical-align:top;">${escape(m.label)}</td>
-          <td align="right" style="padding:11px 14px;font:700 14px/1.4 ${FONT};color:${color};border-bottom:1px solid ${LINE};vertical-align:top;white-space:nowrap;tabular-nums:1;">${earned} / ${max}</td>
-        </tr>`;
+          <td style="padding:11px 12px 4px;font:600 14px/1.4 ${FONT};color:${INK};${note ? "" : `border-bottom:1px solid ${LINE};`}vertical-align:top;">${escape(m.label)}</td>
+          <td align="right" style="padding:11px 14px 4px;font:700 14px/1.4 ${FONT};color:${color};${note ? "" : `border-bottom:1px solid ${LINE};`}vertical-align:top;white-space:nowrap;tabular-nums:1;">${earned} / ${max}</td>
+        </tr>${noteRow}`;
     })
     .join("");
 
@@ -277,7 +293,7 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
   </style>
 </head>
 <body style="margin:0;padding:0;background:${PAGE};">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escape(t.subjectQualityFeedback)} ${escape(caseNumber ? `${t.caseWord} ${caseNumber}` : "")} · ${escape(d.title)} · ${escape(earnedOutOf)}</div>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escape(subject)} · ${escape(d.title)} · ${escape(earnedOutOf)}</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAGE};">
     <tr><td align="center" style="padding:24px 12px;">
       <table role="presentation" class="container" width="640" cellpadding="0" cellspacing="0" style="width:640px;max-width:640px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(15,23,42,.06);">
@@ -335,6 +351,10 @@ export function renderFeedbackEmail(d: FeedbackEmailData): { subject: string; ht
     const max = formatPoints(Number(m.maxPoints));
     const earned = formatPoints(Number(m.earnedPoints));
     textLines.push(`  ${String(m.label).padEnd(40)} ${earned} / ${max}`);
+    const note = (m.note ?? "").trim();
+    if (note) {
+      textLines.push(`    Comments: ${note}`);
+    }
   }
   textLines.push(`  ${t.overallScoreRow.padEnd(40)} ${earnedOutOf}`);
   textLines.push("");
