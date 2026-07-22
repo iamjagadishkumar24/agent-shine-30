@@ -84,6 +84,7 @@ function NewFeedback() {
           parameter_name: p.name,
           max_points: Number(p.max_points),
           points: 0,
+          note: "",
         })),
       );
     }
