@@ -303,29 +303,105 @@ function CoachingCalendar() {
         </Card>
 
         {mode === "calendar" ? (
-          <Card className="p-3 rbc-shell">
-            <DnDCalendar
-              localizer={localizer}
-              events={events}
-              view={view}
-              onView={setView}
-              date={date}
-              onNavigate={setDate}
-              views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
-              step={30}
-              timeslots={2}
-              popup
-              selectable
-              defaultView={Views.WEEK}
-              onSelectSlot={(slot: SlotInfo) => openCreate(slot.start as Date, slot.end as Date)}
-              onSelectEvent={(evt: any) => openEdit(evt.resource)}
-              onDoubleClickEvent={(evt: any) => openEdit(evt.resource)}
-              onEventDrop={({ event, start, end }: any) => reschedule.mutate({ id: event.id, start, end })}
-              onEventResize={({ event, start, end }: any) => reschedule.mutate({ id: event.id, start, end })}
-              resizable
-              eventPropGetter={eventPropGetter}
-              style={{ height: 720 }}
-            />
+          <Card className="p-0 overflow-hidden">
+            {/* Minimalist executive toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+              <div className="flex items-center gap-1.5">
+                <Button variant="outline" size="sm" className="h-8 px-3 font-medium" onClick={() => goto("today")}>
+                  Today
+                </Button>
+                <div className="mx-1 flex items-center rounded-md border border-border/70">
+                  <button
+                    type="button"
+                    onClick={() => goto("prev")}
+                    className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    aria-label="Previous period"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="h-4 w-px bg-border/70" />
+                  <button
+                    type="button"
+                    onClick={() => goto("next")}
+                    className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    aria-label="Next period"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+                <h2 className="ml-2 text-lg font-semibold tracking-tight text-foreground">
+                  {periodLabel}
+                </h2>
+              </div>
+
+              <div className="inline-flex rounded-md border border-border/70 bg-muted/30 p-0.5">
+                {VIEW_OPTIONS.map((v) => (
+                  <button
+                    key={v.id}
+                    onClick={() => changeView(v.id)}
+                    className={cn(
+                      "h-7 rounded px-3 text-xs font-semibold transition-all",
+                      view === v.id
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="qp-fc p-3">
+              <FullCalendar
+                ref={calendarRef}
+                plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+                initialView={view}
+                headerToolbar={false}
+                height={720}
+                firstDay={1}
+                dayMaxEvents={3}
+                nowIndicator
+                selectable
+                editable
+                eventResizableFromStart
+                allDaySlot={false}
+                slotMinTime="06:00:00"
+                slotMaxTime="22:00:00"
+                slotDuration="00:30:00"
+                slotLabelFormat={{ hour: "numeric", minute: "2-digit", meridiem: "short" }}
+                eventTimeFormat={{ hour: "numeric", minute: "2-digit", meridiem: "short" }}
+                dayHeaderFormat={{ weekday: "short" }}
+                events={events}
+                eventContent={renderEventContent}
+                datesSet={(arg) => setPeriodLabel(arg.view.title)}
+                dateClick={(arg) => {
+                  const start = arg.date;
+                  const end = new Date(start.getTime() + 30 * 60000);
+                  openCreate(start, end);
+                }}
+                select={(arg) => openCreate(arg.start, arg.end)}
+                eventClick={(arg) => {
+                  const s = (arg.event.extendedProps as any).session ?? sessionsById.get(arg.event.id);
+                  if (s) openEdit(s);
+                }}
+                eventDrop={(arg) => {
+                  if (!arg.event.start || !arg.event.end) { arg.revert(); return; }
+                  reschedule.mutate(
+                    { id: arg.event.id, start: arg.event.start, end: arg.event.end },
+                    { onError: () => arg.revert() }
+                  );
+                }}
+                eventResize={(arg) => {
+                  if (!arg.event.start || !arg.event.end) { arg.revert(); return; }
+                  reschedule.mutate(
+                    { id: arg.event.id, start: arg.event.start, end: arg.event.end },
+                    { onError: () => arg.revert() }
+                  );
+                }}
+                noEventsContent={() => "No sessions in this range."}
+              />
+            </div>
           </Card>
         ) : (
           <Card className="overflow-hidden p-0">
