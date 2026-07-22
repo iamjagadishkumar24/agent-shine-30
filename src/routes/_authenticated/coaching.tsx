@@ -267,29 +267,36 @@ function CoachingCalendar() {
       />
       <CoachingTabs />
 
-      <div className="mx-auto max-w-[1600px] px-6 pb-12 pt-4 space-y-4">
-        <Card className="p-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative flex-1 min-w-[220px]">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search topic or agent" className="h-8 pl-8" />
+      <div className="mx-auto max-w-[1600px] px-4 pb-12 pt-4 space-y-4 sm:px-6">
+        <Card className="p-3" role="search" aria-label="Filter coaching sessions">
+          <div className="grid grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
+            <div className="relative col-span-2 min-w-0 flex-1 sm:min-w-[220px]">
+              <label htmlFor="coaching-search" className="sr-only">Search topic or agent</label>
+              <Search aria-hidden="true" className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="coaching-search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search topic or agent"
+                className="h-9 pl-8 sm:h-8"
+              />
             </div>
             <Select value={agentId} onValueChange={setAgentId}>
-              <SelectTrigger className="h-8 w-[180px]"><SelectValue placeholder="Agent" /></SelectTrigger>
+              <SelectTrigger aria-label="Filter by agent" className="h-9 w-full sm:h-8 sm:w-[180px]"><SelectValue placeholder="Agent" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All agents</SelectItem>
                 {agents.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.full_name}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="h-8 w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectTrigger aria-label="Filter by status" className="h-9 w-full sm:h-8 sm:w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All statuses</SelectItem>
                 {Object.entries(STATUS_META).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={sessionType} onValueChange={setSessionType}>
-              <SelectTrigger className="h-8 w-[140px]"><SelectValue placeholder="Type" /></SelectTrigger>
+              <SelectTrigger aria-label="Filter by session type" className="h-9 w-full sm:h-8 sm:w-[140px]"><SelectValue placeholder="Type" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All types</SelectItem>
                 <SelectItem value="coaching">Coaching</SelectItem>
@@ -300,7 +307,7 @@ function CoachingCalendar() {
               </SelectContent>
             </Select>
             <Select value={priority} onValueChange={setPriority}>
-              <SelectTrigger className="h-8 w-[140px]"><SelectValue placeholder="Priority" /></SelectTrigger>
+              <SelectTrigger aria-label="Filter by priority" className="h-9 w-full sm:h-8 sm:w-[140px]"><SelectValue placeholder="Priority" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All priorities</SelectItem>
                 <SelectItem value="low">Low</SelectItem>
@@ -313,64 +320,88 @@ function CoachingCalendar() {
         </Card>
 
         {mode === "calendar" ? (
-          <Card className="p-0 overflow-hidden">
+          <Card
+            className="p-0 overflow-hidden"
+            role="region"
+            aria-label={`Coaching calendar, ${VIEW_OPTIONS.find((v) => v.id === view)?.label ?? "Month"} view${periodLabel ? `, ${periodLabel}` : ""}`}
+          >
             {/* Minimalist executive toolbar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
-              <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-3 py-3 sm:px-4">
+              <div className="flex min-w-0 items-center gap-1.5">
                 <Button variant="outline" size="sm" className="h-8 px-3 font-medium" onClick={() => goto("today")}>
                   Today
                 </Button>
-                <div className="mx-1 flex items-center rounded-md border border-border/70">
+                <div className="mx-1 flex items-center rounded-md border border-border/70" role="group" aria-label="Navigate calendar">
                   <button
                     type="button"
                     onClick={() => goto("prev")}
-                    className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="flex h-8 w-8 items-center justify-center rounded-l-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
                     aria-label="Previous period"
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft aria-hidden="true" className="h-4 w-4" />
                   </button>
-                  <span className="h-4 w-px bg-border/70" />
+                  <span aria-hidden="true" className="h-4 w-px bg-border/70" />
                   <button
                     type="button"
                     onClick={() => goto("next")}
-                    className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="flex h-8 w-8 items-center justify-center rounded-r-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
                     aria-label="Next period"
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight aria-hidden="true" className="h-4 w-4" />
                   </button>
                 </div>
-                <h2 className="ml-2 text-lg font-semibold tracking-tight text-foreground">
+                <h2 aria-live="polite" className="ml-2 truncate text-base font-semibold tracking-tight text-foreground sm:text-lg">
                   {periodLabel}
                 </h2>
               </div>
 
-              <div className="inline-flex rounded-md border border-border/70 bg-muted/30 p-0.5">
-                {VIEW_OPTIONS.map((v) => (
-                  <button
-                    key={v.id}
-                    onClick={() => changeView(v.id)}
-                    className={cn(
-                      "h-7 rounded px-3 text-xs font-semibold transition-all",
-                      view === v.id
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {v.label}
-                  </button>
-                ))}
+              <div
+                role="tablist"
+                aria-label="Calendar view"
+                className="inline-flex rounded-md border border-border/70 bg-muted/30 p-0.5"
+              >
+                {VIEW_OPTIONS.map((v) => {
+                  const selected = view === v.id;
+                  return (
+                    <button
+                      key={v.id}
+                      role="tab"
+                      type="button"
+                      aria-selected={selected}
+                      tabIndex={selected ? 0 : -1}
+                      onClick={() => changeView(v.id)}
+                      onKeyDown={(e) => {
+                        if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+                        e.preventDefault();
+                        const idx = VIEW_OPTIONS.findIndex((o) => o.id === view);
+                        const next = e.key === "ArrowRight"
+                          ? VIEW_OPTIONS[(idx + 1) % VIEW_OPTIONS.length]
+                          : VIEW_OPTIONS[(idx - 1 + VIEW_OPTIONS.length) % VIEW_OPTIONS.length];
+                        changeView(next.id);
+                      }}
+                      className={cn(
+                        "h-7 rounded px-3 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        selected
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {v.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="qp-fc p-3">
+            <div className="qp-fc p-2 sm:p-3">
               <FullCalendar
                 ref={calendarRef}
                 plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
                 initialView={view}
                 headerToolbar={false}
-                height={720}
+                height={isMobile ? 560 : 720}
                 firstDay={1}
-                dayMaxEvents={3}
+                dayMaxEvents={isMobile ? 2 : 3}
                 nowIndicator
                 selectable
                 editable
