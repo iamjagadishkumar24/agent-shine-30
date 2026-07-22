@@ -209,19 +209,31 @@ function CoachingCalendar() {
     }
   }, []);
 
-  const eventPropGetter = (event: any) => {
-    const s = event.resource;
-    const meta = STATUS_META[s.status ?? "scheduled"] ?? STATUS_META.scheduled;
-    return {
-      style: {
-        backgroundColor: `${meta.dot}22`,
-        borderLeft: `3px solid ${meta.dot}`,
-        color: "hsl(var(--foreground))",
-        borderRadius: 6,
-        padding: "2px 6px",
-        fontSize: 12,
-      },
-    };
+  const goto = (action: "prev" | "next" | "today") => {
+    const api = calendarRef.current?.getApi();
+    if (!api) return;
+    if (action === "prev") api.prev();
+    else if (action === "next") api.next();
+    else api.today();
+  };
+  const changeView = (v: FcView) => {
+    setView(v);
+    calendarRef.current?.getApi().changeView(v);
+  };
+
+  const renderEventContent = (arg: EventContentArg) => {
+    const time = arg.timeText;
+    return (
+      <div className="qp-event" style={{
+        // @ts-expect-error CSS custom props
+        "--qp-color": arg.event.borderColor,
+        "--qp-tint":  arg.event.backgroundColor,
+        "--qp-text":  arg.event.textColor,
+      }}>
+        {time && <span className="qp-event-time">{time}</span>}
+        <span className="qp-event-title">{arg.event.title}</span>
+      </div>
+    );
   };
 
   return (
