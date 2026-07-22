@@ -1,0 +1,215 @@
+/* FullCalendar theme overrides — Minimalist Executive Planner */
+
+.qp-fc {
+  --qp-line: hsl(var(--border));
+  --qp-line-soft: color-mix(in oklab, hsl(var(--border)) 55%, transparent);
+  --qp-ink: hsl(var(--foreground));
+  --qp-mute: hsl(var(--muted-foreground));
+  --qp-today-tint: color-mix(in oklab, oklch(0.62 0.15 155) 8%, transparent);
+  font-family: var(--font-sans);
+}
+
+/* Kill the default heavy borders */
+.qp-fc .fc-scrollgrid,
+.qp-fc .fc-scrollgrid td,
+.qp-fc .fc-scrollgrid th,
+.qp-fc .fc-theme-standard td,
+.qp-fc .fc-theme-standard th,
+.qp-fc .fc-theme-standard .fc-scrollgrid {
+  border-color: var(--qp-line-soft);
+}
+.qp-fc .fc-scrollgrid {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--qp-line-soft);
+}
+
+/* Header (weekday labels) */
+.qp-fc .fc-col-header-cell {
+  background: transparent;
+  padding: 10px 0;
+}
+.qp-fc .fc-col-header-cell-cushion {
+  color: var(--qp-mute);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 0;
+}
+
+/* Day number top-left, small */
+.qp-fc .fc-daygrid-day-top {
+  flex-direction: row;
+  padding: 6px 8px 0;
+}
+.qp-fc .fc-daygrid-day-number {
+  color: var(--qp-ink);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0;
+  text-decoration: none;
+  line-height: 1;
+}
+.qp-fc .fc-day-other .fc-daygrid-day-number {
+  color: color-mix(in oklab, var(--qp-mute) 60%, transparent);
+}
+.qp-fc .fc-day-other {
+  background: color-mix(in oklab, hsl(var(--muted)) 25%, transparent);
+}
+
+/* Today: filled emerald circle around the number */
+.qp-fc .fc-day-today {
+  background: var(--qp-today-tint) !important;
+}
+.qp-fc .fc-day-today .fc-daygrid-day-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: oklch(0.62 0.15 155);
+  color: white;
+  font-weight: 700;
+}
+
+/* Weekend faint tint */
+.qp-fc .fc-day-sat,
+.qp-fc .fc-day-sun {
+  background: color-mix(in oklab, hsl(var(--muted)) 15%, transparent);
+}
+.qp-fc .fc-day-sat.fc-day-today,
+.qp-fc .fc-day-sun.fc-day-today {
+  background: var(--qp-today-tint) !important;
+}
+
+/* Events — soft pill with leading color bar */
+.qp-fc .fc-daygrid-event,
+.qp-fc .fc-timegrid-event,
+.qp-fc .fc-list-event {
+  border-radius: 6px;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+}
+.qp-fc .fc-daygrid-event {
+  background: transparent;
+  margin: 2px 6px;
+}
+.qp-fc .qp-event {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 6px;
+  border-radius: 6px;
+  border-left: 3px solid var(--qp-color, #64748b);
+  background: var(--qp-tint, #f1f5f9);
+  color: var(--qp-text, #0f172a);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  overflow: hidden;
+}
+.qp-fc .qp-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px -4px color-mix(in oklab, var(--qp-color, #64748b) 50%, transparent);
+}
+.qp-fc .qp-event-time {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+.qp-fc .qp-event-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 700;
+}
+
+/* Time grid views */
+.qp-fc .fc-timegrid-slot-label-cushion,
+.qp-fc .fc-timegrid-axis-cushion {
+  color: var(--qp-mute);
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+.qp-fc .fc-timegrid-slot {
+  height: 2.4em;
+}
+.qp-fc .fc-timegrid-now-indicator-line {
+  border-color: oklch(0.62 0.15 155);
+  border-width: 2px;
+}
+.qp-fc .fc-timegrid-now-indicator-arrow {
+  border-color: oklch(0.62 0.15 155);
+  color: oklch(0.62 0.15 155);
+}
+
+/* List / agenda view */
+.qp-fc .fc-list {
+  border: 1px solid var(--qp-line-soft);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.qp-fc .fc-list-day-cushion {
+  background: color-mix(in oklab, hsl(var(--muted)) 40%, transparent) !important;
+  color: var(--qp-ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.qp-fc .fc-list-event:hover td {
+  background: color-mix(in oklab, hsl(var(--muted)) 30%, transparent);
+}
+.qp-fc .fc-list-event-dot {
+  border-radius: 999px;
+  border-width: 5px;
+}
+.qp-fc .fc-list-event-time,
+.qp-fc .fc-list-event-title {
+  font-size: 0.8125rem;
+  color: var(--qp-ink);
+  font-weight: 500;
+}
+.qp-fc .fc-list-empty {
+  background: transparent;
+  color: var(--qp-mute);
+  font-size: 0.875rem;
+}
+
+/* Hide default FullCalendar toolbar — we render our own */
+.qp-fc .fc-toolbar.fc-header-toolbar {
+  display: none;
+}
+
+/* "more" link */
+.qp-fc .fc-daygrid-more-link {
+  color: var(--qp-mute);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 6px;
+}
+.qp-fc .fc-daygrid-more-link:hover {
+  color: oklch(0.62 0.15 155);
+}
+
+/* Popover for +more */
+.qp-fc .fc-popover {
+  border: 1px solid var(--qp-line);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.15);
+  overflow: hidden;
+  background: hsl(var(--card));
+}
+.qp-fc .fc-popover-header {
+  background: color-mix(in oklab, hsl(var(--muted)) 35%, transparent);
+  padding: 8px 12px;
+  color: var(--qp-ink);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
