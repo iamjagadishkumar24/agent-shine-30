@@ -433,13 +433,13 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
         </div>
 
         {savedEvent && (
-          <div className="rounded-md border border-emerald-500/20 bg-emerald-500/5 p-3 text-sm">
-            <div className="mb-2 font-medium text-emerald-300">Session scheduled — add it to your calendar</div>
+          <div className="mx-6 mb-2 rounded-md border border-emerald-500/20 bg-emerald-500/5 p-3 text-sm">
+            <div className="mb-2 font-medium text-emerald-700">Session scheduled — add it to your calendar</div>
             <AddToCalendarMenu event={savedEvent} triggerLabel="Add to my calendar" />
           </div>
         )}
 
-        <DialogFooter>
+        <SheetFooter className="border-t px-6 py-3 sm:justify-end">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             {savedEvent ? "Close" : "Cancel"}
           </Button>
@@ -449,8 +449,8 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
               {isEdit ? "Save changes" : "Schedule session"}
             </Button>
           )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
