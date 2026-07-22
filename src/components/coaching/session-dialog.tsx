@@ -431,6 +431,8 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
             </Select>
           </div>
         </div>
+        </div>
+
 
         {savedEvent && (
           <div className="mx-6 mb-2 rounded-md border border-emerald-500/20 bg-emerald-500/5 p-3 text-sm">
