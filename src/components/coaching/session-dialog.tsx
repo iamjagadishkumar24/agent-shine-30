@@ -262,14 +262,18 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
   const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit coaching session" : "Schedule coaching session"}</DialogTitle>
-          <DialogDescription>
-            {isEdit ? "Update the details below and save." : "Book time with an agent and capture the plan."}
-          </DialogDescription>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col gap-0 p-0 sm:max-w-xl md:max-w-2xl"
+      >
+        <SheetHeader className="border-b px-6 py-4">
+          <SheetTitle>{isEdit ? "Coaching session" : "Schedule coaching session"}</SheetTitle>
+          <SheetDescription>
+            {isEdit ? "View and edit details, notes, and status." : "Book time with an agent and capture the plan."}
+          </SheetDescription>
+        </SheetHeader>
+        <div className="flex-1 overflow-y-auto px-6 py-4">
 
         <div className="grid grid-cols-1 gap-4 py-2 md:grid-cols-2">
           <div className="space-y-1.5 md:col-span-2">
