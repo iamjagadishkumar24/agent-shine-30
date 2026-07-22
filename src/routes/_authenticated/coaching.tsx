@@ -138,12 +138,28 @@ function CoachingCalendar() {
   const { page, pageSize, setPage, setPageSize } = usePagination(sorted.length, 25);
   const paged = paginate(sorted, page, pageSize);
 
-  const events = useMemo(() => filtered
+  const sessionsById = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const s of filtered) map.set(s.id, s);
+    return map;
+  }, [filtered]);
+
+  const events = useMemo<EventInput[]>(() => filtered
     .filter((s) => s.scheduled_at)
     .map((s) => {
       const start = new Date(s.scheduled_at);
-      const end = addMinutes(start, s.duration_minutes ?? 30);
-      return { id: s.id, title: s.topic ?? "Untitled", start, end, resource: s };
+      const end = new Date(start.getTime() + (s.duration_minutes ?? 30) * 60000);
+      const pal = paletteFor(s.session_type);
+      return {
+        id: s.id,
+        title: s.topic ?? "Untitled",
+        start,
+        end,
+        extendedProps: { session: s },
+        backgroundColor: pal.tint,
+        borderColor: pal.color,
+        textColor: pal.text,
+      };
     }), [filtered]);
 
   const reschedule = useMutation({
