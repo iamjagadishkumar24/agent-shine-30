@@ -119,6 +119,16 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 10px -4px color-mix(in oklab, var(--qp-color, #64748b) 50%, transparent);
 }
+/* Keyboard focus for FullCalendar events (they render as <a role="button">) */
+.qp-fc .fc-event:focus-visible,
+.qp-fc .fc-event.fc-event-selected,
+.qp-fc .fc-list-event:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px oklch(0.62 0.15 155);
+  border-radius: 6px;
+}
+/* Ensure link-style events don't get an underline from the browser */
+.qp-fc .fc-event { text-decoration: none; }
 .qp-fc .qp-event-time {
   font-variant-numeric: tabular-nums;
   opacity: 0.85;
@@ -129,6 +139,20 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 700;
+}
+
+/* Mobile: tighten padding, allow event title to wrap to two lines so tap targets stay legible */
+@media (max-width: 640px) {
+  .qp-fc .fc-scrollgrid { border-radius: 10px; }
+  .qp-fc .fc-col-header-cell { padding: 6px 0; }
+  .qp-fc .fc-col-header-cell-cushion { font-size: 0.625rem; }
+  .qp-fc .fc-daygrid-day-top { padding: 4px 4px 0; }
+  .qp-fc .fc-daygrid-day-number { font-size: 0.6875rem; }
+  .qp-fc .qp-event { padding: 4px 6px; font-size: 0.6875rem; min-height: 22px; }
+  .qp-fc .qp-event-time { display: none; }
+  .qp-fc .fc-timegrid-slot { height: 3em; } /* larger tap targets */
+  .qp-fc .fc-list-event-time,
+  .qp-fc .fc-list-event-title { font-size: 0.875rem; padding: 10px 12px; }
 }
 
 /* Time grid views */
