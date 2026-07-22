@@ -9,13 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -262,14 +262,18 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
   const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit coaching session" : "Schedule coaching session"}</DialogTitle>
-          <DialogDescription>
-            {isEdit ? "Update the details below and save." : "Book time with an agent and capture the plan."}
-          </DialogDescription>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col gap-0 p-0 sm:max-w-xl md:max-w-2xl"
+      >
+        <SheetHeader className="border-b px-6 py-4">
+          <SheetTitle>{isEdit ? "Coaching session" : "Schedule coaching session"}</SheetTitle>
+          <SheetDescription>
+            {isEdit ? "View and edit details, notes, and status." : "Book time with an agent and capture the plan."}
+          </SheetDescription>
+        </SheetHeader>
+        <div className="flex-1 overflow-y-auto px-6 py-4">
 
         <div className="grid grid-cols-1 gap-4 py-2 md:grid-cols-2">
           <div className="space-y-1.5 md:col-span-2">
@@ -427,15 +431,17 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
             </Select>
           </div>
         </div>
+        </div>
+
 
         {savedEvent && (
-          <div className="rounded-md border border-emerald-500/20 bg-emerald-500/5 p-3 text-sm">
-            <div className="mb-2 font-medium text-emerald-300">Session scheduled — add it to your calendar</div>
+          <div className="mx-6 mb-2 rounded-md border border-emerald-500/20 bg-emerald-500/5 p-3 text-sm">
+            <div className="mb-2 font-medium text-emerald-700">Session scheduled — add it to your calendar</div>
             <AddToCalendarMenu event={savedEvent} triggerLabel="Add to my calendar" />
           </div>
         )}
 
-        <DialogFooter>
+        <SheetFooter className="border-t px-6 py-3 sm:justify-end">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             {savedEvent ? "Close" : "Cancel"}
           </Button>
@@ -445,8 +451,8 @@ export function SessionDialog({ open, onOpenChange, session, initialStart, initi
               {isEdit ? "Save changes" : "Schedule session"}
             </Button>
           )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
